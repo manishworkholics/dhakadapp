@@ -8,6 +8,13 @@ import RegisterScreen from "./src/screens/RegisterScreen";
 import OtpScreen from "./src/screens/OtpScreen";
 import EmailOtpScreen from "./src/screens/EmailOtpScreen";
 import HomeScreen from "./src/screens/HomeScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import MatchesScreen from "./src/screens/MatchesScreen";
+import InterestScreen from "./src/screens/InterestScreen";
+import ChatScreen from "./src/screens/ChatScreen";
+import ShortlistScreen from "./src/screens/ShortlistScreen";
+import NotificationScreen from "./src/screens/NotificationScreen";
+import PartnerPreferenceScreen from "./src/screens/PartnerPreferenceScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
 
 
@@ -24,6 +31,13 @@ export default function App() {
         <Stack.Screen name="Otp" component={OtpScreen} />
         <Stack.Screen name="EmailOtp" component={EmailOtpScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Matches" component={MatchesScreen} />
+        <Stack.Screen name="Interest" component={InterestScreen} />
+        <Stack.Screen name="Chat" component={ChatScreen} />
+        <Stack.Screen name="Shortlist" component={ShortlistScreen} />
+        <Stack.Screen name="Notification" component={NotificationScreen} />
+        <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
         <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>

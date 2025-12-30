@@ -10,24 +10,20 @@ import {
 } from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useNavigation } from "@react-navigation/native";
 
-const HomeScreen = () => {
+export default function HomeScreen() {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
-      <Header title="Shivam Thakur" />
-
+    <Header
+        title="Shivam Thakur"
+       
+      />
 
 
       <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              fetchHomeData();
-            }}
-          />
-        }
+        
       >
 
 
@@ -352,4 +348,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default HomeScreen;
+
