@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 100,
+    height: 100,
     marginBottom: 25,
   },
   optionBtn: {

@@ -14,21 +14,25 @@ import Footer from '../components/Footer';
 const HomeScreen = () => {
   return (
     <View style={styles.container}>
-      <Header title="Shivam Thakur" />
+      <Header title="Sujal Prajapati" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 🔶 Profile + Upgrade Card */}
         <View style={styles.profileCard}>
           <View style={styles.profileRow}>
-            <View style={styles.avatar} />
+            <Image
+              source={require("../assets/images/adminlogo.png")}
+
+            />
             <View style={{ flex: 1 }}>
-              <Text style={styles.profileId}>DH1409005</Text>
+              <Text style={styles.profileId}>DH1409009</Text>
+              <Text style={styles.editprofiletext}>Edit Profile</Text>
               <Text style={styles.accountType}>Account : Free</Text>
             </View>
           </View>
 
           <TouchableOpacity style={styles.upgradeBtn}>
-            <Text style={styles.upgradeText}>Upgrade Now</Text>
+            <Text style={styles.upgradeText}>👑 Upgrade Now</Text>
           </TouchableOpacity>
         </View>
 
@@ -141,3 +145,181 @@ const newProfiles = [
 ];
 
 export default HomeScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+
+  profileCard: {
+    backgroundColor: 'black',
+    margin: 15,
+    padding: 15,
+    borderRadius: 10,
+  },
+
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ccc',
+    marginRight: 10,
+  },
+
+  profileId: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: 'white',
+  },
+  editprofiletext: {
+    color: 'rgba(255, 126, 0, 1)',
+    fontSize: 14,
+  },
+
+  accountType: {
+    color: 'white',
+    marginTop: 2,
+  },
+
+  upgradeBtn: {
+    marginTop: 10,
+    backgroundColor: 'rgba(255, 168, 33, 1)',
+    padding: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    width: '175',
+    marginLeft: '85',
+    height: 40
+  },
+
+  upgradeText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16
+  },
+
+  heading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginHorizontal: 15,
+    marginTop: 20,
+  },
+
+  completeCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 15,
+    marginTop: 10,
+    padding: 15,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  completeText: {
+    fontSize: 16,
+  },
+
+  arrow: {
+    fontSize: 18,
+    color: '#999',
+  },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 15,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+
+  seeAll: {
+    color: '#E91E63',
+    fontWeight: 'bold',
+  },
+
+  matchCard: {
+    backgroundColor: '#fff',
+    width: 140,
+    margin: 10,
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+
+  matchImg: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+
+  matchName: {
+    marginVertical: 6,
+    fontWeight: 'bold',
+  },
+
+  connectBtn: {
+    backgroundColor: '#E91E63',
+    padding: 6,
+    borderRadius: 5,
+  },
+
+  connectText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+
+  chatBtn: {
+    backgroundColor: '#4CAF50',
+    padding: 6,
+    borderRadius: 5,
+  },
+
+  chatText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+
+  successWrap: {
+    margin: 15,
+  },
+
+  successTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  successSub: {
+    color: 'gray',
+    marginVertical: 5,
+  },
+
+  successCard: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+
+  successImg: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 10,
+  },
+
+  successName: {
+    fontWeight: 'bold',
+  },
+
+  readMore: {
+    color: '#E91E63',
+    marginTop: 5,
+  },
+});
+
