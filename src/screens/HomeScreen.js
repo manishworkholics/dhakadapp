@@ -1,88 +1,143 @@
 // src/screens/HomeScreen.js
 import React from 'react';
-import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const HomeScreen = () => {
-    return (
-        <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
-            <Header title="Shivam Thakur" />
-            <ScrollView contentContainerStyle={{ padding: 15 }}>
-                {/* Profile Card */}
-                <View style={styles.card}>
-                    <Text style={styles.accountType}>Account: Free</Text>
-                    <TouchableOpacity style={styles.upgradeBtn}>
-                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Upgrade Now</Text>
-                    </TouchableOpacity>
-                </View>
+  return (
+    <View style={styles.container}>
+      <Header title="Shivam Thakur" />
 
-                {/* Premium Matches */}
-                <Text style={styles.sectionTitle}>Premium Matches</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View style={styles.profileCard}>
-                        <Image
-                            source={{ uri: 'https://randomuser.me/api/portraits/women/1.jpg' }}
-                            style={styles.profileImg}
-                        />
-                        <Text style={styles.profileName}>Jane Doe</Text>
-                    </View>
-                    <View style={styles.profileCard}>
-                        <Image
-                            source={{ uri: 'https://randomuser.me/api/portraits/women/2.jpg' }}
-                            style={styles.profileImg}
-                        />
-                        <Text style={styles.profileName}>Mary Jane</Text>
-                    </View>
-                </ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* 🔶 Profile + Upgrade Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.profileRow}>
+            <View style={styles.avatar} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.profileId}>DH1409005</Text>
+              <Text style={styles.accountType}>Account : Free</Text>
+            </View>
+          </View>
 
-                {/* Success Story */}
-                <Text style={styles.sectionTitle}>Success Stories</Text>
-                <View style={styles.successCard}>
-                    <Image
-                        source={{ uri: 'https://randomuser.me/api/portraits/women/3.jpg' }}
-                        style={styles.successImg}
-                    />
-                    <View>
-                        <Text style={{ fontWeight: 'bold' }}>Verite & Desendra</Text>
-                        <Text>Got married successfully!</Text>
-                    </View>
-                </View>
-            </ScrollView>
-            <Footer />
+          <TouchableOpacity style={styles.upgradeBtn}>
+            <Text style={styles.upgradeText}>Upgrade Now</Text>
+          </TouchableOpacity>
         </View>
-    );
+
+        {/* 🔶 Complete Profile Section */}
+        <Text style={styles.heading}>Complete Your Profile</Text>
+
+        <View style={styles.completeCard}>
+          <Text style={styles.completeText}>Create short bio</Text>
+          <Text style={styles.arrow}>›</Text>
+        </View>
+
+        <View style={styles.completeCard}>
+          <Text style={styles.completeText}>Add partner preferences</Text>
+          <Text style={styles.arrow}>›</Text>
+        </View>
+
+        <View style={styles.completeCard}>
+          <Text style={styles.completeText}>Find matching profiles</Text>
+          <Text style={styles.arrow}>›</Text>
+        </View>
+
+        {/* 🔶 Premium Matches */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.heading}>Premium Matches (54)</Text>
+          <Text style={styles.seeAll}>See All</Text>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {premiumProfiles.map((item, index) => (
+            <View key={index} style={styles.matchCard}>
+              <Image source={{ uri: item.image }} style={styles.matchImg} />
+              <Text style={styles.matchName}>{item.name}</Text>
+              <TouchableOpacity style={styles.connectBtn}>
+                <Text style={styles.connectText}>Connect Now</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* 🔶 New Matches */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.heading}>New Matches (54)</Text>
+          <Text style={styles.seeAll}>See All</Text>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {newProfiles.map((item, index) => (
+            <View key={index} style={styles.matchCard}>
+              <Image source={{ uri: item.image }} style={styles.matchImg} />
+              <Text style={styles.matchName}>{item.name}</Text>
+              <TouchableOpacity style={styles.chatBtn}>
+                <Text style={styles.chatText}>Chat</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* 🔶 Success Stories */}
+        <View style={styles.successWrap}>
+          <Text style={styles.successTitle}>Success Story</Text>
+          <Text style={styles.successSub}>
+            Over 4 Crore success stories have been found
+          </Text>
+
+          <View style={styles.successCard}>
+            <Image
+              source={{
+                uri: 'https://randomuser.me/api/portraits/men/44.jpg',
+              }}
+              style={styles.successImg}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.successName}>Verite & Devendra</Text>
+              <TouchableOpacity>
+                <Text style={styles.readMore}>Read More</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        <View style={{ height: 80 }} />
+      </ScrollView>
+
+      <Footer />
+    </View>
+  );
 };
 
-const styles = StyleSheet.create({
-    card: {
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 20,
-        elevation: 2,
-    },
-    accountType: { marginBottom: 10 },
-    upgradeBtn: {
-        backgroundColor: '#FF8C00',
-        padding: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    sectionTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 10, marginTop: 20 },
-    profileCard: { width: 120, marginRight: 10 },
-    profileImg: { width: 120, height: 120, borderRadius: 10 },
-    profileName: { textAlign: 'center', marginTop: 5 },
-    successCard: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
-        padding: 10,
-        borderRadius: 8,
-        elevation: 2,
-        marginBottom: 20,
-        alignItems: 'center',
-    },
-    successImg: { width: 60, height: 60, borderRadius: 30, marginRight: 10 },
-});
+/* 🔹 Dummy Data */
+const premiumProfiles = [
+  {
+    name: 'Aman Kaur',
+    image: 'https://randomuser.me/api/portraits/women/11.jpg',
+  },
+  {
+    name: 'Jaspreet',
+    image: 'https://randomuser.me/api/portraits/women/22.jpg',
+  },
+];
+
+const newProfiles = [
+  {
+    name: 'Pooja',
+    image: 'https://randomuser.me/api/portraits/women/33.jpg',
+  },
+  {
+    name: 'Ritika',
+    image: 'https://randomuser.me/api/portraits/women/44.jpg',
+  },
+];
 
 export default HomeScreen;
