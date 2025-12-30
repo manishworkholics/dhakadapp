@@ -16,7 +16,7 @@ export default function EmailOtpScreen() {
   const verifyOtp = () => {
     if (!otp) return Alert.alert("Enter OTP!");
     // later add API verify
-    navigation.replace("CreateProfile");
+    navigation.replace("Home");
   };
 
   return (
