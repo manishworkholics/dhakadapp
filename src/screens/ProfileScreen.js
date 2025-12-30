@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 /* 🔹 SECTION WRAPPER */
 const Section = ({ title, children }) => (
@@ -147,6 +148,7 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={{ height: 30 }} />
       </ScrollView>
+       <Footer />
     </View>
   );
 }

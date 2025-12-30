@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const plans = [
   {
@@ -103,6 +104,7 @@ export default function PlanScreen({ navigation }) {
           </View>
         ))}
       </ScrollView>
+      <Footer />
     </View>
   );
 }

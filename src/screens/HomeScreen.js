@@ -16,9 +16,6 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
-<<<<<<< HEAD
-      <Header title="Sujal Prajapati" />
-=======
     <Header
         title="Shivam Thakur"
        
@@ -29,7 +26,6 @@ export default function HomeScreen() {
         
       >
 
->>>>>>> 3e3ca245c6561e796cd62a7e83f920cc52fc36a8
 
         {/* 🔶 Profile + Upgrade Card */}
         <View style={styles.profileCard}>
@@ -158,47 +154,6 @@ const newProfiles = [
   },
 ];
 
-<<<<<<< HEAD
-export default HomeScreen;
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-
-  profileCard: {
-    backgroundColor: 'black',
-    margin: 15,
-    padding: 15,
-    borderRadius: 10,
-  },
-
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#ccc',
-    marginRight: 10,
-  },
-
-  profileId: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: 'white',
-  },
-  editprofiletext: {
-    color: 'rgba(255, 126, 0, 1)',
-    fontSize: 14,
-  },
-
-  accountType: {
-    color: 'white',
-=======
 
 const styles = StyleSheet.create({
   container: {
@@ -236,112 +191,10 @@ const styles = StyleSheet.create({
 
   accountType: {
     color: "#777",
->>>>>>> 3e3ca245c6561e796cd62a7e83f920cc52fc36a8
     marginTop: 2,
   },
 
   upgradeBtn: {
-<<<<<<< HEAD
-    marginTop: 10,
-    backgroundColor: 'rgba(255, 168, 33, 1)',
-    padding: 10,
-    borderRadius: 20,
-    alignItems: 'center',
-    width: '175',
-    marginLeft: '85',
-    height: 40
-  },
-
-  upgradeText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16
-  },
-
-  heading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginHorizontal: 15,
-    marginTop: 20,
-  },
-
-  completeCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 15,
-    marginTop: 10,
-    padding: 15,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-
-  completeText: {
-    fontSize: 16,
-  },
-
-  arrow: {
-    fontSize: 18,
-    color: '#999',
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginHorizontal: 15,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-
-  seeAll: {
-    color: '#E91E63',
-    fontWeight: 'bold',
-  },
-
-  matchCard: {
-    backgroundColor: '#fff',
-    width: 140,
-    margin: 10,
-    padding: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  matchImg: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-
-  matchName: {
-    marginVertical: 6,
-    fontWeight: 'bold',
-  },
-
-  connectBtn: {
-    backgroundColor: '#E91E63',
-    padding: 6,
-    borderRadius: 5,
-  },
-
-  connectText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-
-  chatBtn: {
-    backgroundColor: '#4CAF50',
-    padding: 6,
-    borderRadius: 5,
-  },
-
-  chatText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-
-  successWrap: {
-    margin: 15,
-=======
     backgroundColor: "#f7a11b",
     paddingVertical: 10,
     borderRadius: 22,
@@ -461,46 +314,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     elevation: 3,
->>>>>>> 3e3ca245c6561e796cd62a7e83f920cc52fc36a8
   },
 
   successTitle: {
     fontSize: 18,
-<<<<<<< HEAD
-    fontWeight: 'bold',
-  },
-
-  successSub: {
-    color: 'gray',
-    marginVertical: 5,
-  },
-
-  successCard: {
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-
-  successImg: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 10,
-  },
-
-  successName: {
-    fontWeight: 'bold',
-  },
-
-  readMore: {
-    color: '#E91E63',
-    marginTop: 5,
-  },
-});
-
-=======
     fontWeight: "700",
     marginBottom: 4,
   },
@@ -536,4 +353,3 @@ const styles = StyleSheet.create({
 
 
 
->>>>>>> 3e3ca245c6561e796cd62a7e83f920cc52fc36a8

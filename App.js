@@ -15,6 +15,7 @@ import ChatScreen from "./src/screens/ChatScreen";
 import ShortlistScreen from "./src/screens/ShortlistScreen";
 import NotificationScreen from "./src/screens/NotificationScreen";
 import PartnerPreferenceScreen from "./src/screens/PartnerPreferenceScreen";
+import PlanScreen from "./src/screens/PlanScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
 
 
@@ -37,6 +38,7 @@ export default function App() {
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Shortlist" component={ShortlistScreen} />
         <Stack.Screen name="Notification" component={NotificationScreen} />
+        <Stack.Screen name="Plan" component={PlanScreen} />
         <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
         <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
       </Stack.Navigator>
