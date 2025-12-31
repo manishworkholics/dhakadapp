@@ -12,10 +12,11 @@ import {
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
-
+import { useNavigation } from "@react-navigation/native";
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function MatchesScreen() {
+  const navigation = useNavigation();
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,8 +68,8 @@ export default function MatchesScreen() {
         <Text style={styles.upgradeSub}>
           Connect & chat with matches instantly
         </Text>
-        <TouchableOpacity style={styles.upgradeBtn}>
-          <Text style={styles.upgradeText}>Upgrade Now</Text>
+        <TouchableOpacity style={styles.upgradeBtn} onPress={() => navigation.navigate("Plan")}>
+          <Text style={styles.upgradeText} >Upgrade Now</Text>
         </TouchableOpacity>
       </View>
 
@@ -78,7 +79,7 @@ export default function MatchesScreen() {
         <Text style={styles.completeSub}>
           Get better & more matches by completing your profile
         </Text>
-        <TouchableOpacity style={styles.completeBtn}>
+        <TouchableOpacity style={styles.completeBtn} onPress={() => navigation.navigate("Profile")}>
           <Text style={styles.completeBtnText}>Complete Now</Text>
         </TouchableOpacity>
       </View>
@@ -94,34 +95,39 @@ export default function MatchesScreen() {
 
   /* 🔹 PROFILE CARD */
   const renderItem = ({ item }) => (
-    <View style={styles.profileCard}>
-      <Image
-        source={{ uri: item.photos?.[0] }}
-        style={styles.image}
-      />
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate("ProfileDetail", { id: item._id })}
+    >
+      <View style={styles.profileCard}>
+        <Image
+          source={{ uri: item.photos?.[0] }}
+          style={styles.image}
+        />
 
-      <View style={styles.verified}>
-        <Text style={styles.verifiedText}>✔</Text>
-      </View>
+        <View style={styles.verified}>
+          <Text style={styles.verifiedText}>✔</Text>
+        </View>
 
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.details}>
-          {calculateAge(item.dob)} yrs • {item.height} •{" "}
-          {item.location}
-        </Text>
+        <View style={styles.info}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.details}>
+            {calculateAge(item.dob)} yrs • {item.height} •{" "}
+            {item.location}
+          </Text>
 
-        <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.connectBtn}>
-            <Text style={styles.connectText}>Connect</Text>
-          </TouchableOpacity>
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.connectBtn}>
+              <Text style={styles.connectText}>Connect</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.chatBtn}>
-            <Text style={styles.chatText}>Chat</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.chatBtn}>
+              <Text style={styles.chatText}>Chat</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   /* 🔹 LOADER */
