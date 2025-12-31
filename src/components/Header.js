@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#fff",
     elevation: 4,
-    marginTop:"35"
+    marginTop:"1"
   },
 
   title: {
