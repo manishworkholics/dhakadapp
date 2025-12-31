@@ -1,5 +1,5 @@
 // src/screens/MatchesScreen.js
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,106 +7,113 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-
-const feedData = [
-  { id: "u1", type: "upgrade" },
-
-  {
-    id: "p1",
-    type: "profile",
-    name: "Ankita Kaur",
-    age: 26,
-    height: "5'4\"",
-    city: "Indore",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
-    verified: true,
-  },
-
-  { id: "info1", type: "completeProfile" },
-
-  {
-    id: "p2",
-    type: "profile",
-    name: "Riya Sharma",
-    age: 24,
-    height: "5'5\"",
-    city: "Bhopal",
-    image: "https://randomuser.me/api/portraits/women/32.jpg",
-    verified: true,
-  },
-
-  { id: "banner1", type: "banner" },
-
-  {
-    id: "p3",
-    type: "profile",
-    name: "Neha Patel",
-    age: 27,
-    height: "5'6\"",
-    city: "Ahmedabad",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
-    verified: true,
-  },
-];
+import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
+const API_URL = "http://143.110.244.163:5000/api";
 
 export default function MatchesScreen() {
-  const renderItem = ({ item }) => {
-    if (item.type === "upgrade") {
-      return (
-        <View style={styles.upgradeCard}>
-          <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
-          <Text style={styles.upgradeSub}>
-            Connect & chat with matches instantly
-          </Text>
-          <TouchableOpacity style={styles.upgradeBtn}>
-            <Text style={styles.upgradeText}>Upgrade Now</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+  const navigation = useNavigation();
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    if (item.type === "completeProfile") {
-      return (
-        <View style={styles.completeCard}>
-          <Text style={styles.completeTitle}>Complete your profile</Text>
-          <Text style={styles.completeSub}>
-            Get better & more matches by completing your profile
-          </Text>
-          <TouchableOpacity style={styles.completeBtn}>
-            <Text style={styles.completeBtnText}>Complete Now</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+  /* 🔹 FETCH MATCHES */
+  const fetchMatches = async () => {
+    try {
+      setLoading(true);
 
-    if (item.type === "banner") {
-      return (
-        <View style={styles.bannerCard}>
-          <Text style={styles.bannerText}>
-            Find your perfect match faster 🚀
-          </Text>
-        </View>
-      );
-    }
+      const res = await axios.get(`${API_URL}/featured?limit=10`);
 
-    // 🔹 PROFILE CARD
-    return (
+      console.log("MATCHES RESPONSE 👉", res.data);
+
+      if (res.data?.profiles) {
+        setProfiles(res.data.profiles);
+      }
+    } catch (err) {
+      console.log(
+        "MATCHES ERROR 👉",
+        err?.response?.data || err.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatches();
+  }, []);
+
+  /* 🔹 AGE CALCULATION */
+  const calculateAge = (dob) => {
+    if (!dob) return "-";
+    const birth = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  /* 🔹 HEADER COMPONENT (STATIC CTA ONLY) */
+  const ListHeader = () => (
+    <>
+      {/* Upgrade Card */}
+      <View style={styles.upgradeCard}>
+        <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
+        <Text style={styles.upgradeSub}>
+          Connect & chat with matches instantly
+        </Text>
+        <TouchableOpacity style={styles.upgradeBtn} onPress={() => navigation.navigate("Plan")}>
+          <Text style={styles.upgradeText} >Upgrade Now</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Complete Profile Card */}
+      <View style={styles.completeCard}>
+        <Text style={styles.completeTitle}>Complete your profile</Text>
+        <Text style={styles.completeSub}>
+          Get better & more matches by completing your profile
+        </Text>
+        <TouchableOpacity style={styles.completeBtn} onPress={() => navigation.navigate("Profile")}>
+          <Text style={styles.completeBtnText}>Complete Now</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Banner */}
+      <View style={styles.bannerCard}>
+        <Text style={styles.bannerText}>
+          Find your perfect match faster 🚀
+        </Text>
+      </View>
+    </>
+  );
+
+  /* 🔹 PROFILE CARD */
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate("ProfileDetail", { id: item._id })}
+    >
       <View style={styles.profileCard}>
-        <Image source={{ uri: item.image }} style={styles.image} />
+        <Image
+          source={{ uri: item.photos?.[0] }}
+          style={styles.image}
+        />
 
-        {item.verified && (
-          <View style={styles.verified}>
-            <Text style={styles.verifiedText}>✔</Text>
-          </View>
-        )}
+        <View style={styles.verified}>
+          <Text style={styles.verifiedText}>✔</Text>
+        </View>
 
         <View style={styles.info}>
           <Text style={styles.name}>{item.name}</Text>
           <Text style={styles.details}>
-            {item.age} yrs • {item.height} • {item.city}
+            {calculateAge(item.dob)} yrs • {item.height} •{" "}
+            {item.location}
           </Text>
 
           <View style={styles.actionRow}>
@@ -120,17 +127,27 @@ export default function MatchesScreen() {
           </View>
         </View>
       </View>
+    </TouchableOpacity>
+  );
+
+  /* 🔹 LOADER */
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#ff4e50" />
+      </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
       <Header title="Matches" />
 
       <FlatList
-        data={feedData}
-        keyExtractor={(item) => item.id}
+        data={profiles}
+        keyExtractor={(item) => item._id}
         renderItem={renderItem}
+        ListHeaderComponent={ListHeader}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
       />
@@ -139,6 +156,8 @@ export default function MatchesScreen() {
     </View>
   );
 }
+
+
 
 
 const styles = StyleSheet.create({

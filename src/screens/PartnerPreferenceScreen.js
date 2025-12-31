@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Header from "../components/Header";
+import axios from "axios";
+
+const API_URL = "http://143.110.244.163:5000/api";
 
 /* 🔹 SECTION WRAPPER */
 const Section = ({ title, onEdit, children }) => (
@@ -27,27 +30,81 @@ const Section = ({ title, onEdit, children }) => (
 const Row = ({ label, value }) => (
   <View style={styles.row}>
     <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
+    <Text style={styles.value}>{value || "-"}</Text>
   </View>
 );
 
 export default function PartnerPreferenceScreen({ navigation }) {
-  // 🔹 Dummy data (later API se aayega)
-  const preference = {
-    ageFrom: 23,
-    ageTo: 30,
-    heightFrom: "5'2\"",
-    heightTo: "5'10\"",
-    maritalStatus: "Never Married",
-    religion: "Hindu",
-    caste: "Dhakad",
-    motherTongue: "Hindi",
-    education: "Graduate / Post Graduate",
-    employment: "Private / Govt",
-    income: "₹3L - ₹10L",
-    city: "Indore / Bhopal",
-    state: "Madhya Pradesh",
+  const [preference, setPreference] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+
+  /* 🔹 FETCH PARTNER PREFERENCE */
+  const fetchPreference = async () => {
+    try {
+      setLoading(true);
+
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        console.log("No token found");
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.get(
+        `${API_URL}/partner-preference/my`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("API RESPONSE 👉", res.data);
+      if (res.data?.preference) {
+        setPreference(res.data.preference);
+      } else {
+        setPreference(null); // optional
+      }
+    } catch (err) {
+      console.log(
+        "Preference fetch error:",
+        err?.response?.data || err.message
+      );
+    } finally {
+      setLoading(false); // 🔥 ALWAYS stop loader
+    }
   };
+
+
+
+  useEffect(() => {
+    fetchPreference();
+  }, []);
+
+  // if (!preference) {
+  //   return (
+  //     <View style={{ flex: 1, backgroundColor: "#fff" }}>
+  //       <Header
+  //         title="Partner Preferences"
+  //         onMenuPress={() => navigation.openDrawer()}
+  //       />
+  //       <View style={{ padding: 20 }}>
+  //         <Text>Loading preferences...</Text>
+  //       </View>
+  //     </View>
+  //   );
+  // }
+
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading preferences...</Text>
+      </View>
+    );
+  }
+
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
@@ -57,22 +114,22 @@ export default function PartnerPreferenceScreen({ navigation }) {
       />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* 🔹 BASIC PREFERENCES */}
+        {/* 🔹 BASIC */}
         <Section
           title="Basic Preferences"
           onEdit={() => navigation.navigate("EditPartnerBasic")}
         >
           <Row
             label="Age"
-            value={`${preference.ageFrom} - ${preference.ageTo} yrs`}
+            value={`${preference?.ageFrom} - ${preference?.ageTo} yrs`}
           />
           <Row
             label="Height"
-            value={`${preference.heightFrom} - ${preference.heightTo}`}
+            value={`${preference?.heightFrom} - ${preference?.heightTo}`}
           />
           <Row
             label="Marital Status"
-            value={preference.maritalStatus}
+            value={(preference?.maritalStatus || []).join(", ")}
           />
         </Section>
 
@@ -81,11 +138,11 @@ export default function PartnerPreferenceScreen({ navigation }) {
           title="Religion & Community"
           onEdit={() => navigation.navigate("EditPartnerReligion")}
         >
-          <Row label="Religion" value={preference.religion} />
-          <Row label="Caste" value={preference.caste} />
+          <Row label="Religion" value={preference?.religion} />
+          <Row label="Caste" value={preference?.caste} />
           <Row
             label="Mother Tongue"
-            value={preference.motherTongue}
+            value={preference?.motherTongue}
           />
         </Section>
 
@@ -94,9 +151,14 @@ export default function PartnerPreferenceScreen({ navigation }) {
           title="Education & Career"
           onEdit={() => navigation.navigate("EditPartnerCareer")}
         >
-          <Row label="Education" value={preference.education} />
-          <Row label="Employment" value={preference.employment} />
-          <Row label="Annual Income" value={preference.income} />
+          <Row
+            label="Education"
+            value={(preference?.educationDetails || []).join(", ")}
+          />
+          <Row
+            label="Employment"
+            value={(preference?.employmentType || []).join(", ")}
+          />
         </Section>
 
         {/* 🔹 LOCATION */}
@@ -104,8 +166,14 @@ export default function PartnerPreferenceScreen({ navigation }) {
           title="Location Preferences"
           onEdit={() => navigation.navigate("EditPartnerLocation")}
         >
-          <Row label="Preferred City" value={preference.city} />
-          <Row label="Preferred State" value={preference.state} />
+          <Row
+            label="Preferred State"
+            value={(preference?.preferredState || []).join(", ")}
+          />
+          <Row
+            label="Preferred City"
+            value={(preference?.preferredCity || []).join(", ")}
+          />
         </Section>
 
         {/* 🔹 SAVE CTA */}
@@ -121,8 +189,7 @@ export default function PartnerPreferenceScreen({ navigation }) {
   );
 }
 
-
-
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
   section: {
     backgroundColor: "#fff",

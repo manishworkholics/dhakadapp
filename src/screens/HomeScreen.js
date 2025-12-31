@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.js
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,19 +10,81 @@ import {
 } from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+<<<<<<< HEAD
 import Icon from "react-native-vector-icons/Ionicons";
 
 
+=======
+import axios from "axios";
+>>>>>>> ac550b3b4c9a457f72c008154a18ec4738a1f459
 import { useNavigation } from "@react-navigation/native";
+
+const API_URL = "http://143.110.244.163:5000/api";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const [premiumProfiles, setPremiumProfiles] = useState([]);
+  const [successStories, setSuccessStories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+
+  const fetchHomeData = async () => {
+    try {
+      setLoading(true);
+
+      // 🔹 Premium Matches
+      const featuredRes = await axios.get(
+        `${API_URL}/featured?limit=10`
+      );
+
+      console.log("FEATURED 👉", featuredRes.data);
+
+      if (featuredRes.data?.profiles) {
+        setPremiumProfiles(featuredRes.data.profiles);
+      }
+
+      // 🔹 Success Stories
+      const successRes = await axios.get(
+        `${API_URL}/success`
+      );
+
+      console.log("SUCCESS 👉", successRes.data);
+
+      if (successRes.data?.stories?.length) {
+        setSuccessStories(successRes.data.stories);
+      }
+    } catch (err) {
+      console.log(
+        "HOME API ERROR 👉",
+        err?.response?.data || err.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHomeData();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading preferences...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
+<<<<<<< HEAD
       <Header
         title="Shivam Thaku"
 
       />
+=======
+      <Header title="Shivam Thakur" />
+>>>>>>> ac550b3b4c9a457f72c008154a18ec4738a1f459
 
       {/* 🔵 Verification Banner */}
       <TouchableOpacity style={styles.verifyBanner}>
@@ -36,9 +98,13 @@ export default function HomeScreen() {
         <Icon name="chevron-forward" size={20} color="#999" />
       </TouchableOpacity>
 
+<<<<<<< HEAD
       <ScrollView
 
       >
+=======
+      <ScrollView>
+>>>>>>> ac550b3b4c9a457f72c008154a18ec4738a1f459
 
 
         {/* 🔶 Profile + Upgrade Card */}
@@ -63,31 +129,51 @@ export default function HomeScreen() {
         {/* 🔶 Complete Profile Section */}
         <Text style={styles.heading}>Complete Your Profile</Text>
 
-        <View style={styles.completeCard}>
+        <TouchableOpacity
+          style={styles.completeCard}
+          onPress={() => navigation.navigate("Profile")}
+        >
           <Text style={styles.completeText}>Create short bio</Text>
           <Text style={styles.arrow}>›</Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.completeCard}>
+        <TouchableOpacity
+          style={styles.completeCard}
+          onPress={() => navigation.navigate("PartnerPreference")}
+        >
           <Text style={styles.completeText}>Add partner preferences</Text>
           <Text style={styles.arrow}>›</Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.completeCard}>
+        <TouchableOpacity
+          style={styles.completeCard}
+          onPress={() => navigation.navigate("Matches")}
+        >
           <Text style={styles.completeText}>Find matching profiles</Text>
           <Text style={styles.arrow}>›</Text>
-        </View>
+        </TouchableOpacity>
+
 
         {/* 🔶 Premium Matches */}
         <View style={styles.sectionHeader}>
           <Text style={styles.heading}>Premium Matches (54)</Text>
-          <Text style={styles.seeAll}>See All</Text>
+          {/* <Text style={styles.seeAll}>See All</Text> */}
+          <TouchableOpacity
+            style={styles.seeAll}
+            onPress={() => navigation.navigate("Matches")}
+          >
+            <Text style={styles.seeAll}>See All</Text>
+
+          </TouchableOpacity>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {premiumProfiles.map((item, index) => (
             <View key={index} style={styles.matchCard}>
-              <Image source={{ uri: item.image }} style={styles.matchImg} />
+              <Image
+                source={{ uri: item.photos?.[0] }}
+                style={styles.matchImg}
+              />
               <Text style={styles.matchName}>{item.name}</Text>
               <TouchableOpacity style={styles.connectBtn}>
                 <Text style={styles.connectText}>Connect Now</Text>
@@ -99,43 +185,60 @@ export default function HomeScreen() {
         {/* 🔶 New Matches */}
         <View style={styles.sectionHeader}>
           <Text style={styles.heading}>New Matches (54)</Text>
-          <Text style={styles.seeAll}>See All</Text>
+          <TouchableOpacity
+            style={styles.seeAll}
+            onPress={() => navigation.navigate("Matches")}
+          >
+            <Text style={styles.seeAll}>See All</Text>
+
+          </TouchableOpacity>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {newProfiles.map((item, index) => (
+          {premiumProfiles.map((item, index) => (
             <View key={index} style={styles.matchCard}>
-              <Image source={{ uri: item.image }} style={styles.matchImg} />
+              <Image
+                source={{ uri: item.photos?.[0] }}
+                style={styles.matchImg}
+              />
               <Text style={styles.matchName}>{item.name}</Text>
-              <TouchableOpacity style={styles.chatBtn}>
-                <Text style={styles.chatText}>Chat</Text>
+              <TouchableOpacity style={styles.connectBtn}>
+                <Text style={styles.connectText}>Connect Now</Text>
               </TouchableOpacity>
             </View>
           ))}
         </ScrollView>
 
         {/* 🔶 Success Stories */}
-        <View style={styles.successWrap}>
-          <Text style={styles.successTitle}>Success Story</Text>
-          <Text style={styles.successSub}>
-            Over 4 Crore success stories have been found
-          </Text>
 
-          <View style={styles.successCard}>
-            <Image
-              source={{
-                uri: 'https://randomuser.me/api/portraits/men/44.jpg',
-              }}
-              style={styles.successImg}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.successName}>Verite & Devendra</Text>
-              <TouchableOpacity>
-                <Text style={styles.readMore}>Read More</Text>
-              </TouchableOpacity>
-            </View>
+        {successStories.length > 0 && (
+          <View style={styles.successWrap}>
+            <Text style={styles.successTitle}>Success Stories</Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              {successStories.map((story) => (
+                <View key={story._id} style={styles.successCard}>
+                  <Image
+                    source={{ uri: story.image }}
+                    style={styles.successImg}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.successName}>
+                      {story.name} & {story.partnerName}
+                    </Text>
+                    <TouchableOpacity>
+                      <Text style={styles.readMore}>Read More</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
           </View>
-        </View>
+        )}
+
 
         <View style={{ height: 80 }} />
       </ScrollView>
@@ -145,6 +248,7 @@ export default function HomeScreen() {
   );
 };
 
+<<<<<<< HEAD
 /* 🔹 Dummy Data */
 const premiumProfiles = [
   {
@@ -181,6 +285,8 @@ const newProfiles = [
     image: 'https://randomuser.me/api/portraits/women/44.jpg',
   },
 ];
+=======
+>>>>>>> ac550b3b4c9a457f72c008154a18ec4738a1f459
 
 
 const styles = StyleSheet.create({
@@ -347,6 +453,15 @@ const styles = StyleSheet.create({
     margin: 14,
     borderRadius: 14,
     padding: 14,
+    elevation: 3,
+  },
+  successCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 14,   // 🔥 spacing between cards
     elevation: 3,
   },
 

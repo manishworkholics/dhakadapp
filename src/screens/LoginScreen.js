@@ -6,13 +6,75 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const API_URL = "http://143.110.244.163:5000/api/auth/email-login";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const [mobile, setMobile] = useState("");
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert("Email and Password are required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(API_URL, {
+        email,
+        password,
+      });
+console.log("API RESPONSE 👉", res.data);
+      const data = res?.data;
+
+      if (!data?.success) {
+        alert(data?.message || "Login failed");
+        return;
+      }
+
+      // 🔐 OTP REQUIRED
+      if (data?.requiresVerification) {
+        await AsyncStorage.setItem("tempEmail", email);
+
+        // optional: for testing
+        if (data?.debugOtp) {
+          await AsyncStorage.setItem("debugOtp", String(data.debugOtp));
+        }
+
+        alert("OTP sent to your email");
+        navigation.navigate("EmailOtp");
+        return;
+      }
+
+      // ✅ DIRECT LOGIN
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+
+      alert("Login successful");
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
+    } catch (error) {
+      alert(
+        error?.response?.data?.message || "Something went wrong. Try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -24,32 +86,48 @@ export default function LoginScreen() {
         />
 
         <TextInput
-          placeholder="Enter Mobile Number"
-          keyboardType="number-pad"
+          placeholder="Enter Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
           style={styles.input}
-          value={mobile}
-          onChangeText={setMobile}
+          value={email}
+          onChangeText={setEmail}
         />
 
-        <TextInput
-          placeholder="Password"
-          secureTextEntry
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.passwordWrap}>
+          <TextInput
+            placeholder="Password"
+            secureTextEntry={!showPassword}
+            style={styles.passwordInput}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Text style={styles.showText}>
+              {showPassword ? "Hide" : "Show"}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate("EmailOtp")}>
-          <Text style={styles.loginBtnText}>Login</Text>
+        <TouchableOpacity
+          style={styles.loginBtn}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.loginBtnText}>Login</Text>
+          )}
         </TouchableOpacity>
 
-        <Text style={styles.or}>────────────── OR ──────────────</Text>
+        <Text style={styles.or}>──────────── OR ────────────</Text>
 
         <TouchableOpacity
           style={styles.otpBtn}
           onPress={() => navigation.navigate("Otp")}
         >
-          <Text style={styles.otpBtnText}>Continue with OTP</Text>
+          <Text style={styles.otpBtnText}>Login with OTP</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -57,13 +135,15 @@ export default function LoginScreen() {
           onPress={() => navigation.navigate("Register")}
         >
           <Text style={styles.regText}>
-            Don't have an account? <Text style={styles.regHighlight}>Create Account</Text>
+            Don’t have an account?{" "}
+            <Text style={styles.regHighlight}>Create Account</Text>
           </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -93,16 +173,34 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     fontSize: 15,
   },
+  passwordWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginVertical: 8,
+    width: "100%",
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
+  },
+  showText: {
+    color: "#ff4e50",
+    fontWeight: "600",
+  },
   loginBtn: {
     backgroundColor: "#ff4e50",
     width: "100%",
     padding: 14,
     borderRadius: 10,
     marginTop: 10,
+    alignItems: "center",
   },
   loginBtnText: {
     color: "#fff",
-    textAlign: "center",
     fontSize: 16,
     fontWeight: "600",
   },
