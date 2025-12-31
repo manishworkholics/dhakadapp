@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,70 +6,164 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import Header from "../components/Header";
+import Footer from '../components/Footer';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-const interestsData = [
-  {
-    id: "1",
-    name: "Muskan Dhakad",
-    age: 24,
-    city: "Indore",
-    image: "https://randomuser.me/api/portraits/women/32.jpg",
-    status: "new",
-  },
-  {
-    id: "2",
-    name: "Riya Sharma",
-    age: 26,
-    city: "Bhopal",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
-    status: "accepted",
-  },
-];
+const API_URL = "http://143.110.244.163:5000/api/interest/request";
 
 export default function InterestScreen({ navigation }) {
   const [mainTab, setMainTab] = useState("received"); // received | sent
   const [subTab, setSubTab] = useState("new"); // new | accepted | denied
 
-  const filteredData = interestsData.filter(
-    (item) => item.status === subTab
-  );
+  const [receivedRequests, setReceivedRequests] = useState({
+    new: [],
+    accepted: [],
+    denied: [],
+  });
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.avatar} />
+  const [sentRequests, setSentRequests] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-      <View style={{ flex: 1 }}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.details}>
-          {item.age} yrs • {item.city}
-        </Text>
+  /* 🔹 FETCH INTEREST REQUESTS */
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
 
-        {subTab === "new" && (
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.acceptBtn}>
-              <Text style={styles.btnText}>Accept</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.rejectBtn}>
-              <Text style={styles.rejectText}>Decline</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+      let receivedURL = `${API_URL}/received`;
+
+      if (mainTab === "received") {
+        if (subTab === "new") receivedURL += `?status=pending`;
+        if (subTab === "accepted") receivedURL += `?status=accepted`;
+        if (subTab === "denied") receivedURL += `?status=rejected`;
+      }
+
+      const receivedRes = await axios.get(receivedURL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const sentRes = await axios.get(`${API_URL}/sent`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (receivedRes.data.success) {
+        setReceivedRequests({
+          new: receivedRes.data.requests.filter(
+            (r) => r.status === "pending"
+          ),
+          accepted: receivedRes.data.requests.filter(
+            (r) => r.status === "accepted"
+          ),
+          denied: receivedRes.data.requests.filter(
+            (r) => r.status === "rejected"
+          ),
+        });
+      }
+
+      if (sentRes.data.success) {
+        setSentRequests(sentRes.data.requests);
+      }
+    } catch (err) {
+      console.log(
+        "INTEREST FETCH ERROR 👉",
+        err?.response?.data || err.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [mainTab, subTab]);
+
+  /* 🔹 ACCEPT / REJECT */
+  const updateRequestStatus = async (requestId, actionType) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const url =
+        actionType === "accept"
+          ? `${API_URL}/accept/${requestId}`
+          : `${API_URL}/reject/${requestId}`;
+
+      const res = await axios.put(
+        url,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        fetchRequests();
+      }
+    } catch (err) {
+      console.log("UPDATE ERROR 👉", err?.response?.data || err.message);
+    }
+  };
+
+  let currentData = [];
+  if (mainTab === "received") {
+    currentData = receivedRequests[subTab];
+  } else {
+    currentData = sentRequests;
+  }
+
+  /* 🔹 RENDER ITEM */
+  const renderItem = ({ item }) => {
+    const profile = item.profile;
+
+    return (
+      <View style={styles.card}>
+        <Image
+          source={{ uri: profile?.photos?.[0] }}
+          style={styles.avatar}
+        />
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.name}>{profile?.name}</Text>
+          <Text style={styles.details}>
+            {profile?.location} • {profile?.age || "-"} yrs
+          </Text>
+
+          {mainTab === "received" && subTab === "new" && (
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={styles.acceptBtn}
+                onPress={() => updateRequestStatus(item._id, "accept")}
+              >
+                <Text style={styles.btnText}>Accept</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.rejectBtn}
+                onPress={() => updateRequestStatus(item._id, "reject")}
+              >
+                <Text style={styles.rejectText}>Decline</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ProfileDetail", {
+              id: profile?._id,
+            })
+          }
+        >
+          <Text style={styles.viewProfile}>View</Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity>
-        <Text style={styles.viewProfile}>View</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header
-        title="Interests"
-        onMenuPress={() => navigation.openDrawer()}
-      />
+      <Header title="Interests" />
 
       {/* MAIN TABS */}
       <View style={styles.mainTabs}>
@@ -86,38 +180,47 @@ export default function InterestScreen({ navigation }) {
       </View>
 
       {/* SUB TABS */}
-      <View style={styles.subTabs}>
-        <SubTab title="New" active={subTab === "new"} onPress={() => setSubTab("new")} />
-        <SubTab
-          title="Accepted"
-          active={subTab === "accepted"}
-          onPress={() => setSubTab("accepted")}
-        />
-        <SubTab
-          title="Denied"
-          active={subTab === "denied"}
-          onPress={() => setSubTab("denied")}
-        />
-      </View>
+      {mainTab === "received" && (
+        <View style={styles.subTabs}>
+          <SubTab
+            title="New"
+            active={subTab === "new"}
+            onPress={() => setSubTab("new")}
+          />
+          <SubTab
+            title="Accepted"
+            active={subTab === "accepted"}
+            onPress={() => setSubTab("accepted")}
+          />
+          <SubTab
+            title="Denied"
+            active={subTab === "denied"}
+            onPress={() => setSubTab("denied")}
+          />
+        </View>
+      )}
 
       {/* LIST */}
-      {filteredData.length === 0 ? (
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} size="large" />
+      ) : currentData.length === 0 ? (
         <View style={styles.empty}>
           <Text style={{ color: "#888" }}>No requests found</Text>
         </View>
       ) : (
         <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item.id}
+          data={currentData}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 10 }}
         />
       )}
+      
     </View>
   );
 }
 
-/* 🔹 Reusable Components */
+/* 🔹 REUSABLE COMPONENTS */
 
 const TabButton = ({ title, active, onPress }) => (
   <TouchableOpacity
@@ -138,6 +241,7 @@ const SubTab = ({ title, active, onPress }) => (
   </TouchableOpacity>
 );
 
+/* 🔹 STYLES */
 
 const styles = StyleSheet.create({
   mainTabs: {

@@ -101,9 +101,9 @@ export default function HomeScreen() {
 
         <TouchableOpacity
           style={styles.completeCard}
-          onPress={() => navigation.navigate("Profile")}
+          onPress={() => navigation.navigate("FindPartner")}
         >
-          <Text style={styles.completeText}>Create short bio</Text>
+          <Text style={styles.completeText}>Find Partner</Text>
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
 

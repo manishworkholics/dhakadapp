@@ -17,6 +17,7 @@ import NotificationScreen from "./src/screens/NotificationScreen";
 import PartnerPreferenceScreen from "./src/screens/PartnerPreferenceScreen";
 import PlanScreen from "./src/screens/PlanScreen";
 import ProfileDetailScreen from "./src/screens/ProfileDetailScreen";
+import FindPartnerScreen from "./src/screens/FindPartnerScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
 import PremiumScreen from "./src/screens/PremiumScreen";
 
@@ -45,7 +46,8 @@ export default function App() {
         <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
         <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
         <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
-          <Stack.Screen name="Premium" component={PremiumScreen} />
+        <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
+        <Stack.Screen name="Premium" component={PremiumScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

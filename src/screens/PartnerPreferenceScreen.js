@@ -4,239 +4,357 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TextInput,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import Header from "../components/Header";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
-/* 🔹 SECTION WRAPPER */
-const Section = ({ title, onEdit, children }) => (
-  <View style={styles.section}>
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {onEdit && (
-        <TouchableOpacity onPress={onEdit}>
-          <Text style={styles.edit}>Edit</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-    {children}
-  </View>
+/* ================= LABEL ================= */
+const Label = ({ text }) => (
+  <Text style={styles.label}>{text}</Text>
 );
 
-/* 🔹 ROW */
-const Row = ({ label, value }) => (
-  <View style={styles.row}>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value || "-"}</Text>
-  </View>
+/* ================= CHIP ================= */
+const Chip = ({ label, selected, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[styles.chip, selected && styles.chipActive]}
+  >
+    <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
 );
 
-export default function PartnerPreferenceScreen({ navigation }) {
-  const [preference, setPreference] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function EditPartnerPreferenceScreen({ navigation }) {
+  const [form, setForm] = useState({
+    ageFrom: "",
+    ageTo: "",
+    heightFrom: "",
+    heightTo: "",
+    religion: "",
+    caste: "",
+    motherTongue: "",
+    maritalStatus: [],
+    educationDetails: [],
+    employmentType: [],
+    preferredState: [],
+    preferredCity: [],
+  });
 
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
-  /* 🔹 FETCH PARTNER PREFERENCE */
+  /* ================= FETCH STATES ================= */
+  const fetchStates = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/location/states`);
+      setStates(res.data || []);
+    } catch {}
+  };
+
+  /* ================= FETCH CITIES ================= */
+  const fetchCities = async (state) => {
+    try {
+      const res = await axios.get(`${API_URL}/location/cities/${state}`);
+      setCities((prev) =>
+        Array.from(new Set([...(prev || []), ...(res.data?.cities || [])]))
+      );
+    } catch {}
+  };
+
+  /* ================= FETCH PREFERENCE ================= */
   const fetchPreference = async () => {
     try {
-      setLoading(true);
-
       const token = await AsyncStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/partner-preference/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      if (!token) {
-        console.log("No token found");
-        setLoading(false);
-        return;
-      }
-
-      const res = await axios.get(
-        `${API_URL}/partner-preference/my`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log("API RESPONSE 👉", res.data);
       if (res.data?.preference) {
-        setPreference(res.data.preference);
-      } else {
-        setPreference(null); // optional
+        setForm(res.data.preference);
+
+        for (const s of res.data.preference.preferredState || []) {
+          await fetchCities(s);
+        }
       }
-    } catch (err) {
-      console.log(
-        "Preference fetch error:",
-        err?.response?.data || err.message
-      );
+    } catch {
+      console.log("No preference found");
     } finally {
-      setLoading(false); // 🔥 ALWAYS stop loader
+      setPageLoading(false);
     }
   };
 
-
-
   useEffect(() => {
+    fetchStates();
     fetchPreference();
   }, []);
 
-  // if (!preference) {
-  //   return (
-  //     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-  //       <Header
-  //         title="Partner Preferences"
-  //         onMenuPress={() => navigation.openDrawer()}
-  //       />
-  //       <View style={{ padding: 20 }}>
-  //         <Text>Loading preferences...</Text>
-  //       </View>
-  //     </View>
-  //   );
-  // }
+  /* ================= HELPERS ================= */
+  const toggleMulti = (field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: prev[field].includes(value)
+        ? prev[field].filter((v) => v !== value)
+        : [...prev[field], value],
+    }));
+  };
 
+  const addState = async (state) => {
+    if (!state || form.preferredState.includes(state)) return;
+    setForm((prev) => ({
+      ...prev,
+      preferredState: [...prev.preferredState, state],
+    }));
+    await fetchCities(state);
+  };
 
-  if (loading) {
+  const addCity = (city) => {
+    if (!city || form.preferredCity.includes(city)) return;
+    setForm((prev) => ({
+      ...prev,
+      preferredCity: [...prev.preferredCity, city],
+    }));
+  };
+
+  /* ================= SAVE ================= */
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+
+      await axios.post(`${API_URL}/partner-preference/save`, form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      navigation.goBack();
+    } catch {
+      alert("Failed to save preferences");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (pageLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Loading preferences...</Text>
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
 
-
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header
-        title="Partner Preferences"
-        onMenuPress={() => navigation.openDrawer()}
-      />
+    <View style={{ flex: 1 }}>
+      <Header title="Edit Partner Preference" back />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* 🔹 BASIC */}
-        <Section
-          title="Basic Preferences"
-          onEdit={() => navigation.navigate("EditPartnerBasic")}
-        >
-          <Row
-            label="Age"
-            value={`${preference?.ageFrom} - ${preference?.ageTo} yrs`}
+      <ScrollView contentContainerStyle={{ padding: 14 }}>
+        {/* BASIC */}
+        <Label text="Age Range (Years)" />
+        <View style={styles.row}>
+          <TextInput
+            placeholder="From"
+            keyboardType="numeric"
+            style={styles.input}
+            value={form.ageFrom?.toString()}
+            onChangeText={(v) => setForm({ ...form, ageFrom: v })}
           />
-          <Row
-            label="Height"
-            value={`${preference?.heightFrom} - ${preference?.heightTo}`}
+          <TextInput
+            placeholder="To"
+            keyboardType="numeric"
+            style={styles.input}
+            value={form.ageTo?.toString()}
+            onChangeText={(v) => setForm({ ...form, ageTo: v })}
           />
-          <Row
-            label="Marital Status"
-            value={(preference?.maritalStatus || []).join(", ")}
-          />
-        </Section>
-
-        {/* 🔹 RELIGION */}
-        <Section
-          title="Religion & Community"
-          onEdit={() => navigation.navigate("EditPartnerReligion")}
-        >
-          <Row label="Religion" value={preference?.religion} />
-          <Row label="Caste" value={preference?.caste} />
-          <Row
-            label="Mother Tongue"
-            value={preference?.motherTongue}
-          />
-        </Section>
-
-        {/* 🔹 EDUCATION & CAREER */}
-        <Section
-          title="Education & Career"
-          onEdit={() => navigation.navigate("EditPartnerCareer")}
-        >
-          <Row
-            label="Education"
-            value={(preference?.educationDetails || []).join(", ")}
-          />
-          <Row
-            label="Employment"
-            value={(preference?.employmentType || []).join(", ")}
-          />
-        </Section>
-
-        {/* 🔹 LOCATION */}
-        <Section
-          title="Location Preferences"
-          onEdit={() => navigation.navigate("EditPartnerLocation")}
-        >
-          <Row
-            label="Preferred State"
-            value={(preference?.preferredState || []).join(", ")}
-          />
-          <Row
-            label="Preferred City"
-            value={(preference?.preferredCity || []).join(", ")}
-          />
-        </Section>
-
-        {/* 🔹 SAVE CTA */}
-        <View style={styles.saveWrap}>
-          <TouchableOpacity style={styles.saveBtn}>
-            <Text style={styles.saveText}>Save Preferences</Text>
-          </TouchableOpacity>
         </View>
 
-        <View style={{ height: 30 }} />
+        <Label text="Height Range (Feet)" />
+        <View style={styles.row}>
+          <TextInput
+            placeholder="From (eg 5.2)"
+            style={styles.input}
+            value={form.heightFrom}
+            onChangeText={(v) => setForm({ ...form, heightFrom: v })}
+          />
+          <TextInput
+            placeholder="To (eg 5.8)"
+            style={styles.input}
+            value={form.heightTo}
+            onChangeText={(v) => setForm({ ...form, heightTo: v })}
+          />
+        </View>
+
+        {/* RELIGION */}
+        <Label text="Religion" />
+        <TextInput
+          placeholder="Enter religion"
+          style={styles.inputFull}
+          value={form.religion}
+          onChangeText={(v) => setForm({ ...form, religion: v })}
+        />
+
+        <Label text="Caste" />
+        <TextInput
+          placeholder="Enter caste"
+          style={styles.inputFull}
+          value={form.caste}
+          onChangeText={(v) => setForm({ ...form, caste: v })}
+        />
+
+        <Label text="Mother Tongue" />
+        <TextInput
+          placeholder="Enter mother tongue"
+          style={styles.inputFull}
+          value={form.motherTongue}
+          onChangeText={(v) => setForm({ ...form, motherTongue: v })}
+        />
+
+        {/* MULTI SELECT */}
+        <Label text="Marital Status" />
+        <View style={styles.wrap}>
+          {["Never married", "Widower", "Divorced"].map((m) => (
+            <Chip
+              key={m}
+              label={m}
+              selected={form.maritalStatus.includes(m)}
+              onPress={() => toggleMulti("maritalStatus", m)}
+            />
+          ))}
+        </View>
+
+        <Label text="Education Qualification" />
+        <View style={styles.wrap}>
+          {["Graduate", "Post Graduate", "PhD"].map((e) => (
+            <Chip
+              key={e}
+              label={e}
+              selected={form.educationDetails.includes(e)}
+              onPress={() => toggleMulti("educationDetails", e)}
+            />
+          ))}
+        </View>
+
+        <Label text="Employment Type" />
+        <View style={styles.wrap}>
+          {["Private", "Govt", "Business"].map((e) => (
+            <Chip
+              key={e}
+              label={e}
+              selected={form.employmentType.includes(e)}
+              onPress={() => toggleMulti("employmentType", e)}
+            />
+          ))}
+        </View>
+
+        {/* LOCATION */}
+        <Label text="Preferred State" />
+        <View style={styles.wrap}>
+          {states.map((s) => (
+            <Chip
+              key={s.state}
+              label={s.state}
+              selected={form.preferredState.includes(s.state)}
+              onPress={() => addState(s.state)}
+            />
+          ))}
+        </View>
+
+        <Label text="Preferred City" />
+        <View style={styles.wrap}>
+          {cities.map((c) => (
+            <Chip
+              key={c}
+              label={c}
+              selected={form.preferredCity.includes(c)}
+              onPress={() => addCity(c)}
+            />
+          ))}
+        </View>
+
+        {/* SAVE */}
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={handleSave}
+          disabled={loading}
+        >
+          <Text style={styles.saveText}>
+            {loading ? "Saving..." : "Save Preferences"}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
 
 /* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  section: {
-    backgroundColor: "#fff",
-    marginHorizontal: 10,
-    marginTop: 12,
-    borderRadius: 12,
-    padding: 14,
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-
-  sectionTitle: {
-    fontSize: 15,
+  label: {
+    fontSize: 14,
     fontWeight: "700",
-  },
-
-  edit: {
-    color: "#ff4e50",
-    fontWeight: "600",
+    color: "#333",
+    marginTop: 14,
+    marginBottom: 6,
   },
 
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  input: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 6,
+  },
+
+  inputFull: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 6,
+  },
+
+  wrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  chip: {
     paddingVertical: 8,
-    borderBottomWidth: 0.5,
-    borderColor: "#eee",
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
 
-  label: {
-    color: "#666",
+  chipActive: {
+    backgroundColor: "#ff4e50",
+    borderColor: "#ff4e50",
   },
 
-  value: {
-    fontWeight: "600",
+  chipText: {
     color: "#333",
-    maxWidth: "60%",
-    textAlign: "right",
+    fontWeight: "600",
   },
 
-  saveWrap: {
-    marginTop: 20,
-    paddingHorizontal: 20,
+  chipTextActive: {
+    color: "#fff",
   },
 
   saveBtn: {
@@ -244,6 +362,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 28,
     alignItems: "center",
+    marginTop: 24,
+    marginBottom: 30,
   },
 
   saveText: {
