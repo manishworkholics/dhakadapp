@@ -10,20 +10,34 @@ import {
 } from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import Icon from "react-native-vector-icons/Ionicons";
+
+
 import { useNavigation } from "@react-navigation/native";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
-    <Header
-        title="Shivam Thakur"
-       
+      <Header
+        title="Shivam Thaku"
+
       />
 
+      {/* 🔵 Verification Banner */}
+      <TouchableOpacity style={styles.verifyBanner}>
+        <View style={styles.verifyLeft}>
+          <Icon name="checkmark-circle" size={20} color="#1e88e5" />
+          <Text style={styles.verifyText}>
+            Stand out with Verification. Get Blue Tick now
+          </Text>
+        </View>
+
+        <Icon name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
 
       <ScrollView
-        
+
       >
 
 
@@ -141,6 +155,20 @@ const premiumProfiles = [
     name: 'Jaspreet',
     image: 'https://randomuser.me/api/portraits/women/22.jpg',
   },
+  {
+    name: 'Sujal',
+    image: 'https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg?semt=ais_hybrid&w=740&q=80',
+  },
+  {
+    name: 'Manish',
+    image: 'https://static.vecteezy.com/system/resources/thumbnails/005/346/410/small/close-up-portrait-of-smiling-handsome-young-caucasian-man-face-looking-at-camera-on-isolated-light-gray-studio-background-photo.jpg',
+  },
+  {
+    name: 'Sushil',
+    image: 'https://t4.ftcdn.net/jpg/02/97/24/51/360_F_297245133_gBPfK0h10UM3y7vfoEiBC3ZXt559KZar.jpg',
+  },
+
+
 ];
 
 const newProfiles = [
@@ -163,11 +191,13 @@ const styles = StyleSheet.create({
 
   /* Profile Card */
   profileCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "black",
     margin: 12,
     borderRadius: 14,
     padding: 14,
     elevation: 3,
+    width: "auto",
+    height: "200"
   },
 
   profileRow: {
@@ -185,13 +215,15 @@ const styles = StyleSheet.create({
   },
 
   profileId: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 1)"
   },
 
   accountType: {
-    color: "#777",
+    color: "rgba(255, 255, 255, 1)",
     marginTop: 2,
+
   },
 
   upgradeBtn: {
@@ -200,6 +232,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     marginTop: 8,
+    width: "200",
+    marginLeft: "80"
   },
 
   upgradeText: {
@@ -254,9 +288,9 @@ const styles = StyleSheet.create({
   /* Matches Cards */
   matchCard: {
     backgroundColor: "#fff",
-    width: 160,
+    width: 180,
     borderRadius: 14,
-    marginLeft: 14,
+    marginLeft: 18,
     marginVertical: 12,
     paddingBottom: 12,
     elevation: 3,
@@ -277,7 +311,7 @@ const styles = StyleSheet.create({
   },
 
   connectBtn: {
-    backgroundColor: "#ff4e50",
+    backgroundColor: "red",
     marginTop: 10,
     marginHorizontal: 10,
     paddingVertical: 8,
@@ -349,7 +383,31 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: "600",
   },
+  editprofiletext: {
+    color: "rgba(255, 126, 0, 1)"
+  },
+  verifyBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(253, 241, 227, 1)",
+
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+
+  },
+
+  verifyLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+
+  verifyText: {
+    fontSize: 13,
+    color: "#333",
+    marginLeft: 8,
+  },
+
 });
-
-
-

@@ -1,3 +1,4 @@
+
 // src/components/Header.js
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
@@ -7,14 +8,18 @@ const Header = ({ title, onMenuPress, onNotificationPress }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onMenuPress}>
-        <Icon name="menu-outline" size={26} color="#000" />
+        <Icon name="menu-outline" size={26} color="red" />
       </TouchableOpacity>
 
       {/* Title */}
       <Text style={styles.title}>{title}</Text>
 
+        <TouchableOpacity onPress={onNotificationPress}>
+        <Icon name="search"  size={24} color="red" style={styles.searchIcon} />
+      </TouchableOpacity>
+
       <TouchableOpacity onPress={onNotificationPress}>
-        <Icon name="notifications-outline" size={24} color="#000" />
+        <Icon name="notifications-outline" size={24} color="red" />
       </TouchableOpacity>
     </View>
   );
@@ -29,29 +34,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#fff",
     elevation: 4,
+    marginTop:"35"
   },
-  
+
   title: {
     fontSize: 18,
     fontWeight: "600",
   },
   alignItems: 'center',
-    position: 'relative',notification: {
+  position: 'relative', notification: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    
+
     justifyContent: 'center',
-    
+
   },
   bell: {
     fontSize: 25,
     color: '#fff',
   },
-  menu:{
+  menu: {
     fontSize: 25, color: 'black',
+  },
+  searchIcon:{
+    marginLeft:"120"
   }
-  
+
 });
 
 export default Header;

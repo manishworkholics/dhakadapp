@@ -54,7 +54,7 @@ export default function ProfileScreen({ navigation }) {
             source={{ uri: "https://randomuser.me/api/portraits/men/75.jpg" }}
             style={styles.profileImg}
           />
-          <Text style={styles.name}>Manish Kushwah</Text>
+          <Text style={styles.name}>Sujal Prajapati</Text>
           <Text style={styles.subText}>
             29 yrs • Hindu • Web Developer
           </Text>

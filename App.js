@@ -17,6 +17,8 @@ import NotificationScreen from "./src/screens/NotificationScreen";
 import PartnerPreferenceScreen from "./src/screens/PartnerPreferenceScreen";
 import PlanScreen from "./src/screens/PlanScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
+import PremiumScreen from "./src/screens/PremiumScreen";
+
 
 
 const Stack = createNativeStackNavigator();
@@ -41,6 +43,7 @@ export default function App() {
         <Stack.Screen name="Plan" component={PlanScreen} />
         <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
         <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+          <Stack.Screen name="Premium" component={PremiumScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
