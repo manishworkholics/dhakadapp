@@ -1,4 +1,3 @@
-// src/screens/MatchesScreen.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -12,31 +11,29 @@ import {
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function MatchesScreen() {
   const navigation = useNavigation();
+
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* 🔹 FETCH MATCHES */
+  const [interestSent, setInterestSent] = useState({});
+  const [chatInterestSent, setChatInterestSent] = useState({});
+  const [shortlisted, setShortlisted] = useState({});
+
+  /* ================= FETCH MATCHES ================= */
   const fetchMatches = async () => {
     try {
       setLoading(true);
-
       const res = await axios.get(`${API_URL}/featured?limit=10`);
-
-      console.log("MATCHES RESPONSE 👉", res.data);
-
-      if (res.data?.profiles) {
-        setProfiles(res.data.profiles);
-      }
+      if (res.data?.profiles) setProfiles(res.data.profiles);
     } catch (err) {
-      console.log(
-        "MATCHES ERROR 👉",
-        err?.response?.data || err.message
-      );
+      console.log("MATCHES ERROR", err?.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -46,83 +43,162 @@ export default function MatchesScreen() {
     fetchMatches();
   }, []);
 
-  /* 🔹 AGE CALCULATION */
+  /* ================= AGE ================= */
   const calculateAge = (dob) => {
     if (!dob) return "-";
     const birth = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    if (
+      today.getMonth() < birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
+    ) {
       age--;
     }
     return age;
   };
 
-  /* 🔹 HEADER COMPONENT (STATIC CTA ONLY) */
+  /* ================= SEND INTEREST ================= */
+  const sendInterest = async (userId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.post(
+        `${API_URL}/interest/request/send`,
+        { receiverId: userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        setInterestSent((p) => ({ ...p, [userId]: true }));
+      }
+    } catch (err) {
+      console.log("INTEREST ERROR", err.message);
+    }
+  };
+
+  /* ================= CHAT INTEREST ================= */
+  const sendChatInterest = async (profileId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.post(
+        `${API_URL}/chat/now`,
+        { receiverId: profileId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        setChatInterestSent((p) => ({ ...p, [profileId]: true }));
+      }
+    } catch (err) {
+      console.log("CHAT ERROR", err.message);
+    }
+  };
+
+  /* ================= SHORTLIST ================= */
+  const toggleShortlist = async (profileId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      if (shortlisted[profileId]) {
+        await axios.delete(`${API_URL}/shortlist/${profileId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setShortlisted((p) => ({ ...p, [profileId]: false }));
+      } else {
+        await axios.post(
+          `${API_URL}/shortlist/${profileId}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setShortlisted((p) => ({ ...p, [profileId]: true }));
+      }
+    } catch (err) {
+      console.log("SHORTLIST ERROR", err.message);
+    }
+  };
+
+  /* ================= LIST HEADER ================= */
   const ListHeader = () => (
     <>
-      {/* Upgrade Card */}
       <View style={styles.upgradeCard}>
         <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
         <Text style={styles.upgradeSub}>
           Connect & chat with matches instantly
         </Text>
-        <TouchableOpacity style={styles.upgradeBtn} onPress={() => navigation.navigate("Plan")}>
-          <Text style={styles.upgradeText} >Upgrade Now</Text>
+        <TouchableOpacity
+          style={styles.upgradeBtn}
+          onPress={() => navigation.navigate("Plan")}
+        >
+          <Text style={styles.upgradeText}>Upgrade Now</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Complete Profile Card */}
-      <View style={styles.completeCard}>
-        <Text style={styles.completeTitle}>Complete your profile</Text>
-        <Text style={styles.completeSub}>
-          Get better & more matches by completing your profile
-        </Text>
-        <TouchableOpacity style={styles.completeBtn} onPress={() => navigation.navigate("Profile")}>
-          <Text style={styles.completeBtnText}>Complete Now</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Banner */}
-      <View style={styles.bannerCard}>
-        <Text style={styles.bannerText}>
-          Find your perfect match faster 🚀
-        </Text>
       </View>
     </>
   );
 
-  /* 🔹 PROFILE CARD */
+  /* ================= CARD ================= */
   const renderItem = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => navigation.navigate("ProfileDetail", { id: item._id })}
+      onPress={() =>
+        navigation.navigate("ProfileDetail", { id: item._id })
+      }
     >
       <View style={styles.profileCard}>
+        {/* IMAGE */}
         <Image
           source={{ uri: item.photos?.[0] }}
           style={styles.image}
+          resizeMode="cover"
         />
 
-        <View style={styles.verified}>
-          <Text style={styles.verifiedText}>✔</Text>
-        </View>
+        {/* SHORTLIST */}
+        <TouchableOpacity
+          style={[
+            styles.shortlist,
+            shortlisted[item._id] && styles.shortlistActive,
+          ]}
+          onPress={() => toggleShortlist(item._id)}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>
+            {shortlisted[item._id] ? "♥" : "♡"}
+          </Text>
+        </TouchableOpacity>
 
+        {/* INFO */}
         <View style={styles.info}>
           <Text style={styles.name}>{item.name}</Text>
           <Text style={styles.details}>
-            {calculateAge(item.dob)} yrs • {item.height} •{" "}
-            {item.location}
+            {calculateAge(item.dob)} yrs • {item.height} • {item.location}
           </Text>
 
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.connectBtn}>
-              <Text style={styles.connectText}>Connect</Text>
+            <TouchableOpacity
+              style={[
+                styles.chatBtn,
+                chatInterestSent[item._id] && styles.disabled,
+              ]}
+              onPress={() => sendChatInterest(item._id)}
+              disabled={chatInterestSent[item._id]}
+            >
+              <Text style={styles.chatText}>
+                {chatInterestSent[item._id]
+                  ? "Interest Sent ✓"
+                  : "Chat"}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.chatBtn}>
-              <Text style={styles.chatText}>Chat</Text>
+            <TouchableOpacity
+              style={[
+                styles.connectBtn,
+                interestSent[item.userId] && styles.disabled,
+              ]}
+              onPress={() => sendInterest(item.userId)}
+              disabled={interestSent[item.userId]}
+            >
+              <Text style={styles.connectText}>
+                {interestSent[item.userId]
+                  ? "Interest Sent ✓"
+                  : "Connect"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -130,10 +206,10 @@ export default function MatchesScreen() {
     </TouchableOpacity>
   );
 
-  /* 🔹 LOADER */
+  /* ================= LOADER ================= */
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.loader}>
         <ActivityIndicator size="large" color="#ff4e50" />
       </View>
     );
@@ -149,7 +225,7 @@ export default function MatchesScreen() {
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 90 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
       />
 
       <Footer />
@@ -157,74 +233,86 @@ export default function MatchesScreen() {
   );
 }
 
-
-
-
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
 
-  /* Profile Card */
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  /* CARD */
   profileCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 20,
     margin: 12,
     overflow: "hidden",
-    elevation: 3,
+    elevation: 4,
   },
 
-  image: { width: "100%", height: 300 },
+  image: {
+    width: "100%",
+    height: 320,
+  },
 
-  verified: {
+  shortlist: {
     position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "#2ecc71",
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    top: 16,
+    right: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
 
-  verifiedText: { color: "#fff", fontWeight: "bold" },
+  shortlistActive: {
+    backgroundColor: "#ff4e50",
+  },
 
-  info: { padding: 14 },
+  info: {
+    padding: 16,
+  },
 
-  name: { fontSize: 17, fontWeight: "700" },
+  name: { fontSize: 18, fontWeight: "700" },
 
   details: { color: "#777", marginVertical: 6 },
 
   actionRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     marginTop: 12,
   },
 
   connectBtn: {
+    flex: 1,
     backgroundColor: "#ff4e50",
     paddingVertical: 10,
-    paddingHorizontal: 22,
-    borderRadius: 22,
+    borderRadius: 24,
+    alignItems: "center",
+    marginLeft: 6,
   },
 
-  connectText: { color: "#fff", fontWeight: "600" },
+  connectText: { color: "#fff", fontWeight: "700" },
 
   chatBtn: {
+    flex: 1,
     borderWidth: 1,
     borderColor: "#ff4e50",
     paddingVertical: 10,
-    paddingHorizontal: 28,
-    borderRadius: 22,
+    borderRadius: 24,
+    alignItems: "center",
+    marginRight: 6,
   },
 
-  chatText: { color: "#ff4e50", fontWeight: "600" },
+  chatText: { color: "#ff4e50", fontWeight: "700" },
 
-  /* Upgrade Card */
+  disabled: { opacity: 0.6 },
+
+  /* UPGRADE */
   upgradeCard: {
-    backgroundColor: "#333",
+    backgroundColor: "#111",
     margin: 12,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 18,
+    padding: 18,
   },
 
   upgradeTitle: { color: "#fff", fontSize: 18, fontWeight: "700" },
@@ -235,43 +323,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff9800",
     marginTop: 10,
     paddingVertical: 10,
-    borderRadius: 22,
+    borderRadius: 24,
     alignItems: "center",
   },
 
   upgradeText: { color: "#fff", fontWeight: "700" },
-
-  /* Complete Profile */
-  completeCard: {
-    backgroundColor: "#fff",
-    margin: 12,
-    borderRadius: 16,
-    padding: 16,
-    elevation: 2,
-  },
-
-  completeTitle: { fontSize: 16, fontWeight: "700" },
-
-  completeSub: { color: "#666", marginVertical: 6 },
-
-  completeBtn: {
-    backgroundColor: "#ff4e50",
-    marginTop: 10,
-    paddingVertical: 10,
-    borderRadius: 22,
-    alignItems: "center",
-  },
-
-  completeBtnText: { color: "#fff", fontWeight: "600" },
-
-  /* Banner */
-  bannerCard: {
-    backgroundColor: "#ff9800",
-    margin: 12,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-  },
-
-  bannerText: { color: "#fff", fontWeight: "700" },
 });

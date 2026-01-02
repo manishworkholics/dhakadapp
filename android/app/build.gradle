@@ -79,7 +79,9 @@ android {
 
     namespace "com.dhakadmatrimonyapp"
     defaultConfig {
-        applicationId "com.dhakadmatrimonyapp"
+       applicationId "com.dhakadmatrimony"
+    minSdkVersion 21
+    targetSdkVersion 34
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

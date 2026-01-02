@@ -6,6 +6,7 @@ import WelcomeScreen from "./src/screens/WelcomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import OtpScreen from "./src/screens/OtpScreen";
+import MobileOtpScreen from "./src/screens/MobileOtpScreen";
 import EmailOtpScreen from "./src/screens/EmailOtpScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
@@ -18,6 +19,7 @@ import PartnerPreferenceScreen from "./src/screens/PartnerPreferenceScreen";
 import PlanScreen from "./src/screens/PlanScreen";
 import ProfileDetailScreen from "./src/screens/ProfileDetailScreen";
 import FindPartnerScreen from "./src/screens/FindPartnerScreen";
+import ChatDetailScreen from "./src/screens/ChatDetailScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
 import PremiumScreen from "./src/screens/PremiumScreen";
 
@@ -34,6 +36,7 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Otp" component={OtpScreen} />
+        <Stack.Screen name="MobileOtp" component={MobileOtpScreen} />
         <Stack.Screen name="EmailOtp" component={EmailOtpScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
@@ -47,6 +50,7 @@ export default function App() {
         <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
         <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
         <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
+        <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
         <Stack.Screen name="Premium" component={PremiumScreen} />
       </Stack.Navigator>
     </NavigationContainer>

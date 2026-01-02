@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
     View,
+    ScrollView,
     Text,
     StyleSheet,
     FlatList,
@@ -19,8 +20,47 @@ export default function FindPartnerScreen({ navigation }) {
     const [filters, setFilters] = useState({
         gender: "",
         age: "",
+        religion: "",
+        location: "",
+        education: "",
+        profession: "",
         search: "",
     });
+
+
+    const [filterOptions, setFilterOptions] = useState({
+        religions: [],
+        locations: [],
+        educations: [],
+        professions: [],
+    });
+
+
+    const fetchFilterOptions = async () => {
+        try {
+            const res = await axios.get(`${API_URL}/profile/filters`);
+
+            console.log("FILTER OPTIONS 👉", res.data);
+
+            if (res.data?.success) {
+                setFilterOptions({
+                    religions: res.data.filters.religions || [],
+                    locations: res.data.filters.locations || [],
+                    educations: res.data.filters.education || [],
+                    professions: res.data.filters.occupations || [],
+                });
+            }
+        } catch (err) {
+            console.log("FILTER OPTIONS ERROR:", err.message);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchFilterOptions();
+    }, []);
+
+
 
     const [profiles, setProfiles] = useState([]);
     const [page, setPage] = useState(1);
@@ -55,6 +95,11 @@ export default function FindPartnerScreen({ navigation }) {
 
             if (filters.gender) params.append("gender", filters.gender);
             if (filters.search) params.append("search", filters.search);
+            if (filters.religion) params.append("religion", filters.religion);
+            if (filters.location) params.append("location", filters.location);
+            if (filters.education) params.append("education", filters.education);
+            if (filters.profession) params.append("occupation", filters.profession);
+
 
             const ageObj = ageRangeToQuery(filters.age);
             if (ageObj.ageMin) params.append("ageMin", ageObj.ageMin);
@@ -151,6 +196,10 @@ export default function FindPartnerScreen({ navigation }) {
         </TouchableOpacity>
     );
 
+
+
+
+
     return (
         <View style={{ flex: 1 }}>
             <Header title="Find Partner" />
@@ -216,8 +265,10 @@ export default function FindPartnerScreen({ navigation }) {
                 visible={showFilter}
                 filters={filters}
                 setFilters={setFilters}
+                filterOptions={filterOptions}
                 onClose={() => setShowFilter(false)}
             />
+
 
             <Footer />
         </View>
@@ -226,12 +277,55 @@ export default function FindPartnerScreen({ navigation }) {
 
 /* ================= FILTER SHEET ================= */
 
-const FilterSheet = ({ visible, filters, setFilters, onClose }) => {
+const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) => {
     if (!visible) return null;
+
+    const SelectInput = ({ label, value, options, onSelect }) => {
+        const [open, setOpen] = React.useState(false);
+
+        return (
+            <View style={{ marginBottom: 14 }}>
+                <Text style={sheet.label}>{label}</Text>
+
+                {/* INPUT */}
+                <TouchableOpacity
+                    style={sheet.selectInput}
+                    onPress={() => setOpen(!open)}
+                >
+                    <Text style={{ color: value ? "#000" : "#999" }}>
+                        {value || "Select"}
+                    </Text>
+                    <Text style={sheet.arrow}>▼</Text>
+                </TouchableOpacity>
+
+                {/* OPTIONS */}
+                {open && (
+                    <View style={sheet.optionList}>
+                        {options.length === 0 ? (
+                            <Text style={sheet.empty}>No options</Text>
+                        ) : (
+                            options.map((item) => (
+                                <TouchableOpacity
+                                    key={item}
+                                    style={sheet.option}
+                                    onPress={() => {
+                                        onSelect(item);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    <Text>{item}</Text>
+                                </TouchableOpacity>
+                            ))
+                        )}
+                    </View>
+                )}
+            </View>
+        );
+    };
 
     return (
         <View style={sheet.overlay}>
-            <View style={sheet.container}>
+            <ScrollView style={sheet.container} showsVerticalScrollIndicator={false}>
                 <Text style={sheet.title}>Filters</Text>
 
                 <Text style={sheet.label}>Looking for</Text>
@@ -252,28 +346,58 @@ const FilterSheet = ({ visible, filters, setFilters, onClose }) => {
                     ))}
                 </View>
 
-                <Text style={sheet.label}>Age</Text>
-                {["18-25", "26-30", "31-35", "36-40", "41-50", "50+"].map(
-                    (age) => (
-                        <TouchableOpacity
-                            key={age}
-                            style={[
-                                sheet.option,
-                                filters.age === age && sheet.active,
-                            ]}
-                            onPress={() => setFilters({ ...filters, age })}
-                        >
-                            <Text style={filters.age === age && { color: "#fff" }}>
-                                {age}
-                            </Text>
-                        </TouchableOpacity>
-                    )
-                )}
+
+                <SelectInput
+                    label="Age"
+                    value={filters.age}
+                    options={["18-25", "26-30", "31-35", "36-40", "41-50", "50+"]}
+                    onSelect={(v) => setFilters({ ...filters, age: v })}
+                />
+
+
+
+                <SelectInput
+                    label="Religion"
+                    value={filters.religion}
+                    options={filterOptions.religions}
+                    onSelect={(v) => setFilters({ ...filters, religion: v })}
+                />
+
+                <SelectInput
+                    label="Location"
+                    value={filters.location}
+                    options={filterOptions.locations}
+                    onSelect={(v) => setFilters({ ...filters, location: v })}
+                />
+
+                <SelectInput
+                    label="Education"
+                    value={filters.education}
+                    options={filterOptions.educations}
+                    onSelect={(v) => setFilters({ ...filters, education: v })}
+                />
+
+                <SelectInput
+                    label="Profession"
+                    value={filters.profession}
+                    options={filterOptions.professions}
+                    onSelect={(v) => setFilters({ ...filters, profession: v })}
+                />
+
 
                 <View style={sheet.actionRow}>
                     <TouchableOpacity
                         onPress={() => {
-                            setFilters({ gender: "", age: "", search: "" });
+                            setFilters({
+                                gender: "",
+                                age: "",
+                                religion: "",
+                                location: "",
+                                education: "",
+                                profession: "",
+                                search: "",
+                            });
+
                             onClose();
                         }}
                     >
@@ -284,7 +408,7 @@ const FilterSheet = ({ visible, filters, setFilters, onClose }) => {
                         <Text style={sheet.applyText}>Apply</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </ScrollView>
         </View>
     );
 };
@@ -482,4 +606,41 @@ const sheet = StyleSheet.create({
         color: "#fff",
         fontWeight: "700",
     },
+    selectInput: {
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 8,
+        padding: 12,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fff",
+    },
+
+    arrow: {
+        color: "#999",
+        fontSize: 12,
+    },
+
+    optionList: {
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 8,
+        marginTop: 6,
+        backgroundColor: "#fff",
+        maxHeight: 180,
+    },
+
+    option: {
+        padding: 12,
+        borderBottomWidth: 0.5,
+        borderColor: "#eee",
+    },
+
+    empty: {
+        padding: 12,
+        color: "#999",
+        textAlign: "center",
+    },
+
 });

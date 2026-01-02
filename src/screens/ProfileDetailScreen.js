@@ -8,10 +8,12 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
+
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function ProfileDetailScreen({ route, navigation }) {
@@ -20,59 +22,121 @@ export default function ProfileDetailScreen({ route, navigation }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [interestSent, setInterestSent] = useState(false);
+  const [chatInterestSent, setChatInterestSent] = useState(false);
+  const [isShortlisted, setIsShortlisted] = useState(false);
+
   const calculateAge = (dob) => {
     if (!dob) return "-";
     const birth = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     return age;
   };
 
+  /* ================= FETCH PROFILE ================= */
   useEffect(() => {
-    const getProfile = async () => {
+    const loadProfile = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
         const user = await AsyncStorage.getItem("user");
         const currentUser = user ? JSON.parse(user) : null;
 
         const res = await axios.get(`${API_URL}/profile/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         setProfile(res.data.profile);
-        setLoading(false);
 
-        // ✅ Mark profile as viewed (not own profile)
         if (currentUser && res.data.profile._id !== currentUser._id) {
           await axios.post(
             `${API_URL}/viewed/view/${res.data.profile._id}`,
             {},
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-          console.log("Profile marked as viewed");
         }
-      } catch (error) {
-        console.log(
-          "PROFILE DETAIL ERROR 👉",
-          error?.response?.data || error.message
-        );
+
+        checkShortlist(res.data.profile._id);
+      } catch (err) {
+        console.log("PROFILE ERROR", err?.response?.data || err.message);
+      } finally {
         setLoading(false);
       }
     };
 
-    getProfile();
+    loadProfile();
   }, [id]);
 
+  /* ================= SHORTLIST ================= */
+  const checkShortlist = async (profileId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/shortlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        setIsShortlisted(
+          res.data.shortlist.some((i) => i.profile._id === profileId)
+        );
+      }
+    } catch { }
+  };
+
+  const toggleShortlist = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      if (isShortlisted) {
+        await axios.delete(`${API_URL}/shortlist/${profile._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsShortlisted(false);
+      } else {
+        await axios.post(
+          `${API_URL}/shortlist/${profile._id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsShortlisted(true);
+      }
+    } catch (err) {
+      console.log("SHORTLIST ERROR", err.message);
+    }
+  };
+
+  /* ================= INTEREST ================= */
+  const sendInterest = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.post(
+        `${API_URL}/interest/request/send`,
+        { receiverId: profile.userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) setInterestSent(true);
+    } catch (err) {
+      console.log("INTEREST ERROR", err.message);
+    }
+  };
+
+  const sendChatInterest = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.post(
+        `${API_URL}/chat/now`,
+        { receiverId: profile._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) setChatInterestSent(true);
+    } catch (err) {
+      console.log("CHAT ERROR", err.message);
+    }
+  };
+
+  /* ================= LOADER ================= */
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -90,17 +154,17 @@ export default function ProfileDetailScreen({ route, navigation }) {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <Header title={profile.name} back />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f4f6f8" }}>
+      <Header title={profile.name} onMenuPress={() => navigation.goBack()} />
 
-      <ScrollView>
-        {/* 🔹 PHOTO */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* HERO IMAGE */}
         <Image
           source={{ uri: profile.photos?.[0] }}
-          style={styles.mainImage}
+          style={styles.heroImage}
         />
 
-        {/* 🔹 BASIC INFO */}
+        {/* BASIC CARD */}
         <View style={styles.card}>
           <Text style={styles.name}>{profile.name}</Text>
           <Text style={styles.sub}>
@@ -109,7 +173,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
           </Text>
         </View>
 
-        {/* 🔹 ABOUT */}
+        {/* ABOUT */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>About</Text>
           <Text style={styles.text}>
@@ -117,38 +181,74 @@ export default function ProfileDetailScreen({ route, navigation }) {
           </Text>
         </View>
 
-        {/* 🔹 PERSONAL DETAILS */}
+        {/* DETAILS */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Personal Details</Text>
-          <Text style={styles.text}>Religion: {profile.religion}</Text>
-          <Text style={styles.text}>Caste: {profile.caste}</Text>
-          <Text style={styles.text}>
-            Education: {profile.educationDetails}
-          </Text>
-          <Text style={styles.text}>
-            Occupation: {profile.occupation}
-          </Text>
+          <Info label="Religion" value={profile.religion} />
+          <Info label="Caste" value={profile.caste} />
+          <Info label="Education" value={profile.educationDetails} />
+          <Info label="Occupation" value={profile.occupation} />
         </View>
 
-        {/* 🔹 ACTIONS */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.connectBtn}>
-            <Text style={styles.btnText}>Connect</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.chatBtn}>
-            <Text style={styles.chatText}>Chat</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
-      <Footer />
-    </View>
+
+      {/* PREMIUM ACTION BAR */}
+      <View style={styles.actionBar}>
+        <ActionButton
+          title={chatInterestSent ? "Interest Sent ✓" : "Chat Now"}
+          onPress={sendChatInterest}
+          disabled={chatInterestSent}
+          style={{ backgroundColor: "#ff4e50" }}
+        />
+
+        <ActionButton
+          title={interestSent ? "Interest Sent ✓" : "Send Interest"}
+          onPress={sendInterest}
+          disabled={interestSent}
+          style={{ backgroundColor: "#D4AF37" }}
+        />
+
+        <ActionButton
+          title={isShortlisted ? "Remove Shortlist" : "Add Shortlist"}
+          onPress={toggleShortlist}
+          style={{
+            backgroundColor: isShortlisted ? "#ff4e50" : "#e3e3e3",
+          }}
+          textColor={isShortlisted ? "#fff" : "#000"}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
+/* ================= SMALL COMPONENTS ================= */
+const Info = ({ label, value }) => (
+  <View style={styles.infoRow}>
+    <Text style={styles.infoLabel}>{label}</Text>
+    <Text style={styles.infoValue}>{value || "-"}</Text>
+  </View>
+);
 
+const ActionButton = ({
+  title,
+  onPress,
+  disabled,
+  style,
+  textColor = "#fff",
+}) => (
+  <TouchableOpacity
+    style={[styles.actionBtn, style, disabled && { opacity: 0.6 }]}
+    onPress={onPress}
+    disabled={disabled}
+  >
+    <Text style={[styles.actionText, { color: textColor }]}>
+      {title}
+    </Text>
+  </TouchableOpacity>
+);
+
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
   loader: {
     flex: 1,
@@ -157,88 +257,78 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 
-  /* Main Image */
-  mainImage: {
+  heroImage: {
     width: "100%",
     height: 420,
     backgroundColor: "#eee",
   },
 
-  /* Card Wrapper */
   card: {
     backgroundColor: "#fff",
-    marginHorizontal: 14,
-    marginTop: 14,
-    borderRadius: 14,
-    padding: 16,
-    elevation: 3,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 18,
+    elevation: 4,
   },
 
-  /* Name */
   name: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#222",
+    color: "#111",
   },
 
   sub: {
-    fontSize: 14,
+    marginTop: 6,
     color: "#666",
-    marginTop: 4,
   },
 
-  /* Section Titles */
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#333",
-    marginBottom: 8,
+    marginBottom: 10,
   },
 
   text: {
     fontSize: 14,
     color: "#555",
     lineHeight: 22,
-    marginBottom: 4,
   },
 
-  /* Action Buttons */
-  actionRow: {
+  infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginHorizontal: 14,
-    marginTop: 18,
+    paddingVertical: 6,
   },
 
-  connectBtn: {
+  infoLabel: {
+    color: "#777",
+  },
+
+  infoValue: {
+    fontWeight: "600",
+  },
+
+  /* ACTION BAR */
+  actionBar: {
+    position: "absolute",
+    bottom: 0,
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 10,
+    elevation: 12,
+  },
+
+  actionBtn: {
     flex: 1,
-    backgroundColor: "#ff4e50",
+    marginHorizontal: 4,
     paddingVertical: 14,
-    borderRadius: 28,
+    borderRadius: 14,
     alignItems: "center",
-    marginRight: 8,
-    elevation: 3,
   },
 
-  chatBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ff4e50",
-    paddingVertical: 14,
-    borderRadius: 28,
-    alignItems: "center",
-    marginLeft: 8,
-  },
-
-  btnText: {
-    color: "#fff",
+  actionText: {
     fontWeight: "700",
-    fontSize: 15,
-  },
-
-  chatText: {
-    color: "#ff4e50",
-    fontWeight: "700",
-    fontSize: 15,
+    fontSize: 14,
   },
 });

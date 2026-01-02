@@ -7,52 +7,61 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://143.110.244.163:5000/api/auth/email-login";
+const EMAIL_LOGIN_API =
+  "http://143.110.244.163:5000/api/auth/email-login";
+
+const SEND_OTP_API =
+  "http://143.110.244.163:5000/api/auth/send-otp";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
 
+  const [loginMode, setLoginMode] = useState("email"); // email | otp
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async () => {
+  /* ================= EMAIL LOGIN ================= */
+  const handleEmailLogin = async () => {
     if (!email || !password) {
-      alert("Email and Password are required");
+      Alert.alert("Error", "Email and password are required");
       return;
     }
 
     try {
       setLoading(true);
 
-      const res = await axios.post(API_URL, {
+      const res = await axios.post(EMAIL_LOGIN_API, {
         email,
         password,
       });
-console.log("API RESPONSE 👉", res.data);
+
       const data = res?.data;
+      console.log("EMAIL LOGIN 👉", data);
 
       if (!data?.success) {
-        alert(data?.message || "Login failed");
+        Alert.alert("Login Failed", data?.message || "Invalid credentials");
         return;
       }
 
-      // 🔐 OTP REQUIRED
+      // 🔐 EMAIL OTP REQUIRED
       if (data?.requiresVerification) {
         await AsyncStorage.setItem("tempEmail", email);
 
-        // optional: for testing
         if (data?.debugOtp) {
           await AsyncStorage.setItem("debugOtp", String(data.debugOtp));
         }
 
-        alert("OTP sent to your email");
+        Alert.alert("OTP Sent", "Please verify OTP sent to your email");
         navigation.navigate("EmailOtp");
         return;
       }
@@ -61,15 +70,47 @@ console.log("API RESPONSE 👉", res.data);
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
-      alert("Login successful");
-
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
       });
     } catch (error) {
-      alert(
-        error?.response?.data?.message || "Something went wrong. Try again."
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= MOBILE OTP ================= */
+  const handleSendOtp = async () => {
+    if (!phone || phone.length !== 10) {
+      Alert.alert("Invalid Number", "Enter valid 10-digit mobile number");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(SEND_OTP_API, {
+        phone,
+      });
+
+      console.log("SEND OTP 👉", res.data);
+
+      if (res.data?.success) {
+        await AsyncStorage.setItem("phone", phone);
+        Alert.alert("OTP Sent", "OTP sent to your mobile number");
+        navigation.navigate("MobileOtp");
+      } else {
+        Alert.alert("Failed", res.data?.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Server error"
       );
     } finally {
       setLoading(false);
@@ -85,49 +126,91 @@ console.log("API RESPONSE 👉", res.data);
           resizeMode="contain"
         />
 
-        <TextInput
-          placeholder="Enter Email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-        />
+        {/* ================= EMAIL LOGIN ================= */}
+        {loginMode === "email" && (
+          <>
+            <TextInput
+              placeholder="Enter Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+            />
 
-        <View style={styles.passwordWrap}>
-          <TextInput
-            placeholder="Password"
-            secureTextEntry={!showPassword}
-            style={styles.passwordInput}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Text style={styles.showText}>
-              {showPassword ? "Hide" : "Show"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.passwordWrap}>
+              <TextInput
+                placeholder="Password"
+                secureTextEntry={!showPassword}
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Text style={styles.showText}>
+                  {showPassword ? "Hide" : "Show"}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity
-          style={styles.loginBtn}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.loginBtnText}>Login</Text>
-          )}
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.loginBtn}
+              onPress={handleEmailLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginBtnText}>Login</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* ================= OTP LOGIN ================= */}
+        {loginMode === "otp" && (
+          <>
+            <TextInput
+              placeholder="Enter Mobile Number"
+              keyboardType="number-pad"
+              maxLength={10}
+              style={styles.input}
+              value={phone}
+              onChangeText={(t) =>
+                setPhone(t.replace(/[^0-9]/g, ""))
+              }
+            />
+
+            <TouchableOpacity
+              style={styles.loginBtn}
+              onPress={handleSendOtp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginBtnText}>Send OTP</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
 
         <Text style={styles.or}>──────────── OR ────────────</Text>
 
+        {/* 🔁 TOGGLE LOGIN MODE */}
         <TouchableOpacity
           style={styles.otpBtn}
-          onPress={() => navigation.navigate("Otp")}
+          onPress={() =>
+            setLoginMode(loginMode === "email" ? "otp" : "email")
+          }
         >
-          <Text style={styles.otpBtnText}>Login with OTP</Text>
+          <Text style={styles.otpBtnText}>
+            {loginMode === "email"
+              ? "Login with OTP"
+              : "Login with Email"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -144,7 +227,7 @@ console.log("API RESPONSE 👉", res.data);
   );
 }
 
-
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

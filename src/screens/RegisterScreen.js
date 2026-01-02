@@ -1,176 +1,503 @@
+// import React, { useState } from "react";
+// import {
+//   View,
+//   Text,
+//   TextInput,
+//   StyleSheet,
+//   TouchableOpacity,
+//   ScrollView,
+//   Image,
+//   Alert,
+//   ActivityIndicator,
+// } from "react-native";
+// import { Picker } from "@react-native-picker/picker";
+// import { useNavigation } from "@react-navigation/native";
+// import axios from "axios";
+
+// const API_URL = "http://143.110.244.163:5000/api/auth/register";
+
+// export default function RegisterScreen() {
+//   const navigation = useNavigation();
+
+//   const [form, setForm] = useState({
+//     name: "",
+//     email: "",
+//     phone: "",
+//     createdfor: "",
+//     password: "",
+//   });
+
+//   const [loading, setLoading] = useState(false);
+
+//   const handleChange = (key, value) => {
+//     setForm({ ...form, [key]: value });
+//   };
+
+//   /* 🔹 REGISTER API */
+//   const onRegister = async () => {
+//     if (
+//       !form.name ||
+//       !form.email ||
+//       !form.phone ||
+//       !form.createdfor ||
+//       !form.password
+//     ) {
+//       Alert.alert("Missing Fields", "Please fill all fields!");
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+
+//       const res = await axios.post(API_URL, {
+//         name: form.name,
+//         email: form.email,
+//         phone: form.phone,
+//         createdfor: form.createdfor,
+//         password: form.password,
+//       });
+
+//       if (res.data.success) {
+//         Alert.alert(
+//           "Registration Successful",
+//           "Please login to continue",
+//           [
+//             {
+//               text: "OK",
+//               onPress: () => navigation.replace("Login"),
+//             },
+//           ]
+//         );
+//       }
+//     } catch (err) {
+//       console.log(
+//         "REGISTER ERROR 👉",
+//         err?.response?.data || err.message
+//       );
+
+//       Alert.alert(
+//         "Registration Failed",
+//         err?.response?.data?.message || "Something went wrong"
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <ScrollView contentContainerStyle={styles.container}>
+//       <View style={styles.card}>
+//         <Image
+//           source={require("../assets/images/logo.png")}
+//           style={styles.logo}
+//           resizeMode="contain"
+//         />
+
+//         {/* 🔹 CREATED FOR */}
+//         <View style={styles.dropdownWrap}>
+//           <Picker
+//             selectedValue={form.createdfor}
+//             onValueChange={(v) => handleChange("createdfor", v)}
+//           >
+//             <Picker.Item label="Profile Created For" value="" />
+//             <Picker.Item label="Self" value="self" />
+//             <Picker.Item label="Son" value="son" />
+//             <Picker.Item label="Daughter" value="daughter" />
+//             <Picker.Item label="Brother" value="brother" />
+//             <Picker.Item label="Sister" value="sister" />
+//           </Picker>
+//         </View>
+
+//         {/* 🔹 NAME */}
+//         <TextInput
+//           placeholder="Full Name"
+//           style={styles.input}
+//           value={form.name}
+//           onChangeText={(t) => handleChange("name", t)}
+//         />
+
+//         {/* 🔹 EMAIL */}
+//         <TextInput
+//           placeholder="Email"
+//           style={styles.input}
+//           keyboardType="email-address"
+//           autoCapitalize="none"
+//           value={form.email}
+//           onChangeText={(t) => handleChange("email", t)}
+//         />
+
+//         {/* 🔹 PHONE */}
+//         <TextInput
+//           placeholder="Phone Number"
+//           keyboardType="number-pad"
+//           style={styles.input}
+//           value={form.phone}
+//           onChangeText={(t) => handleChange("phone", t)}
+//         />
+
+//         {/* 🔹 PASSWORD */}
+//         <TextInput
+//           placeholder="Password"
+//           secureTextEntry
+//           style={styles.input}
+//           value={form.password}
+//           onChangeText={(t) => handleChange("password", t)}
+//         />
+
+//         {/* 🔹 REGISTER BUTTON */}
+//         <TouchableOpacity
+//           style={styles.registerBtn}
+//           onPress={onRegister}
+//           disabled={loading}
+//         >
+//           {loading ? (
+//             <ActivityIndicator color="#fff" />
+//           ) : (
+//             <Text style={styles.registerBtnText}>Register</Text>
+//           )}
+//         </TouchableOpacity>
+
+//         {/* 🔹 LOGIN */}
+//         <TouchableOpacity
+//           onPress={() => navigation.navigate("Login")}
+//           style={{ marginTop: 15 }}
+//         >
+//           <Text style={styles.loginText}>
+//             Already have an account?{" "}
+//             <Text style={styles.loginLink}>Login</Text>
+//           </Text>
+//         </TouchableOpacity>
+//       </View>
+//     </ScrollView>
+//   );
+// }
+
+// /* ================= STYLES ================= */
+// const styles = StyleSheet.create({
+//   container: {
+//     flexGrow: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     backgroundColor: "#fff",
+//     paddingVertical: 30,
+//   },
+//   card: {
+//     width: "85%",
+//     backgroundColor: "#fff",
+//     borderRadius: 18,
+//     padding: 25,
+//     elevation: 5,
+//     alignItems: "center",
+//   },
+//   logo: {
+//     width: 120,
+//     height: 120,
+//     marginBottom: 25,
+//   },
+//   input: {
+//     width: "100%",
+//     backgroundColor: "#f8f8f8",
+//     padding: 14,
+//     borderRadius: 10,
+//     marginVertical: 8,
+//     fontSize: 15,
+//   },
+//   dropdownWrap: {
+//     width: "100%",
+//     backgroundColor: "#f8f8f8",
+//     paddingVertical: 6,
+//     paddingHorizontal: 10,
+//     borderRadius: 10,
+//     marginVertical: 8,
+//   },
+//   registerBtn: {
+//     backgroundColor: "#ff4e50",
+//     width: "100%",
+//     padding: 14,
+//     borderRadius: 10,
+//     marginTop: 18,
+//   },
+//   registerBtnText: {
+//     color: "#fff",
+//     fontSize: 16,
+//     fontWeight: "600",
+//     textAlign: "center",
+//   },
+//   loginText: {
+//     color: "#444",
+//   },
+//   loginLink: {
+//     color: "#ff4e50",
+//     fontWeight: "600",
+//   },
+// });
+
+
+
+
+
+
 import React, { useState } from "react";
 import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    TouchableOpacity,
-    ScrollView,
-    Image,
-    Alert
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+
+const API_URL = "http://143.110.244.163:5000/api/auth/register";
 
 export default function RegisterScreen() {
-    const navigation = useNavigation();
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        createdfor: "",
-        password: ""
-    });
+  const navigation = useNavigation();
 
-    const handleChange = (key, value) => {
-        setForm({ ...form, [key]: value });
-    };
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    createdfor: "",
+    password: "",
+  });
 
-    const onRegister = () => {
-        if (!form.name || !form.email || !form.phone || !form.createdfor || !form.password) {
-            Alert.alert("Missing Fields", "Please fill all fields!");
-            return;
-        }
-        // Later we will integrate API call here
-        navigation.navigate("Login");
-    };
+  const [loading, setLoading] = useState(false);
 
+  const handleChange = (key, value) => {
+    setForm({ ...form, [key]: value });
+  };
+
+  /* ================= VALIDATION ================= */
+
+  const isValidEmail = (email) => {
+    const regex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const isValidPhone = (phone) => {
+    return /^[6-9]\d{9}$/.test(phone);
+  };
+
+  const isValidPassword = (password) => {
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.card}>
-                <Image
-                    source={require("../assets/images/logo.png")}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
-
-                <View style={styles.dropdownWrap}>
-                    
-                        <Picker
-                            selectedValue={form.createdfor}
-                            onValueChange={(v) => handleChange("createdfor", v)}
-                        >
-                            <Picker.Item label="Profile Created For" value="" />
-                            <Picker.Item label="Self" value="self" />
-                            <Picker.Item label="Son" value="son" />
-                            <Picker.Item label="Daughter" value="daughter" />
-                            <Picker.Item label="Brother" value="brother" />
-                            <Picker.Item label="Sister" value="sister" />
-                        </Picker>
-                  
-
-                </View>
-
-                <TextInput
-                    placeholder="Full Name"
-                    style={styles.input}
-                    value={form.name}
-                    onChangeText={(t) => handleChange("name", t)}
-                />
-
-                <TextInput
-                    placeholder="Email"
-                    style={styles.input}
-                    keyboardType="email-address"
-                    value={form.email}
-                    onChangeText={(t) => handleChange("email", t)}
-                />
-
-                <TextInput
-                    placeholder="Phone Number"
-                    keyboardType="number-pad"
-                    style={styles.input}
-                    value={form.phone}
-                    onChangeText={(t) => handleChange("phone", t)}
-                />
-
-                
-
-                <TextInput
-                    placeholder="Password"
-                    secureTextEntry
-                    style={styles.input}
-                    value={form.password}
-                    onChangeText={(t) => handleChange("password", t)}
-                />
-
-                <TouchableOpacity style={styles.registerBtn} onPress={onRegister}>
-                    <Text style={styles.registerBtnText}>Register</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => navigation.navigate("Login")}
-                    style={{ marginTop: 15 }}
-                >
-                    <Text style={styles.loginText}>
-                        Already have an account? <Text style={styles.loginLink}>Login</Text>
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+      password.length >= 6 &&
+      /[A-Za-z]/.test(password) &&
+      /\d/.test(password)
     );
+  };
+
+  /* ================= REGISTER ================= */
+
+  const onRegister = async () => {
+    const { name, email, phone, createdfor, password } = form;
+
+    if (!name || !email || !phone || !createdfor || !password) {
+      Alert.alert("Missing Fields", "Please fill all fields");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address");
+      return;
+    }
+
+    if (!isValidPhone(phone)) {
+      Alert.alert(
+        "Invalid Phone Number",
+        "Please enter a valid 10-digit Indian mobile number"
+      );
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      Alert.alert(
+        "Weak Password",
+        "Password must be at least 6 characters long and contain at least one letter and one number"
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(API_URL, {
+        name,
+        email,
+        phone,
+        createdfor,
+        password,
+      });
+
+      if (res.data.success) {
+        Alert.alert(
+          "Registration Successful",
+          "Please login to continue",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.replace("Login"),
+            },
+          ]
+        );
+      }
+    } catch (err) {
+      console.log("REGISTER ERROR 👉", err?.response?.data || err.message);
+
+      Alert.alert(
+        "Registration Failed",
+        err?.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.card}>
+        <Image
+          source={require("../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+
+        {/* CREATED FOR */}
+        <View style={styles.dropdownWrap}>
+          <Picker
+            selectedValue={form.createdfor}
+            onValueChange={(v) => handleChange("createdfor", v)}
+          >
+            <Picker.Item label="Profile Created For" value="" />
+            <Picker.Item label="Self" value="self" />
+            <Picker.Item label="Son" value="son" />
+            <Picker.Item label="Daughter" value="daughter" />
+            <Picker.Item label="Brother" value="brother" />
+            <Picker.Item label="Sister" value="sister" />
+          </Picker>
+        </View>
+
+        <TextInput
+          placeholder="Full Name"
+          style={styles.input}
+          value={form.name}
+          onChangeText={(t) => handleChange("name", t)}
+        />
+
+        <TextInput
+          placeholder="Email"
+          style={styles.input}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={form.email}
+          onChangeText={(t) => handleChange("email", t)}
+        />
+
+        <TextInput
+          placeholder="Phone Number"
+          keyboardType="number-pad"
+          style={styles.input}
+          maxLength={10}
+          value={form.phone}
+          onChangeText={(t) => handleChange("phone", t.replace(/[^0-9]/g, ""))}
+        />
+
+        <TextInput
+          placeholder="Password"
+          secureTextEntry
+          style={styles.input}
+          value={form.password}
+          onChangeText={(t) => handleChange("password", t)}
+        />
+
+        <TouchableOpacity
+          style={styles.registerBtn}
+          onPress={onRegister}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.registerBtnText}>Register</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Login")}
+          style={{ marginTop: 15 }}
+        >
+          <Text style={styles.loginText}>
+            Already have an account?{" "}
+            <Text style={styles.loginLink}>Login</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 }
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-    container: {
-        flexGrow: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        paddingVertical: 30,
-    },
-    card: {
-        width: "85%",
-        backgroundColor: "#fff",
-        borderRadius: 18,
-        padding: 25,
-        elevation: 5,
-        alignItems: "center",
-    },
-    logo: {
-        width: 120,
-        height: 120,
-        marginBottom: 25,
-    },
-    input: {
-        width: "100%",
-        backgroundColor: "#f8f8f8",
-        padding: 14,
-        borderRadius: 10,
-        marginVertical: 8,
-        fontSize: 15,
-    },
-    dropdownWrap: {
-        width: "100%",
-        backgroundColor: "#f8f8f8",
-        paddingVertical: 14,
-        paddingHorizontal: 10,
-        borderRadius: 10,
-        marginVertical: 8,
-    },
-    dropdown: {
-        fontSize: 15,
-        color: "#444",
-    },
-    registerBtn: {
-        backgroundColor: "#ff4e50",
-        width: "100%",
-        padding: 14,
-        borderRadius: 10,
-        marginTop: 18,
-    },
-    registerBtnText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "600",
-        textAlign: "center",
-    },
-    loginText: {
-        color: "#444",
-    },
-    loginLink: {
-        color: "#ff4e50",
-        fontWeight: "600",
-    },
+  container: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingVertical: 30,
+  },
+  card: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 25,
+    elevation: 5,
+    alignItems: "center",
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 25,
+  },
+  input: {
+    width: "100%",
+    backgroundColor: "#f8f8f8",
+    padding: 14,
+    borderRadius: 10,
+    marginVertical: 8,
+    fontSize: 15,
+  },
+  dropdownWrap: {
+    width: "100%",
+    backgroundColor: "#f8f8f8",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginVertical: 8,
+  },
+  registerBtn: {
+    backgroundColor: "#ff4e50",
+    width: "100%",
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 18,
+  },
+  registerBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  loginText: {
+    color: "#444",
+  },
+  loginLink: {
+    color: "#ff4e50",
+    fontWeight: "600",
+  },
 });
