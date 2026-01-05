@@ -14,9 +14,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Header from "../components/Header";
 import Footer from '../components/Footer';
+
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function FindPartnerScreen({ navigation }) {
+    
     const [filters, setFilters] = useState({
         gender: "",
         age: "",
@@ -202,7 +204,7 @@ export default function FindPartnerScreen({ navigation }) {
 
     return (
         <View style={{ flex: 1 }}>
-            <Header title="Find Partner" />
+            <Header  title="Find Partner" />
 
             {/* 🔹 SEARCH + FILTER */}
             <View style={styles.topBar}>

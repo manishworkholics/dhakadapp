@@ -58,9 +58,10 @@ const plans = [
 ];
 
 export default function PlanScreen({ navigation }) {
+   
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5",paddingBottom: 70  }}>
+      <Header 
         title="My Plan"
         onMenuPress={() => navigation.openDrawer()}
       />

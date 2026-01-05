@@ -156,7 +156,8 @@ export default function ShortlistScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
         />
       )}
-      
+
+      <Footer />
     </View>
   );
 }

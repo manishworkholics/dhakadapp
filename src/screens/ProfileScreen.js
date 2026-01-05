@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useProfile } from "../context/ProfileContext";
 
 /* 🔹 SECTION WRAPPER */
 const Section = ({ title, children }) => (
@@ -24,11 +25,11 @@ const Section = ({ title, children }) => (
 const InfoRow = ({ label, value }) => (
   <View style={styles.infoRow}>
     <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
+    <Text style={styles.value}>{value || "-"}</Text>
   </View>
 );
 
-/* 🔹 PROFILE OPTION CARD (WEBSITE TABS → MOBILE) */
+/* 🔹 PROFILE OPTION CARD */
 const ProfileNavCard = ({ title, subtitle, onPress }) => (
   <TouchableOpacity style={styles.navCard} onPress={onPress}>
     <View>
@@ -40,46 +41,67 @@ const ProfileNavCard = ({ title, subtitle, onPress }) => (
 );
 
 export default function ProfileScreen({ navigation }) {
+  const { profile, loading } = useProfile();
+  
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <View style={styles.center}>
+        <Text>Profile not found</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header
-        title="My Profile"
-        onMenuPress={() => navigation.openDrawer()}
-      />
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5" ,paddingBottom: 70 }}>
+      <Header  title="My Profile" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 🔹 PROFILE HEADER */}
         <View style={styles.profileCard}>
           <Image
-            source={{ uri: "https://randomuser.me/api/portraits/men/75.jpg" }}
+            source={{ uri: profile.photos?.[0] }}
             style={styles.profileImg}
           />
-          <Text style={styles.name}>Sujal Prajapati</Text>
+          <Text style={styles.name}>{profile.name}</Text>
+
           <Text style={styles.subText}>
-            29 yrs • Hindu • Web Developer
+            {profile.gender} • {profile.religion} • {profile.occupation}
           </Text>
+
           <Text style={styles.profileId}>
-            Profile ID: 6948e8ff770cf88ab8095572
+            Profile ID: {profile._id}
           </Text>
 
           <TouchableOpacity
             style={styles.editBtn}
-            onPress={() => navigation.navigate("ImageGallery")}
+            onPress={() => navigation.navigate("CreateProfile")}
           >
-            <Text style={styles.editText}>Edit Photo</Text>
+            <Text style={styles.editText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
         {/* 🔹 IMAGE GALLERY */}
         <Section title="Image Gallery">
           <View style={styles.galleryRow}>
-            <Image
-              style={styles.galleryImg}
-              source={{ uri: "https://randomuser.me/api/portraits/men/75.jpg" }}
-            />
+            {profile.photos?.map((img, index) => (
+              <Image
+                key={index}
+                style={styles.galleryImg}
+                source={{ uri: img }}
+              />
+            ))}
+
             <TouchableOpacity
               style={styles.addPhoto}
-              onPress={() => navigation.navigate("ImageGallery")}
+              onPress={() => navigation.navigate("CreateProfile")}
             >
               <Text style={{ fontSize: 28, color: "#999" }}>+</Text>
             </TouchableOpacity>
@@ -88,57 +110,54 @@ export default function ProfileScreen({ navigation }) {
 
         {/* 🔹 PERSONAL INFO */}
         <Section title="Personal Information">
-          <InfoRow label="Gender" value="Male" />
-          <InfoRow label="Marital Status" value="Never Married" />
-          <InfoRow label="Physical Status" value="Normal" />
+          <InfoRow label="Gender" value={profile.gender} />
+          <InfoRow label="Marital Status" value={profile.maritalStatus} />
+          <InfoRow label="Physical Status" value={profile.physicalStatus} />
+          <InfoRow label="Height" value={profile.height} />
         </Section>
 
         {/* 🔹 RELIGION */}
         <Section title="Religion & Culture">
-          <InfoRow label="Religion" value="Hinduism" />
-          <InfoRow label="Gotra" value="Malav" />
-          <InfoRow label="Mother Tongue" value="Hindi" />
+          <InfoRow label="Religion" value={profile.religion} />
+          <InfoRow label="Caste" value={profile.caste} />
+          <InfoRow label="Gotra" value={profile.gotra} />
+          <InfoRow label="Mother Tongue" value={profile.motherTongue} />
         </Section>
 
         {/* 🔹 PROFESSIONAL */}
         <Section title="Professional Information">
-          <InfoRow label="Occupation" value="Web Developer" />
-          <InfoRow label="Employment Type" value="Private Sector" />
-          <InfoRow label="Annual Income" value="₹6,00,000" />
+          <InfoRow label="Occupation" value={profile.occupation} />
+          <InfoRow label="Employment Type" value={profile.employmentType} />
+          <InfoRow label="Annual Income" value={profile.annualIncome} />
         </Section>
 
         {/* 🔹 LOCATION */}
         <Section title="Location">
-          <InfoRow label="City" value="Indore" />
-          <InfoRow label="State" value="Madhya Pradesh" />
+          <InfoRow label="City" value={profile.location} />
         </Section>
 
-        {/* 🔹 PROFILE OPTIONS (WEBSITE PROFILE TABS → MOBILE CARDS) */}
+        {/* 🔹 PROFILE OPTIONS */}
         <Section title="Profile Options">
           <ProfileNavCard
             title="Partner Preferences"
             subtitle="Edit your partner requirements"
             onPress={() => navigation.navigate("PartnerPreference")}
           />
-
           <ProfileNavCard
             title="Interests"
             subtitle="View interests sent & received"
             onPress={() => navigation.navigate("Interest")}
           />
-
           <ProfileNavCard
             title="Shortlist"
             subtitle="Profiles you liked"
             onPress={() => navigation.navigate("Shortlist")}
           />
-
           <ProfileNavCard
             title="My Plan"
             subtitle="View or upgrade your plan"
             onPress={() => navigation.navigate("Plan")}
           />
-
           <ProfileNavCard
             title="Notifications"
             subtitle="All alerts & updates"
@@ -148,13 +167,16 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={{ height: 30 }} />
       </ScrollView>
-       <Footer />
+
+      <Footer />
     </View>
   );
 }
 
-/* 🎨 STYLES */
+/* 🎨 STYLES (UNCHANGED) */
 const styles = StyleSheet.create({
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
   profileCard: {
     backgroundColor: "#fff",
     alignItems: "center",
@@ -188,9 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
   },
-  sectionHeader: {
-    marginBottom: 10,
-  },
+  sectionHeader: { marginBottom: 10 },
   sectionTitle: { fontSize: 15, fontWeight: "700" },
 
   infoRow: {
@@ -203,12 +223,13 @@ const styles = StyleSheet.create({
   label: { color: "#666" },
   value: { fontWeight: "600" },
 
-  galleryRow: { flexDirection: "row" },
+  galleryRow: { flexDirection: "row", flexWrap: "wrap" },
   galleryImg: {
     width: 80,
     height: 80,
     borderRadius: 8,
     marginRight: 10,
+    marginBottom: 10,
   },
   addPhoto: {
     width: 80,
@@ -220,7 +241,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* 🔹 PROFILE OPTION CARDS */
   navCard: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -229,17 +249,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderColor: "#eee",
   },
-  navTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  navSub: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 2,
-  },
-  navArrow: {
-    fontSize: 20,
-    color: "#999",
-  },
+  navTitle: { fontSize: 15, fontWeight: "600" },
+  navSub: { fontSize: 12, color: "#777", marginTop: 2 },
+  navArrow: { fontSize: 20, color: "#999" },
 });

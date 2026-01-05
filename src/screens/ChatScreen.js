@@ -94,7 +94,7 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Chats" />
+      <Header  title="Chats" />
 
       {/* ================= EMPTY STATE ================= */}
       {chats.length === 0 ? (

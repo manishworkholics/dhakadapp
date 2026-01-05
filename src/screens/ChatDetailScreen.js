@@ -18,7 +18,7 @@ const API_URL = "http://143.110.244.163:5000/api";
 
 export default function ChatDetailScreen({ route, navigation }) {
   const { chatId } = route.params;
-
+ 
   const [messages, setMessages] = useState([]);
   const [chat, setChat] = useState(null);
   const [text, setText] = useState("");
@@ -125,7 +125,7 @@ export default function ChatDetailScreen({ route, navigation }) {
       style={{ flex: 1, backgroundColor: "#f4f6f8" }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Header
+      <Header 
         title={chat?.otherUser?.name || "Chat"}
         onMenuPress={() => navigation.goBack()}
       />
@@ -170,7 +170,7 @@ export default function ChatDetailScreen({ route, navigation }) {
           style={[
             styles.sendBtn,
             (!text.trim() || chat?.status !== "active") &&
-              styles.sendDisabled,
+            styles.sendDisabled,
           ]}
           onPress={sendMessage}
           disabled={!text.trim() || chat?.status !== "active"}

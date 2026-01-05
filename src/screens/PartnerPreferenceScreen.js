@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
@@ -32,6 +33,7 @@ const Chip = ({ label, selected, onPress }) => (
 );
 
 export default function EditPartnerPreferenceScreen({ navigation }) {
+    
   const [form, setForm] = useState({
     ageFrom: "",
     ageTo: "",
@@ -151,8 +153,8 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <Header title="Edit Partner Preference" back />
+    <View style={{ flex: 1 ,paddingBottom: 70 }}>
+      <Header  title="Edit Partner Preference" back />
 
       <ScrollView contentContainerStyle={{ padding: 14 }}>
         {/* BASIC */}
@@ -288,6 +290,9 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+
+       <Footer />
     </View>
   );
 }

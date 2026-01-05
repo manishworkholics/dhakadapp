@@ -1,4 +1,3 @@
-// src/screens/HomeScreen.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -7,51 +6,36 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-} from 'react-native';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+} from "react-native";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
-
+import { useProfile } from "../context/ProfileContext";
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function HomeScreen() {
+  const { profile } = useProfile();
   const navigation = useNavigation();
   const [premiumProfiles, setPremiumProfiles] = useState([]);
   const [successStories, setSuccessStories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
   const fetchHomeData = async () => {
     try {
       setLoading(true);
 
-      // 🔹 Premium Matches
-      const featuredRes = await axios.get(
-        `${API_URL}/featured?limit=10`
-      );
-
-      console.log("FEATURED 👉", featuredRes.data);
-
+      const featuredRes = await axios.get(`${API_URL}/featured?limit=10`);
       if (featuredRes.data?.profiles) {
         setPremiumProfiles(featuredRes.data.profiles);
       }
 
-      // 🔹 Success Stories
-      const successRes = await axios.get(
-        `${API_URL}/success`
-      );
-
-      console.log("SUCCESS 👉", successRes.data);
-
-      if (successRes.data?.stories?.length) {
+      const successRes = await axios.get(`${API_URL}/success`);
+      if (successRes.data?.stories) {
         setSuccessStories(successRes.data.stories);
       }
     } catch (err) {
-      console.log(
-        "HOME API ERROR 👉",
-        err?.response?.data || err.message
-      );
+      console.log("HOME API ERROR", err.message);
     } finally {
       setLoading(false);
     }
@@ -63,149 +47,201 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Loading preferences...</Text>
+      <View style={styles.loader}>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Header title="Shivam Thakur" />
+      <Header  title={profile?.name} />
 
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* 🔴 TOP PROFILE CARD */}
+        <View style={styles.topCard}>
+          <View style={styles.topRow}>
+            <View>
+              <Text style={styles.profileName}>{profile?.name}</Text>
+              <Text style={styles.profileId}>DH1409005</Text>
 
-      <ScrollView>
-
-
-        {/* 🔶 Profile + Upgrade Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileRow}>
-            <Image
-              source={require("../assets/images/adminlogo.png")}
-
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.profileId}>DH1409009</Text>
-              <Text style={styles.editprofiletext}>Edit Profile</Text>
-              <Text style={styles.accountType}>Account : Free</Text>
+              <View style={styles.freeBadge}>
+                <Text style={styles.freeText}>Account : Free</Text>
+              </View>
             </View>
+
+            <TouchableOpacity style={styles.upgradeBtn}>
+              <Text style={styles.upgradeText}>Upgrade Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 🔴 COMPLETE PROFILE */}
+        <View style={styles.completeBox}>
+          <Text style={styles.completeTitle}>Complete your profile</Text>
+
+          <View style={styles.progressCircle}>
+            <Text style={styles.progressText}>{profile?.profileScore}%</Text>
           </View>
 
-          <TouchableOpacity style={styles.upgradeBtn}>
-            <Text style={styles.upgradeText}>👑 Upgrade Now</Text>
-          </TouchableOpacity>
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.actionBtn}>
+              <Text style={styles.actionText}>Add Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionBtn}>
+              <Text style={styles.actionText}>Family Details</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* 🔶 Complete Profile Section */}
-        <Text style={styles.heading}>Complete Your Profile</Text>
 
-        <TouchableOpacity
-          style={styles.completeCard}
-          onPress={() => navigation.navigate("FindPartner")}
-        >
-          <Text style={styles.completeText}>Find Partner</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
+        {/* 🔶 PREMIUM MATCHES (EXACT DESIGN) */}
+        <View style={styles.premiumWrapper}>
+          <Text style={styles.premiumTitle}>Premium Matches (541)</Text>
+          <Text style={styles.premiumSub}>
+            Recently upgrade Premium Members
+          </Text>
 
-        <TouchableOpacity
-          style={styles.completeCard}
-          onPress={() => navigation.navigate("PartnerPreference")}
-        >
-          <Text style={styles.completeText}>Add partner preferences</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.completeCard}
-          onPress={() => navigation.navigate("Matches")}
-        >
-          <Text style={styles.completeText}>Find matching profiles</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-
-
-        {/* 🔶 Premium Matches */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.heading}>Premium Matches (54)</Text>
-          {/* <Text style={styles.seeAll}>See All</Text> */}
-          <TouchableOpacity
-            style={styles.seeAll}
-            onPress={() => navigation.navigate("Matches")}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 14 }}
           >
-            <Text style={styles.seeAll}>See All</Text>
+            {premiumProfiles.map((item, index) => (
+              <View key={index} style={styles.premiumCard}>
+                <Image
+                  source={{ uri: item.photos?.[0] }}
+                  style={styles.premiumImg}
+                />
 
-          </TouchableOpacity>
-        </View>
+                {/* Overlay */}
+                <View style={styles.premiumOverlay}>
+                  <Text style={styles.premiumName}>
+                    {item.name}
+                    <Text style={styles.premiumAge}>  {item.age} yrs</Text>
+                  </Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {premiumProfiles.map((item, index) => (
-            <View key={index} style={styles.matchCard}>
-              <Image
-                source={{ uri: item.photos?.[0] }}
-                style={styles.matchImg}
-              />
-              <Text style={styles.matchName}>{item.name}</Text>
-              <TouchableOpacity style={styles.connectBtn}>
-                <Text style={styles.connectText}>Connect Now</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+                  <Text style={styles.premiumInfo}>
+                    {item.height || "5'6\""}, {item.caste || "Punjabi"}
+                  </Text>
 
-        {/* 🔶 New Matches */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.heading}>New Matches (54)</Text>
-          <TouchableOpacity
-            style={styles.seeAll}
-            onPress={() => navigation.navigate("Matches")}
-          >
-            <Text style={styles.seeAll}>See All</Text>
-
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {premiumProfiles.map((item, index) => (
-            <View key={index} style={styles.matchCard}>
-              <Image
-                source={{ uri: item.photos?.[0] }}
-                style={styles.matchImg}
-              />
-              <Text style={styles.matchName}>{item.name}</Text>
-              <TouchableOpacity style={styles.connectBtn}>
-                <Text style={styles.connectText}>Connect Now</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-
-        {/* 🔶 Success Stories */}
-
-        {successStories.length > 0 && (
-          <View style={styles.successWrap}>
-            <Text style={styles.successTitle}>Success Stories</Text>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-            >
-              {successStories.map((story) => (
-                <View key={story._id} style={styles.successCard}>
-                  <Image
-                    source={{ uri: story.image }}
-                    style={styles.successImg}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.successName}>
-                      {story.name} & {story.partnerName}
-                    </Text>
-                    <TouchableOpacity>
-                      <Text style={styles.readMore}>Read More</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text style={styles.premiumInfo}>
+                    {item.city}, {item.state}
+                  </Text>
                 </View>
-              ))}
-            </ScrollView>
+
+                {/* Connect Button */}
+                <TouchableOpacity style={styles.connectBtn} onPress={() =>
+                  navigation.navigate("ProfileDetail", { id: item._id })
+                }>
+                  <Text style={styles.connectText}>✓  Connect Now</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* See All */}
+          <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
+        </View>
+
+
+        {/* 🔴 NEW MATCHES */}
+        {/* 🔶 NEW MATCHES (EXACT DESIGN) */}
+        <View style={styles.newMatchWrapper}>
+          <Text style={styles.newMatchTitle}>New Matches (541)</Text>
+          <Text style={styles.newMatchSub}>Members who joined recently</Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 14 }}
+          >
+            {premiumProfiles.map((item, index) => (
+              <View key={index} style={styles.newMatchCard}>
+                <Image
+                  source={{ uri: item.photos?.[0] }}
+                  style={styles.newMatchImg}
+                />
+
+                {/* Overlay Content */}
+                <View style={styles.newMatchOverlay}>
+                  <Text style={styles.newMatchName}>
+                    {item.name}
+                    <Text style={styles.newMatchAge}>  {item.age} yrs</Text>
+                  </Text>
+
+                  <Text style={styles.newMatchInfo}>
+                    {item.height || "5'6\""}, {item.caste || "Punjabi"}
+                  </Text>
+
+                  <Text style={styles.newMatchInfo}>
+                    {item.city}, {item.state}
+                  </Text>
+                </View>
+
+                {/* Chat Button */}
+                <TouchableOpacity style={styles.chatBtn} onPress={() =>
+                  navigation.navigate("ProfileDetail", { id: item._id })
+                }>
+                  <Text style={styles.chatBtnText}>Chat</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* See All */}
+          <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
+        </View>
+
+
+        {/* 🔴 SUCCESS STORIES */}
+        {/* 🔶 SUCCESS STORIES (EXACT DESIGN) */}
+        {successStories.length > 0 && (
+          <View style={styles.successOuterWrap}>
+
+            {/* ORANGE CURVED HEADER */}
+            <View style={styles.successHeader}>
+              <Text style={styles.successHeaderTitle}>Success Story</Text>
+              <Text style={styles.successHeaderSub}>
+                Check it out our success stories who found their life partner here.
+              </Text>
+            </View>
+
+            {/* WHITE CARD BACKGROUND */}
+            <View style={styles.successCardWrapper}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {successStories.map((story) => (
+                  <View key={story._id} style={styles.successStoryCard}>
+
+                    <Image
+                      source={{ uri: story.image }}
+                      style={styles.successStoryImg}
+                    />
+
+                    <View style={styles.successStoryContent}>
+                      <Text style={styles.successStoryName}>
+                        {story.name} & {story.partnerName}
+                      </Text>
+
+                      <Text style={styles.successStoryDesc} numberOfLines={2}>
+                        {story.description || "A beautiful journey of love and togetherness."}
+                      </Text>
+
+                      <TouchableOpacity style={styles.readMoreBtn}>
+                        <Text style={styles.readMoreText}>Read More</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
           </View>
         )}
 
@@ -216,214 +252,379 @@ export default function HomeScreen() {
       <Footer />
     </View>
   );
-};
-
-
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  /* Profile Card */
-  profileCard: {
+
+
+  /* ================= NEW MATCHES ================= */
+
+  newMatchWrapper: {
     backgroundColor: "#fff",
-    margin: 12,
-    borderRadius: 14,
+    marginHorizontal: 14,
+    marginTop: 24,
+    borderRadius: 16,
     padding: 14,
     elevation: 3,
   },
 
-  profileRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
+  newMatchTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#222",
   },
 
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#ddd",
-    marginRight: 12,
+  newMatchSub: {
+    fontSize: 13,
+    color: "#999",
+    marginTop: 4,
   },
 
-  profileId: {
-    fontSize: 16,
+  newMatchCard: {
+    width: 170,
+    borderRadius: 18,
+    marginRight: 14,
+    overflow: "hidden",
+  },
+
+  newMatchImg: {
+    width: "100%",
+    height: 200,
+    borderRadius: 18,
+  },
+
+  newMatchOverlay: {
+    position: "absolute",
+    bottom: 48,
+    left: 10,
+    right: 10,
+  },
+
+  newMatchName: {
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "700",
   },
 
-  accountType: {
-    color: "#777",
+  newMatchAge: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+  newMatchInfo: {
+    color: "#eee",
+    fontSize: 11,
     marginTop: 2,
   },
 
-  upgradeBtn: {
-    backgroundColor: "#f7a11b",
-    paddingVertical: 10,
-    borderRadius: 22,
+  chatBtn: {
+    borderWidth: 1,
+    borderColor: "#ff6f00",
+    borderRadius: 20,
+    paddingVertical: 6,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 10,
+    marginHorizontal: 10,
   },
 
-  upgradeText: {
-    color: "#fff",
-    fontWeight: "700",
+  chatBtnText: {
+    color: "#ff6f00",
+    fontWeight: "600",
   },
 
-  /* Section Headings */
-  heading: {
+  seeAllBox: {
+    borderTopWidth: 1,
+    borderColor: "#eee",
+    marginTop: 16,
+    paddingTop: 12,
+    alignItems: "center",
+  },
+
+  seeAllText: {
+    color: "#ff6f00",
+    fontWeight: "600",
+  },
+
+
+  /* ================= PREMIUM MATCHES ================= */
+
+  premiumWrapper: {
+    backgroundColor: "#fff",
+    marginHorizontal: 14,
+    marginTop: 24,
+    borderRadius: 16,
+    padding: 14,
+    elevation: 3,
+  },
+
+  premiumTitle: {
     fontSize: 18,
     fontWeight: "700",
-    marginHorizontal: 14,
-    marginTop: 16,
+    color: "#222",
   },
 
+  premiumSub: {
+    fontSize: 13,
+    color: "#999",
+    marginTop: 4,
+  },
+
+  premiumCard: {
+    width: 170,
+    borderRadius: 18,
+    marginRight: 14,
+    overflow: "hidden",
+  },
+
+  premiumImg: {
+    width: "100%",
+    height: 200,
+    borderRadius: 18,
+  },
+
+  premiumOverlay: {
+    position: "absolute",
+    bottom: 56,
+    left: 10,
+    right: 10,
+  },
+
+  premiumName: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  premiumAge: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+  premiumInfo: {
+    color: "#eee",
+    fontSize: 11,
+    marginTop: 2,
+  },
+
+  connectBtn: {
+    borderWidth: 1,
+    borderColor: "#ff6f00",
+    borderRadius: 22,
+    paddingVertical: 6,
+    alignItems: "center",
+    marginTop: 10,
+    marginHorizontal: 10,
+  },
+
+  connectText: {
+    color: "#ff6f00",
+    fontWeight: "600",
+  },
+
+  seeAllBox: {
+    borderTopWidth: 1,
+    borderColor: "#eee",
+    marginTop: 16,
+    paddingTop: 12,
+    alignItems: "center",
+  },
+
+  seeAllText: {
+    color: "#ff6f00",
+    fontWeight: "600",
+  },
+
+
+  /* TOP CARD */
+  topCard: {
+    backgroundColor: "#1c1c1c",
+    margin: 14,
+    borderRadius: 16,
+    padding: 16,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  profileName: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  profileId: { color: "#aaa", marginTop: 4 },
+  freeBadge: {
+    backgroundColor: "#333",
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 6,
+  },
+  freeText: { color: "#fff", fontSize: 12 },
+  upgradeBtn: {
+    backgroundColor: "#f7a11b",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 22,
+  },
+  upgradeText: { color: "#fff", fontWeight: "700" },
+
+  /* COMPLETE PROFILE */
+  completeBox: {
+    backgroundColor: "#fff",
+    margin: 14,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+  },
+  completeTitle: { fontSize: 16, fontWeight: "700" },
+  progressCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    borderColor: "#ff4e50",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 14,
+  },
+  progressText: { fontSize: 20, fontWeight: "700" },
+  actionRow: { flexDirection: "row", gap: 12 },
+  actionBtn: {
+    borderWidth: 1,
+    borderColor: "#ff4e50",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  actionText: { color: "#ff4e50", fontWeight: "600" },
+
+  /* SECTIONS */
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginHorizontal: 14,
-    marginTop: 18,
+    marginTop: 20,
   },
+  heading: { fontSize: 18, fontWeight: "700" },
+  seeAll: { color: "#ff4e50", fontWeight: "600" },
 
-  seeAll: {
-    color: "#ff4e50",
-    fontWeight: "600",
-  },
-
-  /* Complete Profile Cards */
-  completeCard: {
-    backgroundColor: "#fff",
-    marginHorizontal: 14,
-    marginTop: 10,
-    padding: 14,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    elevation: 2,
-  },
-
-  completeText: {
-    fontSize: 15,
-    color: "#333",
-  },
-
-  arrow: {
-    fontSize: 20,
-    color: "#bbb",
-  },
-
-  /* Matches Cards */
+  /* MATCH CARD */
   matchCard: {
-    backgroundColor: "#fff",
-    width: 160,
-    borderRadius: 14,
+    width: 180,
+    height: 260,
+    borderRadius: 16,
     marginLeft: 14,
-    marginVertical: 12,
-    paddingBottom: 12,
-    elevation: 3,
+    marginTop: 12,
+    overflow: "hidden",
   },
-
-  matchImg: {
-    width: "100%",
-    height: 190,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+  matchImg: { width: "100%", height: "100%" },
+  overlay: {
+    position: "absolute",
+    bottom: 10,
+    left: 10,
+    right: 10,
   },
-
-  matchName: {
-    fontSize: 15,
-    fontWeight: "700",
-    marginTop: 8,
-    marginHorizontal: 10,
-  },
-
-  connectBtn: {
-    backgroundColor: "#ff4e50",
-    marginTop: 10,
-    marginHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 18,
-    alignItems: "center",
-  },
-
-  connectText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-
-  chatBtn: {
+  matchName: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  matchLoc: { color: "#eee", fontSize: 12, marginBottom: 6 },
+  outlineBtn: {
     borderWidth: 1,
     borderColor: "#ff4e50",
-    marginTop: 10,
-    marginHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: 18,
     alignItems: "center",
   },
+  outlineText: { color: "#ff4e50", fontWeight: "600" },
 
-  chatText: {
-    color: "#ff4e50",
+  /* SUCCESS STORIES */
+  /* ================= SUCCESS STORIES ================= */
+
+  successOuterWrap: {
+    marginTop: 24,
+    marginHorizontal: 14,
+  },
+
+  /* Orange curved header */
+  successHeader: {
+    backgroundColor: "#FFA726",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    alignItems: "center",
+  },
+  successHeaderTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  successHeaderSub: {
+    color: "#fff",
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 6,
+  },
+
+  /* White background card behind stories */
+  successCardWrapper: {
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    paddingVertical: 16,
+    paddingLeft: 10,
+    elevation: 4,
+  },
+
+  /* Individual story card */
+  successStoryCard: {
+    width: 230,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    marginRight: 14,
+    elevation: 3,
+    overflow: "hidden",
+  },
+
+  successStoryImg: {
+    width: "100%",
+    height: 240,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
+
+  successStoryContent: {
+    padding: 12,
+    alignItems: "center",
+  },
+
+  successStoryName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FF6F00",
+    textAlign: "center",
+  },
+
+  successStoryDesc: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+    marginVertical: 6,
+  },
+
+  /* Read More button – EXACT */
+  readMoreBtn: {
+    borderWidth: 1,
+    borderColor: "#FF6F00",
+    paddingHorizontal: 22,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 6,
+  },
+  readMoreText: {
+    color: "#FF6F00",
     fontWeight: "600",
     fontSize: 13,
   },
 
-  /* Success Stories */
-  successWrap: {
-    backgroundColor: "#fff",
-    margin: 14,
-    borderRadius: 14,
-    padding: 14,
-    elevation: 3,
-  },
-  successCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
-    marginRight: 14,   // 🔥 spacing between cards
-    elevation: 3,
-  },
-
-  successTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-
-  successSub: {
-    color: "#666",
-    marginBottom: 14,
-  },
-
-  successCard: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  successImg: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginRight: 12,
-  },
-
-  successName: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-
-  readMore: {
-    color: "#ff4e50",
-    marginTop: 4,
-    fontWeight: "600",
-  },
 });
-
-
-

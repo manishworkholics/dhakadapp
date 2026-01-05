@@ -15,10 +15,11 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-
+import { useNavigation } from "@react-navigation/native";
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function PlanScreen() {
+    const navigation = useNavigation();
   const [myPlan, setMyPlan] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,7 +135,7 @@ export default function PlanScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Premium Membership" />
+      <Header  title="Premium Membership" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 🔹 TOP BANNER */}

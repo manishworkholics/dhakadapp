@@ -3,8 +3,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useProfile } from "../context/ProfileContext";
 
 const Header = ({ title, onMenuPress, onNotificationPress }) => {
+  const { profile } = useProfile();
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onMenuPress}>
@@ -12,7 +14,11 @@ const Header = ({ title, onMenuPress, onNotificationPress }) => {
       </TouchableOpacity>
 
       {/* Title */}
-      <Text style={styles.title}>{title}</Text>
+       <View>
+        <Text style={styles.title}>
+          { profile?.name||''}
+        </Text>
+      </View>
 
         <TouchableOpacity onPress={onNotificationPress}>
         <Icon name="search"  size={24} color="red" style={styles.searchIcon} />

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Header from "../components/Header";
-
+import Footer from "../components/Footer";
 const notifications = [
   {
     id: "1",
@@ -40,6 +40,7 @@ const notifications = [
 ];
 
 export default function NotificationScreen({ navigation }) {
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -62,7 +63,7 @@ export default function NotificationScreen({ navigation }) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 70 }}>
       <Header
         title="Notifications"
         onMenuPress={() => navigation.openDrawer()}
@@ -83,6 +84,8 @@ export default function NotificationScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <Footer />
     </View>
   );
 }
