@@ -55,7 +55,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Header  title={profile?.name} />
+      <Header title={profile?.name} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 🔴 TOP PROFILE CARD */}
@@ -84,12 +84,12 @@ export default function HomeScreen() {
             <Text style={styles.progressText}>{profile?.profileScore}%</Text>
           </View>
 
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionBtn}>
+          <View style={styles.actionRow} >
+            <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
               <Text style={styles.actionText}>Add Photo</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionBtn}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
               <Text style={styles.actionText}>Family Details</Text>
             </TouchableOpacity>
           </View>
@@ -132,9 +132,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Connect Button */}
-                <TouchableOpacity style={styles.connectBtn} onPress={() =>
-                  navigation.navigate("ProfileDetail", { id: item._id })
-                }>
+                <TouchableOpacity style={styles.connectBtn} onPress={() => navigation.navigate("ProfileDetail", { id: item._id })}>
                   <Text style={styles.connectText}>✓  Connect Now</Text>
                 </TouchableOpacity>
               </View>
@@ -198,6 +196,55 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* 🔶 Find Member (EXACT DESIGN) */}
+        <View style={styles.newMatchWrapper}>
+          <Text style={styles.newMatchTitle}>Find Partner</Text>
+
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 14 }}
+          >
+            {premiumProfiles.map((item, index) => (
+              <View key={index} style={styles.newMatchCard}>
+                <Image
+                  source={{ uri: item.photos?.[0] }}
+                  style={styles.newMatchImg}
+                />
+
+                {/* Overlay Content */}
+                <View style={styles.newMatchOverlay}>
+                  <Text style={styles.newMatchName}>
+                    {item.name}
+                    <Text style={styles.newMatchAge}>  {item.age} yrs</Text>
+                  </Text>
+
+                  <Text style={styles.newMatchInfo}>
+                    {item.height || "5'6\""}, {item.caste || "Punjabi"}
+                  </Text>
+
+                  <Text style={styles.newMatchInfo}>
+                    {item.city}, {item.state}
+                  </Text>
+                </View>
+
+                {/* Chat Button */}
+                <TouchableOpacity style={styles.chatBtn} onPress={() =>
+                  navigation.navigate("ProfileDetail", { id: item._id })
+                }>
+                  <Text style={styles.chatBtnText}>View-Detail</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* See All */}
+          <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("FindPartner")}>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
+        </View>
+
 
         {/* 🔴 SUCCESS STORIES */}
         {/* 🔶 SUCCESS STORIES (EXACT DESIGN) */}
@@ -232,7 +279,7 @@ export default function HomeScreen() {
                         {story.description || "A beautiful journey of love and togetherness."}
                       </Text>
 
-                      <TouchableOpacity style={styles.readMoreBtn}>
+                      <TouchableOpacity style={styles.readMoreBtn} onPress={() => navigation.navigate("DetailSuccess", { id: story._id })}>
                         <Text style={styles.readMoreText}>Read More</Text>
                       </TouchableOpacity>
                     </View>

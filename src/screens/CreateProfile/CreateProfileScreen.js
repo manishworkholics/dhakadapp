@@ -1,67 +1,120 @@
 // src/screens/CreateProfile/CreateProfileScreen.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 import Step1Basic from "./Step1Basic";
 import Step2Location from "./Step2Location";
 import Step3Religion from "./Step3Religion";
 import Step4EduJob from "./Step4EduJob";
 import Step5AboutPhotos from "./Step5AboutPhotos";
-import { useNavigation } from "@react-navigation/native";
+
+const API_URL = "http://143.110.244.163:5000/api";
 
 export default function CreateProfileScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
+
+  const existingProfile = route.params?.profile || null;
   const [step, setStep] = useState(1);
 
   const [profileData, setProfileData] = useState({
-    name: "",
-    dob: "",
-    gender: "",
-    height: "",
-    motherTongue: "",
-    location: "",
-    physicalStatus: "Normal",
-    maritalStatus: "Never married",
-    religion: "",
-    cast: "",
-    subCast: "",
-    gotra: "",
-    education: "",
-    employmentType: "",
-    occupation: "",
-    annualIncome: "",
-    familyStatus: "Middle class",
-    diet: "Veg",
-    aboutYourself: "",
-    photos: [],
-    introVideo: "",
+    name: existingProfile?.name || "",
+    dob: existingProfile?.dob || "",
+    gender: existingProfile?.gender || "",
+    motherTongue: existingProfile?.motherTongue || "",
+    location: existingProfile?.location || "",
+
+    height: existingProfile?.height || "",
+    physicalStatus: existingProfile?.physicalStatus || "Normal",
+    maritalStatus: existingProfile?.maritalStatus || "Never married",
+
+    religion: existingProfile?.religion || "",
+    caste: existingProfile?.caste || "",
+    subCaste: existingProfile?.subCaste || "",
+    gotra: existingProfile?.gotra || "",
+
+    education: existingProfile?.educationDetails || "",
+    employmentType: existingProfile?.employmentType || "",
+    occupation: existingProfile?.occupation || "",
+    annualIncome: existingProfile?.annualIncome || "",
+
+    familyStatus: existingProfile?.familyStatus || "Middle class",
+    diet: existingProfile?.diet || "Veg",
+    aboutYourself: existingProfile?.aboutYourself || "",
+    hobbies: existingProfile?.hobbies || "",
+
+    photos: existingProfile?.photos || [],
   });
 
-  const next = () => setStep(step + 1);
-  const prev = () => setStep(step - 1);
+  const next = () => setStep((s) => Math.min(5, s + 1));
+  const prev = () => setStep((s) => Math.max(1, s - 1));
 
+  /* 🔹 AUTO JUMP TO INCOMPLETE STEP (EDIT MODE) */
+  useEffect(() => {
+    if (!existingProfile) return;
+
+    if (!profileData.name || !profileData.gender || !profileData.dob)
+      setStep(1);
+    else if (!profileData.location)
+      setStep(2);
+    else if (!profileData.religion || !profileData.caste)
+      setStep(3);
+    else if (!profileData.occupation || !profileData.annualIncome)
+      setStep(4);
+    else
+      setStep(5);
+  }, []);
+
+  /* 🔹 FINAL SUBMIT */
   const submitForm = async () => {
-    console.log("Profile Submitted:", profileData);
-    alert("Profile Successfully Created!");
-    navigation.replace("Home");
-    // later — POST this to backend API
-    // axios.post(`${API_URL}/profile/create`, profileData)
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const payload = {
+        ...profileData,
+        educationDetails: profileData.education,
+        caste: profileData.caste,
+        subCaste: profileData.subCaste,
+      };
+
+      delete payload.education;
+
+      await axios.put(`${API_URL}/profile/update`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert("Profile updated successfully!");
+      navigation.goBack();
+    } catch (err) {
+      console.log(err.response?.data || err.message);
+      alert("Failed to update profile");
+    }
   };
 
   return (
     <View style={{ flex: 1 }}>
-      {/* RENDER STEP */}
       {step === 1 && <Step1Basic profile={profileData} setProfile={setProfileData} />}
       {step === 2 && <Step2Location profile={profileData} setProfile={setProfileData} />}
       {step === 3 && <Step3Religion profile={profileData} setProfile={setProfileData} />}
       {step === 4 && <Step4EduJob profile={profileData} setProfile={setProfileData} />}
-      {step === 5 && <Step5AboutPhotos profile={profileData} setProfile={setProfileData} submit={submitForm} />}
+      {step === 5 && (
+        <Step5AboutPhotos
+          profile={profileData}
+          setProfile={setProfileData}
+          submit={submitForm}
+        />
+      )}
 
-      {/* BOTTOM BUTTON AREA */}
+      {/* FOOTER */}
       <View style={styles.bottomContainer}>
         {step > 1 && (
           <TouchableOpacity onPress={prev} style={styles.backBtn}>
-            <Text style={{ fontSize: 16 }}>← Back</Text>
+            <Text>← Back</Text>
           </TouchableOpacity>
         )}
 
