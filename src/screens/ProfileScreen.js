@@ -42,7 +42,7 @@ const ProfileNavCard = ({ title, subtitle, onPress }) => (
 
 export default function ProfileScreen({ navigation }) {
   const { profile, loading } = useProfile();
-  
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -59,9 +59,21 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
+  const InfoBlock = ({ label, value }) => {
+    if (!value) return null;
+
+    return (
+      <View style={styles.infoBlock}>
+        <Text style={styles.blockLabel}>{label}</Text>
+        <Text style={styles.blockValue}>{value}</Text>
+      </View>
+    );
+  };
+
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" ,paddingBottom: 70 }}>
-      <Header  title="My Profile" />
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 70 }}>
+      <Header title="My Profile" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 🔹 PROFILE HEADER */}
@@ -82,10 +94,18 @@ export default function ProfileScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.editBtn}
-            onPress={() => navigation.navigate("CreateProfile")}
+            onPress={() =>
+              navigation.navigate("CreateProfile", {
+                mode: "edit",
+                profile: profile,
+              })
+            }
           >
-            <Text style={styles.editText}>Edit Profile</Text>
+            <Text style={styles.editText}>
+              {profile.isCompleted ? "Edit Profile" : "Complete Profile"}
+            </Text>
           </TouchableOpacity>
+
         </View>
 
         {/* 🔹 IMAGE GALLERY */}
@@ -111,30 +131,46 @@ export default function ProfileScreen({ navigation }) {
         {/* 🔹 PERSONAL INFO */}
         <Section title="Personal Information">
           <InfoRow label="Gender" value={profile.gender} />
+          <InfoRow label="Date of Birth" value={profile.dob?.split("T")?.[0]} />
           <InfoRow label="Marital Status" value={profile.maritalStatus} />
           <InfoRow label="Physical Status" value={profile.physicalStatus} />
           <InfoRow label="Height" value={profile.height} />
         </Section>
 
+
         {/* 🔹 RELIGION */}
         <Section title="Religion & Culture">
           <InfoRow label="Religion" value={profile.religion} />
           <InfoRow label="Caste" value={profile.caste} />
+          <InfoRow label="Sub Caste" value={profile.subCaste} />
           <InfoRow label="Gotra" value={profile.gotra} />
           <InfoRow label="Mother Tongue" value={profile.motherTongue} />
         </Section>
 
+
         {/* 🔹 PROFESSIONAL */}
         <Section title="Professional Information">
-          <InfoRow label="Occupation" value={profile.occupation} />
+          <InfoRow label="Education" value={profile.educationDetails} />
           <InfoRow label="Employment Type" value={profile.employmentType} />
+          <InfoRow label="Occupation" value={profile.occupation} />
           <InfoRow label="Annual Income" value={profile.annualIncome} />
         </Section>
+
 
         {/* 🔹 LOCATION */}
         <Section title="Location">
           <InfoRow label="City" value={profile.location} />
         </Section>
+
+
+        <Section title="Family & Lifestyle">
+          <InfoRow label="Family Status" value={profile.familyStatus} />
+          <InfoRow label="Diet" value={profile.diet} />
+          <InfoRow label="Hobbies" value={profile.hobbies} />
+          <InfoBlock label="About Me" value={profile.aboutYourself} />
+
+        </Section>
+
 
         {/* 🔹 PROFILE OPTIONS */}
         <Section title="Profile Options">
@@ -252,4 +288,23 @@ const styles = StyleSheet.create({
   navTitle: { fontSize: 15, fontWeight: "600" },
   navSub: { fontSize: 12, color: "#777", marginTop: 2 },
   navArrow: { fontSize: 20, color: "#999" },
+
+
+  infoBlock: {
+    paddingVertical: 8,
+  },
+
+  blockLabel: {
+    color: "#666",
+    fontSize: 13,
+    marginBottom: 4,
+  },
+
+  blockValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#000",
+    lineHeight: 20,
+  },
+
 });

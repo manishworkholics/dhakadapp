@@ -226,7 +226,7 @@ export default function InterestScreen({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5",paddingBottom:70 }}>
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 70 }}>
       <Header title="Interests" />
 
       {/* MAIN TABS */}

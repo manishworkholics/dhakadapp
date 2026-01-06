@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 100, // footer height
+    bottom: 65, // footer height
     flexDirection: "row",
     backgroundColor: "#fff",
     padding: 10,

@@ -26,6 +26,7 @@ import FindPartnerScreen from "./src/screens/FindPartnerScreen";
 import ChatDetailScreen from "./src/screens/ChatDetailScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
 import PremiumScreen from "./src/screens/PremiumScreen";
+import DetailSuccessStory from "./src/screens/DetailSuccessStory";
 
 const Stack = createNativeStackNavigator();
 
@@ -50,14 +51,12 @@ export default function App() {
           <Stack.Screen name="Notification" component={NotificationScreen} />
           <Stack.Screen name="Plan" component={PlanScreen} />
           <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
-          <Stack.Screen
-            name="PartnerPreference"
-            component={PartnerPreferenceScreen}
-          />
+          <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
           <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
           <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
           <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           <Stack.Screen name="Premium" component={PremiumScreen} />
+          <Stack.Screen name="DetailSuccess" component={DetailSuccessStory} />
         </Stack.Navigator>
       </NavigationContainer>
     </ProfileProvider>
