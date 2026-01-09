@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Dimensions,
   FlatList,
+  ImageBackground
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,13 +17,17 @@ import axios from "axios";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-
+import { useProfile } from "../context/ProfileContext";
 const API_URL = "http://143.110.244.163:5000/api";
 const { width } = Dimensions.get("window");
 
 export default function ProfileDetailScreen({ route, navigation }) {
   const { id } = route.params;
-  
+  const {
+    hasActivePlan,
+    hasFeature,
+    userPlan,
+  } = useProfile();
   const [interestSent, setInterestSent] = useState(false);
   const [chatInterestSent, setChatInterestSent] = useState(false);
   const [isShortlisted, setIsShortlisted] = useState(false);
@@ -150,7 +155,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header  title={profile.name} onMenuPress={() => navigation.goBack()} />
+      <Header title={profile.name} onMenuPress={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 220 }}>
         {/* ================= IMAGE SLIDER ================= */}
@@ -162,12 +167,26 @@ export default function ProfileDetailScreen({ route, navigation }) {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={styles.heroImage} />
+              <ImageBackground
+                source={{ uri: item }}
+                style={styles.heroBg}
+                blurRadius={18}
+              >
+                <View style={styles.heroDark} />
+
+                <Image
+                  source={{ uri: item }}
+                  style={styles.heroImage}
+                  resizeMode="contain"
+                />
+              </ImageBackground>
             )}
+
           />
 
           <View style={styles.heroOverlay}>
             <Text style={styles.heroName}>{profile.name}</Text>
+
             <Text style={styles.heroSub}>
               {calculateAge(profile.dob)} yrs, {profile.height} •{" "}
               {profile.occupation}
@@ -227,7 +246,15 @@ export default function ProfileDetailScreen({ route, navigation }) {
             </View>
           </View>
 
-          <InfoRow label="Birth Date" value="**/**/**** 🔒" />
+          <InfoRow
+            label="Birth Date"
+            value={
+              hasActivePlan
+                ? new Date(profile.dob).toDateString()
+                : "**/**/**** 🔒"
+            }
+          />
+
           <InfoRow label="Marital Status" value={profile.maritalStatus} />
           <InfoRow label="Lives in" value={profile.location} />
           <InfoRow
@@ -242,10 +269,20 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
         {/* ================= CONTACT DETAILS ================= */}
         <Card title="Contact Details">
-          <InfoRow label="Contact No." value="+91********** 🔒" />
-          <InfoRow label="Email ID" value="********@gmail.com 🔒" />
-          <PremiumBtn />
+          {hasFeature("Privacy Controls") ? (
+            <>
+              <InfoRow label="Contact No." value={profile.phone || "Not available"} />
+              <InfoRow label="Email ID" value={profile.email || "Not available"} />
+            </>
+          ) : (
+            <>
+              <InfoRow label="Contact No." value="+91********** 🔒" />
+              <InfoRow label="Email ID" value="********@gmail.com 🔒" />
+              <PremiumBtn />
+            </>
+          )}
         </Card>
+
 
         {/* ================= FAMILY CTA ================= */}
         <View style={styles.familyCard}>
@@ -261,17 +298,18 @@ export default function ProfileDetailScreen({ route, navigation }) {
           <Text style={styles.ceTitle}>Career & Education</Text>
 
           <CEItem
-            icon="💼"
-            label="Profession"
-            value={profile.occupation}
-          />
-
-          <CEItem
             icon="🏢"
             label="Company Name"
-            value="****************"
-            locked
+            value={
+              hasFeature("Verified Profile")
+                ? profile.employmentType || "Not available"
+                : "****************"
+            }
+            locked={!hasFeature("Verified Profile")}
           />
+
+
+
 
           <CEItem
             icon="💰"
@@ -291,23 +329,46 @@ export default function ProfileDetailScreen({ route, navigation }) {
             value={profile.educationField || "Science"}
           />
 
+
+
           <CEItem
             icon="🏫"
             label="College Name"
-            value="****************"
-            locked
+            value={
+              hasFeature("Verified Profile")
+                ? profile.occupation || "Not available"
+                : "****************"
+            }
+            locked={!hasFeature("Verified Profile")}
           />
 
           {/* Divider */}
           <View style={styles.ceDivider} />
 
-          <Text style={styles.unlockText}>
+          {/* <Text style={styles.unlockText}>
             To unlock Contact No. & Email ID
           </Text>
 
           <TouchableOpacity style={styles.premiumBtn}>
             <Text style={styles.premiumBtnText}>Go Premium Now</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+
+          {hasFeature("Best Matches") ? (
+            <View style={styles.yhCard}>
+              {/* existing You & Her UI */}
+            </View>
+          ) : (
+            <View style={styles.yhLocked}>
+              <Text style={styles.yhLockedText}>
+                Upgrade to see compatibility with {profile.name}
+              </Text>
+              <PremiumBtn />
+            </View>
+          )}
+
+
+         
+
         </View>
 
 
@@ -381,10 +442,15 @@ export default function ProfileDetailScreen({ route, navigation }) {
       {/* ================= ACTION BAR ================= */}
       <View style={styles.actionBar}>
         <ActionBtn
-          title={chatInterestSent ? "Interest Sent ✓" : "Chat Now"}
-          onPress={sendChatInterest}
-          disabled={chatInterestSent}
+          title={hasActivePlan ? "Chat Now" : "Upgrade to Chat"}
+          onPress={
+            hasActivePlan
+              ? sendChatInterest
+              : () => navigation.navigate("Plans")
+          }
+          disabled={!hasActivePlan}
         />
+
 
         <ActionBtn
           title={interestSent ? "Interest Sent ✓" : "Send Interest"}
@@ -501,6 +567,19 @@ const styles = StyleSheet.create({
     height: 420,
     resizeMode: "cover",
   },
+  heroBg: {
+    width: width,
+    height: 420,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+  },
+
+  heroDark: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
+
   heroOverlay: {
     position: "absolute",
     bottom: 20,
@@ -695,129 +774,142 @@ const styles = StyleSheet.create({
 
 
   yhCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+
+  yhHeader: {
+    height: 110,
+    backgroundColor: "#fde6cf",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  yhAvatars: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  yhAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+
+  yhLink: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#f4b400",
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 8,
+  },
+
+  yhBody: {
+    padding: 16,
+  },
+
+  yhTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+
+  yhSub: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 12,
+  },
+
+  yhRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+  },
+
+  yhLabel: {
+    fontSize: 13,
+    color: "#999",
+  },
+
+  yhValue: {
+    fontSize: 14,
+    color: "#222",
+    marginTop: 2,
+  },
+
+  yhCheck: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "#ff4e50",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  commonTitle: {
+    marginTop: 16,
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  commonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  commonIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#d4af37",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+
+  commonText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#333",
+  },
+
+  connectBtn: {
+    marginTop: 20,
+    backgroundColor: "#ff4e50",
+    paddingVertical: 12,
+    borderRadius: 24,
+    alignItems: "center",
+  },
+
+  connectText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+yhLocked: {
   backgroundColor: "#fff",
-  marginHorizontal: 16,
-  marginTop: 16,
+  margin: 16,
+  padding: 20,
   borderRadius: 20,
-  overflow: "hidden",
-},
-
-yhHeader: {
-  height: 110,
-  backgroundColor: "#fde6cf",
-  justifyContent: "center",
   alignItems: "center",
 },
-
-yhAvatars: {
-  flexDirection: "row",
-  alignItems: "center",
-},
-
-yhAvatar: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  borderWidth: 2,
-  borderColor: "#fff",
-},
-
-yhLink: {
-  width: 28,
-  height: 28,
-  borderRadius: 14,
-  backgroundColor: "#f4b400",
-  justifyContent: "center",
-  alignItems: "center",
-  marginHorizontal: 8,
-},
-
-yhBody: {
-  padding: 16,
-},
-
-yhTitle: {
-  fontSize: 16,
-  fontWeight: "700",
-  marginBottom: 4,
-},
-
-yhSub: {
+yhLockedText: {
   fontSize: 14,
   color: "#555",
-  marginBottom: 12,
-},
-
-yhRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  paddingVertical: 10,
-  borderBottomWidth: 1,
-  borderColor: "#eee",
-},
-
-yhLabel: {
-  fontSize: 13,
-  color: "#999",
-},
-
-yhValue: {
-  fontSize: 14,
-  color: "#222",
-  marginTop: 2,
-},
-
-yhCheck: {
-  width: 26,
-  height: 26,
-  borderRadius: 13,
-  borderWidth: 1,
-  borderColor: "#ff4e50",
-  justifyContent: "center",
-  alignItems: "center",
-},
-
-commonTitle: {
-  marginTop: 16,
-  marginBottom: 8,
-  fontSize: 14,
-  fontWeight: "700",
-},
-
-commonRow: {
-  flexDirection: "row",
-  alignItems: "center",
   marginBottom: 10,
-},
-
-commonIcon: {
-  width: 32,
-  height: 32,
-  borderRadius: 16,
-  backgroundColor: "#d4af37",
-  justifyContent: "center",
-  alignItems: "center",
-  marginRight: 10,
-},
-
-commonText: {
-  flex: 1,
-  fontSize: 14,
-  color: "#333",
-},
-
-connectBtn: {
-  marginTop: 20,
-  backgroundColor: "#ff4e50",
-  paddingVertical: 12,
-  borderRadius: 24,
-  alignItems: "center",
-},
-
-connectText: {
-  color: "#fff",
-  fontWeight: "700",
-  fontSize: 14,
+  textAlign: "center",
 },
 
 });
