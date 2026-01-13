@@ -10,6 +10,7 @@ export default function WelcomeScreen() {
       <View style={styles.card}>
         <Image
           source={require("../assets/images/logo.png")}  
+          source={require("../assets/images/logo-dark.png")}
           style={styles.logo}
         />
 
@@ -41,16 +42,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card: {
-    backgroundColor: "#fff",
     width: "85%",
     padding: 25,
     borderRadius: 18,
-    alignItems: "center",
+    backgroundColor: "#fff",
     elevation: 5,
+    alignItems: "center",
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 180,
+    height: 120,
     marginBottom: 25,
   },
   optionBtn: {

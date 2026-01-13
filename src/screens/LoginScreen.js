@@ -121,7 +121,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <Image
-          source={require("../assets/images/logo.png")}
+          source={require("../assets/images/logo-dark.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: 120,
+    width: 180,
     height: 120,
     marginBottom: 25,
   },

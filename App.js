@@ -2,7 +2,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 /* 🔹 CONTEXT */
+import { DrawerProvider } from "./src/context/DrawerContext";
 import { ProfileProvider } from "./src/context/ProfileContext";
+
 
 /* 🔹 SCREENS */
 import SplashScreen from "./src/screens/SplashScreen";
@@ -28,37 +30,41 @@ import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen
 import PremiumScreen from "./src/screens/PremiumScreen";
 import DetailSuccessStory from "./src/screens/DetailSuccessStory";
 
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <ProfileProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="Welcome" component={WelcomeScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="Otp" component={OtpScreen} />
-          <Stack.Screen name="MobileOtp" component={MobileOtpScreen} />
-          <Stack.Screen name="EmailOtp" component={EmailOtpScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="Matches" component={MatchesScreen} />
-          <Stack.Screen name="Interest" component={InterestScreen} />
-          <Stack.Screen name="Chat" component={ChatScreen} />
-          <Stack.Screen name="Shortlist" component={ShortlistScreen} />
-          <Stack.Screen name="Notification" component={NotificationScreen} />
-          <Stack.Screen name="Plan" component={PlanScreen} />
-          <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
-          <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
-          <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
-          <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
-          <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-          <Stack.Screen name="Premium" component={PremiumScreen} />
-          <Stack.Screen name="DetailSuccess" component={DetailSuccessStory} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ProfileProvider>
+    <DrawerProvider>
+      <ProfileProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="Otp" component={OtpScreen} />
+            <Stack.Screen name="MobileOtp" component={MobileOtpScreen} />
+            <Stack.Screen name="EmailOtp" component={EmailOtpScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="Matches" component={MatchesScreen} />
+            <Stack.Screen name="Interest" component={InterestScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Shortlist" component={ShortlistScreen} />
+            <Stack.Screen name="Notification" component={NotificationScreen} />
+            <Stack.Screen name="Plan" component={PlanScreen} />
+            <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+            <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
+            <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+            <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+            <Stack.Screen name="Premium" component={PremiumScreen} />
+            <Stack.Screen name="DetailSuccess" component={DetailSuccessStory} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ProfileProvider>
+    </DrawerProvider>
   );
 }
+

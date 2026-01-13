@@ -4,9 +4,11 @@ import {
   Text,
   ScrollView,
   Image,
+  ImageBackground,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import DrawerLayout from "../components/DrawerLayout";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
@@ -20,6 +22,18 @@ export default function HomeScreen() {
   const [premiumProfiles, setPremiumProfiles] = useState([]);
   const [successStories, setSuccessStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { hasActivePlan } = useProfile();
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+
+  const handleProfilePress = (profileId) => {
+    if (!hasActivePlan) {
+      setShowUpgrade(true);
+      return;
+    }
+    navigation.navigate("ProfileDetail", { id: profileId });
+  };
+
 
   const fetchHomeData = async () => {
     try {
@@ -45,6 +59,23 @@ export default function HomeScreen() {
     fetchHomeData();
   }, []);
 
+
+  /* ================= AGE ================= */
+  const calculateAge = (dob) => {
+    if (!dob) return "-";
+    const birth = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    if (
+      today.getMonth() < birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -54,250 +85,278 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Header title={profile?.name} />
+    <DrawerLayout navigation={navigation}>
+      <View style={styles.container}>
+        <Header title={profile?.name} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* 🔴 TOP PROFILE CARD */}
-        <View style={styles.topCard}>
-          <View style={styles.topRow}>
-            <View>
-              <Text style={styles.profileName}>{profile?.name}</Text>
-              <Text style={styles.profileId}>DH1409005</Text>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* 🔴 TOP PROFILE CARD */}
+          <View style={styles.topCard}>
+            <View style={styles.topRow}>
+              <View>
+                <Text style={styles.profileName}>{profile?.name}</Text>
+                <Text style={styles.profileId}>DH{profile?._id?.slice(0, 5)}</Text>
 
-              <View style={styles.freeBadge}>
-                <Text style={styles.freeText}>Account : Free</Text>
+                <View style={styles.freeBadge}>
+                  <Text style={styles.freeText}>Account : Free</Text>
+                </View>
               </View>
+
+              <TouchableOpacity style={styles.upgradeBtn}>
+                <Text style={styles.upgradeText}>Upgrade Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* 🔴 COMPLETE PROFILE */}
+          <View style={styles.completeBox}>
+            <Text style={styles.completeTitle}>Complete your profile</Text>
+
+            <View style={styles.progressCircle}>
+              <Text style={styles.progressText}>{profile?.profileScore}%</Text>
             </View>
 
-            <TouchableOpacity style={styles.upgradeBtn}>
-              <Text style={styles.upgradeText}>Upgrade Now</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            <View style={styles.actionRow} >
+              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
+                <Text style={styles.actionText}>Add Photo</Text>
+              </TouchableOpacity>
 
-        {/* 🔴 COMPLETE PROFILE */}
-        <View style={styles.completeBox}>
-          <Text style={styles.completeTitle}>Complete your profile</Text>
-
-          <View style={styles.progressCircle}>
-            <Text style={styles.progressText}>{profile?.profileScore}%</Text>
-          </View>
-
-          <View style={styles.actionRow} >
-            <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
-              <Text style={styles.actionText}>Add Photo</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
-              <Text style={styles.actionText}>Family Details</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-
-        {/* 🔶 PREMIUM MATCHES (EXACT DESIGN) */}
-        <View style={styles.premiumWrapper}>
-          <Text style={styles.premiumTitle}>Premium Matches (541)</Text>
-          <Text style={styles.premiumSub}>
-            Recently upgrade Premium Members
-          </Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 14 }}
-          >
-            {premiumProfiles.map((item, index) => (
-              <View key={index} style={styles.premiumCard}>
-                <Image
-                  source={{ uri: item.photos?.[0] }}
-                  style={styles.premiumImg}
-                />
-
-                {/* Overlay */}
-                <View style={styles.premiumOverlay}>
-                  <Text style={styles.premiumName}>
-                    {item.name}
-                    <Text style={styles.premiumAge}>  {item.age} yrs</Text>
-                  </Text>
-
-                  <Text style={styles.premiumInfo}>
-                    {item.height || "5'6\""}, {item.caste || "Punjabi"}
-                  </Text>
-
-                  <Text style={styles.premiumInfo}>
-                    {item.city}, {item.state}
-                  </Text>
-                </View>
-
-                {/* Connect Button */}
-                <TouchableOpacity style={styles.connectBtn} onPress={() => navigation.navigate("ProfileDetail", { id: item._id })}>
-                  <Text style={styles.connectText}>✓  Connect Now</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* See All */}
-          <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-
-        {/* 🔴 NEW MATCHES */}
-        {/* 🔶 NEW MATCHES (EXACT DESIGN) */}
-        <View style={styles.newMatchWrapper}>
-          <Text style={styles.newMatchTitle}>New Matches (541)</Text>
-          <Text style={styles.newMatchSub}>Members who joined recently</Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 14 }}
-          >
-            {premiumProfiles.map((item, index) => (
-              <View key={index} style={styles.newMatchCard}>
-                <Image
-                  source={{ uri: item.photos?.[0] }}
-                  style={styles.newMatchImg}
-                />
-
-                {/* Overlay Content */}
-                <View style={styles.newMatchOverlay}>
-                  <Text style={styles.newMatchName}>
-                    {item.name}
-                    <Text style={styles.newMatchAge}>  {item.age} yrs</Text>
-                  </Text>
-
-                  <Text style={styles.newMatchInfo}>
-                    {item.height || "5'6\""}, {item.caste || "Punjabi"}
-                  </Text>
-
-                  <Text style={styles.newMatchInfo}>
-                    {item.city}, {item.state}
-                  </Text>
-                </View>
-
-                {/* Chat Button */}
-                <TouchableOpacity style={styles.chatBtn} onPress={() =>
-                  navigation.navigate("ProfileDetail", { id: item._id })
-                }>
-                  <Text style={styles.chatBtnText}>Chat</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* See All */}
-          <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 🔶 Find Member (EXACT DESIGN) */}
-        <View style={styles.newMatchWrapper}>
-          <Text style={styles.newMatchTitle}>Find Partner</Text>
-
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 14 }}
-          >
-            {premiumProfiles.map((item, index) => (
-              <View key={index} style={styles.newMatchCard}>
-                <Image
-                  source={{ uri: item.photos?.[0] }}
-                  style={styles.newMatchImg}
-                />
-
-                {/* Overlay Content */}
-                <View style={styles.newMatchOverlay}>
-                  <Text style={styles.newMatchName}>
-                    {item.name}
-                    <Text style={styles.newMatchAge}>  {item.age} yrs</Text>
-                  </Text>
-
-                  <Text style={styles.newMatchInfo}>
-                    {item.height || "5'6\""}, {item.caste || "Punjabi"}
-                  </Text>
-
-                  <Text style={styles.newMatchInfo}>
-                    {item.city}, {item.state}
-                  </Text>
-                </View>
-
-                {/* Chat Button */}
-                <TouchableOpacity style={styles.chatBtn} onPress={() =>
-                  navigation.navigate("ProfileDetail", { id: item._id })
-                }>
-                  <Text style={styles.chatBtnText}>View-Detail</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* See All */}
-          <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("FindPartner")}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-
-        {/* 🔴 SUCCESS STORIES */}
-        {/* 🔶 SUCCESS STORIES (EXACT DESIGN) */}
-        {successStories.length > 0 && (
-          <View style={styles.successOuterWrap}>
-
-            {/* ORANGE CURVED HEADER */}
-            <View style={styles.successHeader}>
-              <Text style={styles.successHeaderTitle}>Success Story</Text>
-              <Text style={styles.successHeaderSub}>
-                Check it out our success stories who found their life partner here.
-              </Text>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
+                <Text style={styles.actionText}>Family Details</Text>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* WHITE CARD BACKGROUND */}
-            <View style={styles.successCardWrapper}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {successStories.map((story) => (
-                  <View key={story._id} style={styles.successStoryCard}>
+
+          {/* 🔶 PREMIUM MATCHES (EXACT DESIGN) */}
+          <View style={styles.premiumWrapper}>
+            <Text style={styles.premiumTitle}>Premium Matches </Text>
+            <Text style={styles.premiumSub}>
+              Recently upgrade Premium Members
+            </Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginTop: 14 }}
+            >
+              {premiumProfiles.map((item, index) => (
+                <View key={index} style={styles.premiumCard}>
+                  <ImageBackground
+                    source={{ uri: item.photos?.[0] }}
+                    style={styles.premiumImgBg}
+                    blurRadius={18}
+                  >
+                    <View style={styles.darkOverlay} />
 
                     <Image
-                      source={{ uri: story.image }}
-                      style={styles.successStoryImg}
+                      source={{ uri: item.photos?.[0] }}
+                      style={styles.premiumImg}
+                      resizeMode="contain"
                     />
+                  </ImageBackground>
 
-                    <View style={styles.successStoryContent}>
-                      <Text style={styles.successStoryName}>
-                        {story.name} & {story.partnerName}
-                      </Text>
 
-                      <Text style={styles.successStoryDesc} numberOfLines={2}>
-                        {story.description || "A beautiful journey of love and togetherness."}
-                      </Text>
+                  {/* Overlay */}
+                  <View style={styles.premiumOverlay}>
+                    <Text style={styles.premiumName}>
+                      {item.name}
+                      <Text style={styles.premiumAge}>  {calculateAge(profile.dob)} yrs</Text>
+                    </Text>
 
-                      <TouchableOpacity style={styles.readMoreBtn} onPress={() => navigation.navigate("DetailSuccess", { id: story._id })}>
-                        <Text style={styles.readMoreText}>Read More</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.premiumInfo}>
+                      {item.height || "5'6\""}, {item.caste || ""}
+                    </Text>
 
+                    <Text style={styles.premiumInfo}>
+                      {item.city}, {item.state}
+                    </Text>
                   </View>
-                ))}
-              </ScrollView>
-            </View>
 
+                  {/* Connect Button */}
+                  <TouchableOpacity style={styles.connectBtn} onPress={() => handleProfilePress(item._id)}>
+                    <Text style={styles.connectText}>✓  Connect Now</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* See All */}
+            <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
           </View>
-        )}
 
 
-        <View style={{ height: 80 }} />
-      </ScrollView>
+          {/* 🔴 NEW MATCHES */}
+          {/* 🔶 NEW MATCHES (EXACT DESIGN) */}
+          <View style={styles.newMatchWrapper}>
+            <Text style={styles.newMatchTitle}>New Matches </Text>
+            <Text style={styles.newMatchSub}>Members who joined recently</Text>
 
-      <Footer />
-    </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginTop: 14 }}
+            >
+              {premiumProfiles.map((item, index) => (
+                <View key={index} style={styles.newMatchCard}>
+                  <ImageBackground
+                    source={{ uri: item.photos?.[0] }}
+                    style={styles.newMatchImgBg}
+                    blurRadius={16}
+                  >
+                    <View style={styles.darkOverlay} />
+
+                    <Image
+                      source={{ uri: item.photos?.[0] }}
+                      style={styles.newMatchImg}
+                      resizeMode="contain"
+                    />
+                  </ImageBackground>
+
+                  {/* Overlay Content */}
+                  <View style={styles.newMatchOverlay}>
+                    <Text style={styles.newMatchName}>
+                      {item.name}
+                      <Text style={styles.newMatchAge}>  {calculateAge(item.dob)} yrs</Text>
+                    </Text>
+
+                    <Text style={styles.newMatchInfo}>
+                      {item.height || "5'6\""}, {item.caste || ""}
+                    </Text>
+
+                    <Text style={styles.newMatchInfo}>
+                      {item.city}, {item.state}
+                    </Text>
+                  </View>
+
+                  {/* Chat Button */}
+                  <TouchableOpacity style={styles.chatBtn} onPress={() => handleProfilePress(item._id)}>
+                    <Text style={styles.chatBtnText}>Chat</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* See All */}
+            <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 🔶 Find Member (EXACT DESIGN) */}
+          <View style={styles.newMatchWrapper}>
+            <Text style={styles.newMatchTitle}>Find Partner</Text>
+
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginTop: 14 }}
+            >
+              {premiumProfiles.map((item, index) => (
+                <View key={index} style={styles.newMatchCard}>
+                  <Image
+                    source={{ uri: item.photos?.[0] }}
+                    style={styles.newMatchImg}
+                  />
+
+                  {/* Overlay Content */}
+                  <View style={styles.newMatchOverlay}>
+                    <Text style={styles.newMatchName}>
+                      {item.name}
+                      <Text style={styles.newMatchAge}>  {calculateAge(profile.dob)} yrs</Text>
+                    </Text>
+
+                    <Text style={styles.newMatchInfo}>
+                      {item.height || "5'6\""}, {item.caste || ""}
+                    </Text>
+
+                    <Text style={styles.newMatchInfo}>
+                      {item.city}, {item.state}
+                    </Text>
+                  </View>
+
+                  {/* Chat Button */}
+                  <TouchableOpacity style={styles.chatBtn} onPress={() =>
+                    navigation.navigate("ProfileDetail", { id: item._id })
+                  }>
+                    <Text style={styles.chatBtnText}>View-Detail</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* See All */}
+            <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("FindPartner")}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+
+          {/* 🔴 SUCCESS STORIES */}
+          {/* 🔶 SUCCESS STORIES (EXACT DESIGN) */}
+          {successStories.length > 0 && (
+            <View style={styles.successOuterWrap}>
+
+              {/* ORANGE CURVED HEADER */}
+              <View style={styles.successHeader}>
+                <Text style={styles.successHeaderTitle}>Success Story</Text>
+                <Text style={styles.successHeaderSub}>
+                  Check it out our success stories who found their life partner here.
+                </Text>
+              </View>
+
+              {/* WHITE CARD BACKGROUND */}
+              <View style={styles.successCardWrapper}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} >
+                  {successStories.map((story) => (
+                    <View key={story._id} style={styles.successStoryCard}>
+
+                      <Image
+                        source={{ uri: story.image }}
+                        style={styles.successStoryImg}
+                      />
+
+                      <View style={styles.successStoryContent}>
+                        <Text style={styles.successStoryName}>
+                          {story.name} & {story.partnerName}
+                        </Text>
+
+                        <Text style={styles.successStoryDesc} numberOfLines={2}>
+                          {story.description || "A beautiful journey of love and togetherness."}
+                        </Text>
+
+                        <TouchableOpacity style={styles.readMoreBtn} onPress={() => navigation.navigate("DetailSuccess", { id: story._id })}>
+                          <Text style={styles.readMoreText}>Read More</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+
+            </View>
+          )}
+
+
+          <View style={{ height: 80 }} />
+        </ScrollView>
+
+        <Footer />
+        <UpgradeModal
+          visible={showUpgrade}
+          onClose={() => setShowUpgrade(false)}
+          onUpgrade={() => {
+            setShowUpgrade(false);
+            navigation.navigate("Plans");
+          }}
+        />
+
+      </View>
+    </DrawerLayout>
   );
 }
 
@@ -308,6 +367,40 @@ const styles = StyleSheet.create({
 
 
   /* ================= NEW MATCHES ================= */
+  premiumImgBg: {
+    width: "100%",
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
+
+  premiumImg: {
+    width: "90%",
+    height: "85%",
+  },
+  newMatchImgBg: {
+    width: "100%",
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  newMatchImg: {
+    width: "90%",
+    height: "85%",
+  },
+  successStoryImg: {
+    width: "100%",
+    height: 240,
+    resizeMode: "contain",
+    backgroundColor: "#f5f5f5",
+  },
+
 
   newMatchWrapper: {
     backgroundColor: "#fff",
@@ -618,10 +711,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomLeftRadius: 22,
     borderBottomRightRadius: 22,
-    paddingVertical: 16,
+    paddingVertical: 20,
     paddingLeft: 10,
+    paddingBottom: 26,   // ⭐ KEY FIX
     elevation: 4,
   },
+
 
   /* Individual story card */
   successStoryCard: {
@@ -629,6 +724,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 18,
     marginRight: 14,
+    marginBottom: 10,   // ⭐ prevents touching
     elevation: 3,
     overflow: "hidden",
   },
@@ -674,4 +770,116 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
+
+});
+
+
+const UpgradeModal = ({ visible, onClose, onUpgrade }) => {
+  if (!visible) return null;
+
+  return (
+    <View style={modalStyles.overlay}>
+      <View style={modalStyles.card}>
+        <Image
+          source={{
+            uri: "https://randomuser.me/api/portraits/women/44.jpg",
+          }}
+          style={modalStyles.avatar}
+        />
+
+        <Text style={modalStyles.title}>
+          Upgrade Now to get full access
+        </Text>
+
+        <View style={modalStyles.option}>
+          <Text>📞 +91********</Text>
+        </View>
+
+        <View style={modalStyles.option}>
+          <Text>💬 Chat via WhatsApp</Text>
+        </View>
+
+        <View style={modalStyles.option}>
+          <Text>💌 Message via Direct Chat</Text>
+        </View>
+
+        <TouchableOpacity style={modalStyles.planBtn} onPress={onUpgrade}>
+          <Text style={modalStyles.planText}>View Plans</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onClose}>
+          <Text style={modalStyles.close}>Close</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+
+  card: {
+    width: "85%",
+    backgroundColor: "#d4af37",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+
+  avatar: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: "#fff",
+    marginTop: -60,
+    backgroundColor: "#fff",
+  },
+
+  title: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+
+  option: {
+    width: "100%",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 12,
+    marginVertical: 6,
+  },
+
+  planBtn: {
+    backgroundColor: "#ff4e50",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 22,
+    marginTop: 14,
+  },
+
+  planText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+
+  close: {
+    marginTop: 10,
+    color: "#fff",
+    opacity: 0.8,
+  },
 });
