@@ -6,12 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Alert,
 } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 export default function Step5AboutPhotos({ profile, setProfile, submit }) {
+
+  /* ================= UPLOAD IMAGE ================= */
+
   const uploadImage = async (imageUri) => {
     const token = await AsyncStorage.getItem("token");
 
@@ -36,17 +40,33 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
     return res.data.url;
   };
 
+  /* ================= PICK IMAGE ================= */
+
   const pickImage = async () => {
     const result = await launchImageLibrary({
       mediaType: "photo",
+      selectionLimit: 1, // ✅ single image only
     });
 
-    if (result?.assets?.[0]?.uri) {
+    if (!result?.assets?.[0]?.uri) return;
+
+    try {
       const uploadedUrl = await uploadImage(result.assets[0].uri);
-      setProfile({
-        ...profile,
-        photos: [...profile.photos, uploadedUrl],
+
+      setProfile((prev) => {
+        const remainingPhotos = prev.photos.filter(
+          (p) => p !== uploadedUrl
+        );
+
+        return {
+          ...prev,
+          photos: [uploadedUrl, ...remainingPhotos], // ✅ always first
+        };
       });
+
+    } catch (err) {
+      console.log("Upload error:", err.message);
+      Alert.alert("Upload Failed", "Unable to upload image");
     }
   };
 
@@ -54,14 +74,10 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
     <View style={styles.container}>
       <Text style={styles.title}>Additional Details</Text>
 
-      {/* FAMILY STATUS */}
+      {/* ================= FAMILY STATUS ================= */}
       <Text style={styles.label}>Family Status</Text>
       <View style={styles.row}>
-        {[
-          "Middle class",
-          "Upper middle class",
-          "Rich / Affluent (Elite)",
-        ].map((v) => (
+        {["Middle class", "Upper middle class", "Rich / Affluent (Elite)"].map((v) => (
           <TouchableOpacity
             key={v}
             style={[
@@ -84,15 +100,10 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         ))}
       </View>
 
-      {/* DIET */}
+      {/* ================= DIET ================= */}
       <Text style={styles.label}>Diet</Text>
       <View style={styles.row}>
-        {[
-          "Veg",
-          "Nonveg",
-          "Vegan",
-          "Occasionally Non-Veg",
-        ].map((v) => (
+        {["Veg", "Nonveg", "Vegan", "Occasionally Non-Veg"].map((v) => (
           <TouchableOpacity
             key={v}
             style={[
@@ -115,7 +126,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         ))}
       </View>
 
-      {/* ABOUT */}
+      {/* ================= ABOUT ================= */}
       <TextInput
         style={[styles.input, { height: 110 }]}
         placeholder="A few words about yourself"
@@ -126,7 +137,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         }
       />
 
-      {/* HOBBIES */}
+      {/* ================= HOBBIES ================= */}
       <TextInput
         style={[styles.input, { height: 90 }]}
         placeholder="Hobbies (e.g. music, travel, fitness)"
@@ -137,34 +148,36 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         }
       />
 
-      {/* PHOTOS */}
-      <Text style={styles.label}>Profile Photos</Text>
+      {/* ================= PHOTO PREVIEW ================= */}
+      <Text style={styles.label}>Profile Photo</Text>
+
       <View style={styles.photoRow}>
-        {profile.photos.map((img, index) => (
+        {profile.photos.length > 0 && (
           <Image
-            key={index}
-            source={{ uri: img }}
+            source={{ uri: profile.photos[0] }}
             style={styles.photo}
           />
-        ))}
+        )}
       </View>
 
+      {/* ================= PHOTO BUTTON ================= */}
       <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
         <Text style={{ color: "#fff", fontWeight: "600" }}>
-          Select From Gallery
+          {profile.photos.length
+            ? "Change Profile Photo"
+            : "Select Profile Photo"}
         </Text>
       </TouchableOpacity>
 
-      {/* SUBMIT */}
+      {/* ================= SUBMIT ================= */}
       <TouchableOpacity style={styles.submitBtn} onPress={submit}>
-        <Text style={styles.submitText}>
-          Submit Profile
-        </Text>
+        <Text style={styles.submitText}>Submit Profile</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
+/* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
   container: {
@@ -218,15 +231,13 @@ const styles = StyleSheet.create({
 
   photoRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     marginBottom: 10,
   },
 
   photo: {
-    width: 90,
-    height: 90,
-    borderRadius: 8,
-    margin: 6,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
   },
 
   photoBtn: {

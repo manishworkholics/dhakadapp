@@ -16,12 +16,28 @@ const API_URL = "http://143.110.244.163:5000/api";
 export default function CreateProfileScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const [authUser, setAuthUser] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const storedUser = await AsyncStorage.getItem("user");
+      if (storedUser) {
+        setAuthUser(JSON.parse(storedUser));
+      }
+    };
+    loadUser();
+  }, []);
+
+
 
   const existingProfile = route.params?.profile || null;
   const [step, setStep] = useState(1);
 
   const [profileData, setProfileData] = useState({
-    name: existingProfile?.name || "",
+    name: existingProfile?.name || authUser?.name || "",
+    email: existingProfile?.email || authUser?.email || "",
+    phone: existingProfile?.phone || authUser?.phone || "",
+
     dob: existingProfile?.dob || "",
     gender: existingProfile?.gender || "",
     motherTongue: existingProfile?.motherTongue || "",
@@ -49,6 +65,17 @@ export default function CreateProfileScreen() {
     photos: existingProfile?.photos || [],
   });
 
+
+  useEffect(() => {
+    if (!existingProfile && authUser?.name) {
+      setProfileData((prev) => ({
+        ...prev,
+        name: authUser.name,
+      }));
+    }
+  }, [authUser]);
+
+
   const next = () => setStep((s) => Math.min(5, s + 1));
   const prev = () => setStep((s) => Math.max(1, s - 1));
 
@@ -74,22 +101,51 @@ export default function CreateProfileScreen() {
       const token = await AsyncStorage.getItem("token");
 
       const payload = {
-        ...profileData,
-        educationDetails: profileData.education,
+        name: profileData.name,
+        dob: profileData.dob,
+        motherTongue: profileData.motherTongue,
+        gender: profileData.gender,
+        location: profileData.location,
+
+        height: profileData.height,
+        physicalStatus: profileData.physicalStatus,
+        maritalStatus: profileData.maritalStatus,
+        religion: profileData.religion,
         caste: profileData.caste,
         subCaste: profileData.subCaste,
+        gotra: profileData.gotra,
+
+        educationDetails: profileData.education,
+        employmentType: profileData.employmentType,
+        occupation: profileData.occupation,
+        annualIncome: profileData.annualIncome,
+
+        familyStatus: profileData.familyStatus,
+        diet: profileData.diet,
+        aboutYourself: profileData.aboutYourself,
+        hobbies: profileData.hobbies,
+
+        photos: profileData.photos,
       };
+
 
       delete payload.education;
 
-      await axios.put(`${API_URL}/profile/update`, payload, {
+      await axios.post(`${API_URL}/profile/create`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      await AsyncStorage.removeItem("ownProfile");
+
       alert("Profile updated successfully!");
-      navigation.goBack();
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
+
     } catch (err) {
       console.log(err.response?.data || err.message);
       alert("Failed to update profile");
