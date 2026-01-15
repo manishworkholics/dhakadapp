@@ -5,22 +5,53 @@ import {
   TouchableOpacity,
   Modal,
   StyleSheet,
+  Image
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
-
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useDrawer } from "../context/DrawerContext";
-
+import { useProfile } from "../context/ProfileContext";
 
 export default function SideDrawer({ navigation }) {
+
   const { open, closeDrawer } = useDrawer();
+  const { profile } = useProfile();
 
   const go = (screen) => {
     closeDrawer();
     navigation.navigate(screen);
   };
+
+  // const handleLogout = async () => {
+  //   try {
+  //     await AsyncStorage.removeItem("token");
+  //     closeDrawer();
+  //     navigation.reset({
+  //       index: 0,
+  //       routes: [{ name: "Welcome" }],
+  //     });
+  //   } catch (err) {
+  //     console.log("Logout error", err);
+  //   }
+  // };
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.clear();   // 🔥 clears everything
+      closeDrawer();
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Welcome" }],
+      });
+    } catch (err) {
+      console.log("Logout error", err);
+    }
+  };
+
+
 
   return (
     <Modal visible={open} transparent animationType="fade">
@@ -37,15 +68,23 @@ export default function SideDrawer({ navigation }) {
         {/* Profile */}
         <View style={styles.profileBox}>
           <View style={styles.avatar}>
-            <Icon name="person" size={30} color="#FFA821" />
+            {profile?.images?.[0] || profile?.photos?.[0] ? (
+              <Image
+                source={{ uri: profile.images?.[0] || profile.photos?.[0] }}
+                style={styles.avatar}
+              />
+            ) : (
+              <Icon name="person" size={30} color="#FFA821" />
+            )}
           </View>
 
+
           <View>
-            <Text style={styles.username}>Shivam Thakur</Text>
+            <Text style={styles.username}>{profile?.name}</Text>
 
             {/* USER ID + COPY */}
             <View style={styles.useridbox}>
-              <Text style={styles.userid}>SH07635039</Text>
+              <Text style={styles.userid}>DH{profile?._id?.slice(0, 5)}</Text>
 
               <TouchableOpacity
                 onPress={() => {
@@ -70,7 +109,7 @@ export default function SideDrawer({ navigation }) {
         <DrawerItem
           icon="diamond-outline"
           title="Upgrade to Premium"
-          
+
           onPress={() => go("Premium")}
         />
 
@@ -114,10 +153,8 @@ export default function SideDrawer({ navigation }) {
         <Divider />
 
         {/* Logout */}
-        <TouchableOpacity
-          style={styles.logout}
-          onPress={() => go("Welcome")}
-        >
+        <TouchableOpacity style={styles.logout} onPress={handleLogout}>
+
           <Icon name="log-out-outline" size={18} color="red" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
@@ -168,7 +205,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     alignSelf: "flex-start",
     marginBottom: 10,
-    
+
   },
   profileBox: {
     flexDirection: "row",
@@ -230,4 +267,10 @@ const styles = StyleSheet.create({
     color: "red",
     fontWeight: "600",
   },
+  avatarImg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+  },
+
 });

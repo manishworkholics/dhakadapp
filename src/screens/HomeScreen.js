@@ -20,8 +20,20 @@ import { useProfile } from "../context/ProfileContext";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
+/* ================= Skeleton Card ================= */
+
+const CardSkeleton = () => (
+  <View style={skeleton.card}>
+    <View style={skeleton.image} />
+    <View style={skeleton.lineShort} />
+    <View style={skeleton.lineLong} />
+    <View style={skeleton.button} />
+  </View>
+);
+
+
 export default function HomeScreen() {
-  const [token, setToken] = useState("");
+
 
   const { profile } = useProfile();
   const navigation = useNavigation();
@@ -31,6 +43,13 @@ export default function HomeScreen() {
   const [successStories, setSuccessStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const { hasActivePlan } = useProfile();
+
+
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingMatches, setLoadingMatches] = useState(true);
+  const [loadingProfiles, setLoadingProfiles] = useState(true);
+  const [loadingStories, setLoadingStories] = useState(true);
+
   const [showUpgrade, setShowUpgrade] = useState(false);
 
 
@@ -46,11 +65,11 @@ export default function HomeScreen() {
   const fetchFeaturedProfiles = async () => {
     try {
       const res = await axios.get(`${API_URL}/featured?limit=10`);
-      if (res.data?.profiles) {
-        setPremiumProfiles(res.data.profiles);
-      }
-    } catch (err) {
-      console.log("FEATURED API ERROR", err.message);
+      if (res.data?.profiles) setPremiumProfiles(res.data.profiles);
+    } catch (e) {
+      console.log("FEATURED API ERROR", e.message);
+    } finally {
+      setLoadingFeatured(false);
     }
   };
 
@@ -60,11 +79,11 @@ export default function HomeScreen() {
       const res = await axios.get(`${API_URL}/matches/new-matches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data?.matches) {
-        setNewmatches(res.data.matches);
-      }
-    } catch (err) {
-      console.log("NEW MATCHES API ERROR", err.message);
+      if (res.data?.matches) setNewmatches(res.data.matches);
+    } catch (e) {
+      console.log("MATCHES API ERROR", e.message);
+    } finally {
+      setLoadingMatches(false);
     }
   };
 
@@ -73,46 +92,31 @@ export default function HomeScreen() {
       const res = await axios.get(
         `${API_URL}/profile/profiles?userId=undefined&page=1&limit=9`
       );
-      if (res.data?.profiles) {
-        setProfiles(res.data.profiles);
-      }
-    } catch (err) {
-      console.log("PROFILES API ERROR", err.message);
+      if (res.data?.profiles) setProfiles(res.data.profiles);
+    } catch (e) {
+      console.log("PROFILES API ERROR", e.message);
+    } finally {
+      setLoadingProfiles(false);
     }
   };
 
   const fetchSuccessStories = async () => {
     try {
       const res = await axios.get(`${API_URL}/success`);
-      if (res.data?.stories) {
-        setSuccessStories(res.data.stories);
-      }
-    } catch (err) {
-      console.log("SUCCESS STORIES API ERROR", err.message);
-    }
-  };
-
-
-  const fetchHomeData = async () => {
-    try {
-      setLoading(true);
-
-      await Promise.all([
-        fetchFeaturedProfiles(),
-        fetchNewMatches(),
-        fetchProfiles(),
-        fetchSuccessStories(),
-      ]);
-    } catch (err) {
-      console.log("HOME API ERROR", err.message);
+      if (res.data?.stories) setSuccessStories(res.data.stories);
+    } catch (e) {
+      console.log("STORIES API ERROR", e.message);
     } finally {
-      setLoading(false);
+      setLoadingStories(false);
     }
   };
 
 
   useEffect(() => {
-    fetchHomeData();
+    fetchFeaturedProfiles();
+    fetchNewMatches();
+    fetchProfiles();
+    fetchSuccessStories();
   }, []);
 
 
@@ -133,13 +137,7 @@ export default function HomeScreen() {
     return age;
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+
 
   return (
     <DrawerLayout navigation={navigation}>
@@ -159,15 +157,15 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-           <TouchableOpacity style={styles.upgradeBtn}>
-  <FontAwesome5
-    name="crown"
-    size={14}
-    color="#fff"
-    style={{ marginRight: 6 }}
-  />
-  <Text style={styles.upgradeText}>Upgrade Now</Text>
-</TouchableOpacity>
+              <TouchableOpacity style={styles.upgradeBtn}>
+                <FontAwesome5
+                  name="crown"
+                  size={14}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.upgradeText}>Upgrade Now</Text>
+              </TouchableOpacity>
 
             </View>
           </View>
@@ -192,171 +190,142 @@ export default function HomeScreen() {
           </View>
 
 
-          {/* 🔶 PREMIUM MATCHES (EXACT DESIGN) */}
+          {/* ================= Premium Matches ================= */}
+
           <View style={styles.premiumWrapper}>
-            <Text style={styles.premiumTitle}>Premium Matches </Text>
+            <Text style={styles.premiumTitle}>Premium Matches</Text>
             <Text style={styles.premiumSub}>
-              Recently upgrade Premium Members
+
             </Text>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: 14 }}
-            >
-              {premiumProfiles.map((item, index) => (
-                <View key={index} style={styles.premiumCard}>
-                  <ImageBackground
-                    source={{ uri: item.photos?.[0] }}
-                    style={styles.premiumImgBg}
-                    blurRadius={18}
-                  >
-                    <View style={styles.darkOverlay} />
-
-                    <Image
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {loadingFeatured
+                ? [...Array(4)].map((_, i) => <CardSkeleton key={i} />)
+                : premiumProfiles.map((item) => (
+                  <View key={item._id} style={styles.premiumCard}>
+                    <ImageBackground
                       source={{ uri: item.photos?.[0] }}
-                      style={styles.premiumImg}
-                      resizeMode="contain"
-                    />
-                  </ImageBackground>
+                      style={styles.premiumImgBg}
+                      blurRadius={18}
+                    >
+                      <View style={styles.darkOverlay} />
+                      <Image
+                        source={{ uri: item.photos?.[0] }}
+                        style={styles.premiumImg}
+                      />
+                    </ImageBackground>
 
+                    <View style={styles.premiumOverlay}>
+                      <Text style={styles.premiumName}>
+                        {item.name}{" "}
+                        <Text style={styles.premiumAge}>
+                          {calculateAge(item.dob)} yrs
+                        </Text>
+                      </Text>
+                      <Text style={styles.premiumInfo}>
+                        {item.height}, {item.caste}
+                      </Text>
+                      <Text style={styles.premiumInfo}>
+                        {item.city}, {item.state}
+                      </Text>
+                    </View>
 
-                  {/* Overlay */}
-                  <View style={styles.premiumOverlay}>
-                    <Text style={styles.premiumName}>
-                      {item.name}
-                      <Text style={styles.premiumAge}>  {calculateAge(profile.dob)} yrs</Text>
-                    </Text>
-
-                    <Text style={styles.premiumInfo}>
-                      {item.height || "5'6\""}, {item.caste || ""}
-                    </Text>
-
-                    <Text style={styles.premiumInfo}>
-                      {item.city}, {item.state}
-                    </Text>
+                    <TouchableOpacity
+                      style={styles.connectBtn}
+                      onPress={() => handleProfilePress(item._id)}
+                    >
+                      <Text style={styles.connectText}>✓ Connect Now</Text>
+                    </TouchableOpacity>
                   </View>
-
-                  {/* Connect Button */}
-                  <TouchableOpacity style={styles.connectBtn} onPress={() => handleProfilePress(item._id)}>
-                    <Text style={styles.connectText}>✓  Connect Now</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                ))}
             </ScrollView>
-
-            {/* See All */}
-            <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
           </View>
 
 
-          {/*  NEW MATCHES */}
-          
+          {/* ================= New Matches ================= */}
+
           <View style={styles.newMatchWrapper}>
-            <Text style={styles.newMatchTitle}>New Matches </Text>
-            <Text style={styles.newMatchSub}>Members who joined recently</Text>
+            <Text style={styles.newMatchTitle}>New Matches</Text>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: 14 }}
-            >
-              {newmatches.map((item, index) => (
-                <View key={index} style={styles.newMatchCard}>
-                  <ImageBackground
-                    source={{ uri: item.photos?.[0] }}
-                    style={styles.newMatchImgBg}
-                    blurRadius={16}
-                  >
-                    <View style={styles.darkOverlay} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {loadingMatches
+                ? [...Array(4)].map((_, i) => <CardSkeleton key={i} />)
+                : newmatches.map((item) => (
+                  <View key={item._id} style={styles.newMatchCard}>
+                    <ImageBackground
+                      source={{ uri: item.photos?.[0] }}
+                      style={styles.newMatchImgBg}
+                      blurRadius={16}
+                    >
+                      <View style={styles.darkOverlay} />
+                      <Image
+                        source={{ uri: item.photos?.[0] }}
+                        style={styles.newMatchImg}
+                      />
+                    </ImageBackground>
 
+                    <TouchableOpacity
+                      style={styles.chatBtn}
+                      onPress={() => handleProfilePress(item._id)}
+                    >
+                      <Text style={styles.chatBtnText}>Chat</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+            </ScrollView>
+          </View>
+
+
+          <View style={styles.newMatchWrapper}>
+            <Text style={styles.newMatchTitle}>Find Partner</Text>
+            <Text style={styles.premiumSub}>
+
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {loadingProfiles
+                ? [...Array(4)].map((_, index) => <CardSkeleton key={index} />)
+                : profiles.map((item, index) => (
+                  <View key={item._id || index} style={styles.newMatchCard}>
                     <Image
                       source={{ uri: item.photos?.[0] }}
                       style={styles.newMatchImg}
-                      resizeMode="contain"
                     />
-                  </ImageBackground>
 
-                  {/* Overlay Content */}
-                  <View style={styles.newMatchOverlay}>
-                    <Text style={styles.newMatchName}>
-                      {item.name}
-                      <Text style={styles.newMatchAge}>  {calculateAge(item.dob)} yrs</Text>
-                    </Text>
+                    {/* Overlay Content */}
+                    <View style={styles.newMatchOverlay}>
+                      <Text style={styles.newMatchName}>
+                        {item.name}
+                        <Text style={styles.newMatchAge}>
+                          {"  "}
+                          {calculateAge(item.dob)} yrs
+                        </Text>
+                      </Text>
 
-                    <Text style={styles.newMatchInfo}>
-                      {item.height || "5'6\""}, {item.caste || ""}
-                    </Text>
+                      <Text style={styles.newMatchInfo}>
+                        {item.height || "5'6\""}, {item.caste || ""}
+                      </Text>
 
-                    <Text style={styles.newMatchInfo}>
-                      {item.city}, {item.state}
-                    </Text>
+                      <Text style={styles.newMatchInfo}>
+                        {item.city}, {item.state}
+                      </Text>
+                    </View>
+
+                    {/* Chat Button */}
+                    <TouchableOpacity
+                      style={styles.chatBtn}
+                      onPress={() =>
+                        navigation.navigate("ProfileDetail", { id: item._id })
+                      }
+                    >
+                      <Text style={styles.chatBtnText}>View-Detail</Text>
+                    </TouchableOpacity>
                   </View>
-
-                  {/* Chat Button */}
-                  <TouchableOpacity style={styles.chatBtn} onPress={() => handleProfilePress(item._id)}>
-                    <Text style={styles.chatBtnText}>Chat</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                ))}
             </ScrollView>
-
-            {/* See All */}
-            <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("Matches")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
           </View>
 
-          {/* 🔶 Find Member (EXACT DESIGN) */}
-          <View style={styles.newMatchWrapper}>
-            <Text style={styles.newMatchTitle}>Find Partner</Text>
 
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: 14 }}
-            >
-              {profiles.map((item, index) => (
-                <View key={index} style={styles.newMatchCard}>
-                  <Image
-                    source={{ uri: item.photos?.[0] }}
-                    style={styles.newMatchImg}
-                  />
-
-                  {/* Overlay Content */}
-                  <View style={styles.newMatchOverlay}>
-                    <Text style={styles.newMatchName}>
-                      {item.name}
-                      <Text style={styles.newMatchAge}>  {calculateAge(profile.dob)} yrs</Text>
-                    </Text>
-
-                    <Text style={styles.newMatchInfo}>
-                      {item.height || "5'6\""}, {item.caste || ""}
-                    </Text>
-
-                    <Text style={styles.newMatchInfo}>
-                      {item.city}, {item.state}
-                    </Text>
-                  </View>
-
-                  {/* Chat Button */}
-                  <TouchableOpacity style={styles.chatBtn} onPress={() =>
-                    navigation.navigate("ProfileDetail", { id: item._id })
-                  }>
-                    <Text style={styles.chatBtnText}>View-Detail</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-
-            {/* See All */}
-            <TouchableOpacity style={styles.seeAllBox} onPress={() => navigation.navigate("FindPartner")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
 
 
           {/* 🔴 SUCCESS STORIES */}
@@ -665,19 +634,19 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   freeText: { color: "#fff", fontSize: 12 },
-upgradeBtn: {
-  flexDirection: "row",     // 🔥 IMPORTANT
-  alignItems: "center",
-  backgroundColor: "#D4AF37",
-  paddingHorizontal: 14,
-  paddingVertical: 8,
-  borderRadius: 20,
-},
-upgradeText: {
-  color: "#fff",
-  fontSize: 14,
-  fontWeight: "600",
-},
+  upgradeBtn: {
+    flexDirection: "row",     // 🔥 IMPORTANT
+    alignItems: "center",
+    backgroundColor: "#D4AF37",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  upgradeText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
 
 
   /* COMPLETE PROFILE */
@@ -952,5 +921,46 @@ const modalStyles = StyleSheet.create({
     marginTop: 10,
     color: "#fff",
     opacity: 0.8,
+  },
+});
+
+
+/* ================= Skeleton styles ================= */
+
+const skeleton = StyleSheet.create({
+  card: {
+    width: 170,
+    borderRadius: 18,
+    marginRight: 14,
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+  },
+  image: {
+    width: "100%",
+    height: 160,
+    borderRadius: 14,
+    backgroundColor: "#e0e0e0",
+  },
+  lineShort: {
+    height: 10,
+    width: "60%",
+    backgroundColor: "#ddd",
+    borderRadius: 6,
+    marginTop: 10,
+  },
+  lineLong: {
+    height: 10,
+    width: "80%",
+    backgroundColor: "#ddd",
+    borderRadius: 6,
+    marginTop: 6,
+  },
+  button: {
+    height: 26,
+    width: "90%",
+    backgroundColor: "#ddd",
+    borderRadius: 8,
+    marginTop: 12,
+    alignSelf: "center",
   },
 });

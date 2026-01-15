@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -47,6 +48,7 @@ const ProfileNavCard = ({ title, subtitle, onPress }) => (
 export default function ProfileScreen({ navigation }) {
 
   const { profile, loading } = useProfile();
+  const [uploading, setUploading] = useState(false);
 
   const uploadPhoto = async () => {
     try {
@@ -56,6 +58,8 @@ export default function ProfileScreen({ navigation }) {
       });
 
       if (!result?.assets?.[0]?.uri) return;
+
+      setUploading(true); // 🔄 start loader
 
       const token = await AsyncStorage.getItem("token");
 
@@ -80,13 +84,21 @@ export default function ProfileScreen({ navigation }) {
 
       const newUrl = uploadRes.data.url;
 
-      // make first photo primary
-      const updatedPhotos = [
-        newUrl,
-        ...(profile.photos || []).filter((p) => p !== newUrl),
-      ];
+      const existingPhotos = profile.photos || [];
 
-      // update profile
+      let updatedPhotos = [];
+
+      // ✅ logic:
+      // if no profile image yet → put at index 0
+      // else → add at end
+
+      if (existingPhotos.length === 0) {
+        updatedPhotos = [newUrl];
+      } else {
+        updatedPhotos = [...existingPhotos, newUrl];
+      }
+
+      // update profile API
       await axios.put(
         "http://143.110.244.163:5000/api/profile/update",
         { photos: updatedPhotos },
@@ -95,11 +107,13 @@ export default function ProfileScreen({ navigation }) {
         }
       );
 
-      // update context locally
+      // update local context object
       profile.photos = updatedPhotos;
 
     } catch (err) {
       console.log("Upload error", err.response?.data || err.message);
+    } finally {
+      setUploading(false); // ✅ stop loader
     }
   };
 
@@ -206,9 +220,18 @@ export default function ProfileScreen({ navigation }) {
               <Text style={{ color: "#888" }}>No photos uploaded</Text>
             )}
 
-            <TouchableOpacity style={styles.addPhoto} onPress={uploadPhoto}>
-              <Text style={{ fontSize: 28, color: "#999" }}>+</Text>
+            <TouchableOpacity
+              style={styles.addPhoto}
+              onPress={uploadPhoto}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <ActivityIndicator size="small" color="#ff4e50" />
+              ) : (
+                <Text style={{ fontSize: 28, color: "#999" }}>+</Text>
+              )}
             </TouchableOpacity>
+
 
           </View>
         </Section>
