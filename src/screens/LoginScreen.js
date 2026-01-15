@@ -40,33 +40,30 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
-      const res = await axios.post(EMAIL_LOGIN_API, {
-        email,
-        password,
-      });
+      const res = await axios.post(EMAIL_LOGIN_API, { email, password });
+      const data = res.data;
 
-      const data = res?.data;
-      console.log("EMAIL LOGIN 👉", data);
-
-      if (!data?.success) {
-        Alert.alert("Login Failed", data?.message || "Invalid credentials");
+      if (!data.success) {
+        Alert.alert("Login Failed", data.message || "Invalid credentials");
         return;
       }
 
-      // 🔐 EMAIL OTP REQUIRED
-      if (data?.requiresVerification) {
-        await AsyncStorage.setItem("tempEmail", email);
-
-        if (data?.debugOtp) {
-          await AsyncStorage.setItem("debugOtp", String(data.debugOtp));
-        }
-
-        Alert.alert("OTP Sent", "Please verify OTP sent to your email");
-        navigation.navigate("EmailOtp");
+      // email not verified
+      if (data.requiresVerification) {
+        navigation.navigate("EmailOtp", { email: data.user.email });
         return;
       }
 
-      // ✅ DIRECT LOGIN
+      // clear old cache
+      await AsyncStorage.multiRemove([
+        "token",
+        "user",
+        "ownProfile",
+        "userPlan",
+        "phone"
+      ]);
+
+      // save new session
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
@@ -74,6 +71,7 @@ export default function LoginScreen() {
         index: 0,
         routes: [{ name: "Home" }],
       });
+
     } catch (error) {
       Alert.alert(
         "Error",
@@ -83,6 +81,8 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
+
+
 
   /* ================= MOBILE OTP ================= */
   const handleSendOtp = async () => {

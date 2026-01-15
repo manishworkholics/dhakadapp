@@ -10,6 +10,10 @@ import {
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useProfile } from "../context/ProfileContext";
+import { launchImageLibrary } from "react-native-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+
 
 /* 🔹 SECTION WRAPPER */
 const Section = ({ title, children }) => (
@@ -41,7 +45,64 @@ const ProfileNavCard = ({ title, subtitle, onPress }) => (
 );
 
 export default function ProfileScreen({ navigation }) {
+
   const { profile, loading } = useProfile();
+
+  const uploadPhoto = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: "photo",
+        selectionLimit: 1,
+      });
+
+      if (!result?.assets?.[0]?.uri) return;
+
+      const token = await AsyncStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("image", {
+        uri: result.assets[0].uri,
+        name: "photo.jpg",
+        type: "image/jpeg",
+      });
+
+      // upload image
+      const uploadRes = await axios.post(
+        "http://143.110.244.163:5000/api/upload-image",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const newUrl = uploadRes.data.url;
+
+      // make first photo primary
+      const updatedPhotos = [
+        newUrl,
+        ...(profile.photos || []).filter((p) => p !== newUrl),
+      ];
+
+      // update profile
+      await axios.put(
+        "http://143.110.244.163:5000/api/profile/update",
+        { photos: updatedPhotos },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // update context locally
+      profile.photos = updatedPhotos;
+
+    } catch (err) {
+      console.log("Upload error", err.response?.data || err.message);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -53,11 +114,32 @@ export default function ProfileScreen({ navigation }) {
 
   if (!profile) {
     return (
-      <View style={styles.center}>
-        <Text>Profile not found</Text>
+      <View style={[styles.center, { padding: 20 }]}>
+        <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 10 }}>
+          Profile not completed
+        </Text>
+
+        <Text
+          style={{
+            color: "#666",
+            textAlign: "center",
+            marginBottom: 20,
+            fontSize: 14,
+          }}
+        >
+          Please complete your profile to get better matches and visibility.
+        </Text>
+
+        <TouchableOpacity
+          style={styles.completeBtn}
+          onPress={() => navigation.navigate("CreateProfile")}
+        >
+          <Text style={styles.completeBtnText}>Complete Your Profile</Text>
+        </TouchableOpacity>
       </View>
     );
   }
+
 
   const InfoBlock = ({ label, value }) => {
     if (!value) return null;
@@ -110,23 +192,27 @@ export default function ProfileScreen({ navigation }) {
 
         {/* 🔹 IMAGE GALLERY */}
         <Section title="Image Gallery">
-          <View style={styles.galleryRow}>
-            {profile.photos?.map((img, index) => (
-              <Image
-                key={index}
-                style={styles.galleryImg}
-                source={{ uri: img }}
-              />
-            ))}
+          <View style={styles.galleryGrid}>
 
-            <TouchableOpacity
-              style={styles.addPhoto}
-              onPress={() => navigation.navigate("CreateProfile")}
-            >
+            {profile.photos?.length > 0 ? (
+              profile.photos.map((img, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: img }}
+                  style={styles.galleryImg}
+                />
+              ))
+            ) : (
+              <Text style={{ color: "#888" }}>No photos uploaded</Text>
+            )}
+
+            <TouchableOpacity style={styles.addPhoto} onPress={uploadPhoto}>
               <Text style={{ fontSize: 28, color: "#999" }}>+</Text>
             </TouchableOpacity>
+
           </View>
         </Section>
+
 
         {/* 🔹 PERSONAL INFO */}
         <Section title="Personal Information">
@@ -192,7 +278,7 @@ export default function ProfileScreen({ navigation }) {
           <ProfileNavCard
             title="My Plan"
             subtitle="View or upgrade your plan"
-            onPress={() => navigation.navigate("Plan")}
+            onPress={() => navigation.navigate("Premium")}
           />
           <ProfileNavCard
             title="Notifications"
@@ -305,6 +391,39 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#000",
     lineHeight: 20,
+  },
+  completeBtn: {
+    backgroundColor: "#ff4e50",
+    paddingHorizontal: 25,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+
+  completeBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  galleryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  galleryImg: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+
+  addPhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
 });

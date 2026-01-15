@@ -16,16 +16,41 @@ import { useNavigation } from "@react-navigation/native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
 import { useProfile } from "../context/ProfileContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function HomeScreen() {
+  const [token, setToken] = useState("");
+
   const { profile } = useProfile();
   const navigation = useNavigation();
   const [premiumProfiles, setPremiumProfiles] = useState([]);
+  const [newmatches, setNewmatches] = useState([]);
+  const [profiles, setProfiles] = useState([]);
   const [successStories, setSuccessStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const { hasActivePlan } = useProfile();
   const [showUpgrade, setShowUpgrade] = useState(false);
+
+  useEffect(() => {
+    const loadToken = async () => {
+      const t = await AsyncStorage.getItem("token");
+      if (t) setToken(t);
+    };
+    loadToken();
+  }, []);
+
+  const axiosAuth = axios.create({
+    baseURL: API_URL,
+  });
+
+  axiosAuth.interceptors.request.use((config) => {
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
 
 
   const handleProfilePress = (profileId) => {
@@ -37,19 +62,66 @@ export default function HomeScreen() {
   };
 
 
+  const fetchFeaturedProfiles = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/featured?limit=10`);
+      if (res.data?.profiles) {
+        setPremiumProfiles(res.data.profiles);
+      }
+    } catch (err) {
+      console.log("FEATURED API ERROR", err.message);
+    }
+  };
+
+  const fetchNewMatches = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/matches/new-matches`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data?.matches) {
+        setNewmatches(res.data.matches);
+      }
+    } catch (err) {
+      console.log("NEW MATCHES API ERROR", err.message);
+    }
+  };
+
+  const fetchProfiles = async () => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/profile/profiles?userId=undefined&page=1&limit=9`
+      );
+      if (res.data?.profiles) {
+        setProfiles(res.data.profiles);
+      }
+    } catch (err) {
+      console.log("PROFILES API ERROR", err.message);
+    }
+  };
+
+  const fetchSuccessStories = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/success`);
+      if (res.data?.stories) {
+        setSuccessStories(res.data.stories);
+      }
+    } catch (err) {
+      console.log("SUCCESS STORIES API ERROR", err.message);
+    }
+  };
+
+
   const fetchHomeData = async () => {
     try {
       setLoading(true);
 
-      const featuredRes = await axios.get(`${API_URL}/featured?limit=10`);
-      if (featuredRes.data?.profiles) {
-        setPremiumProfiles(featuredRes.data.profiles);
-      }
-
-      const successRes = await axios.get(`${API_URL}/success`);
-      if (successRes.data?.stories) {
-        setSuccessStories(successRes.data.stories);
-      }
+      await Promise.all([
+        fetchFeaturedProfiles(),
+        fetchNewMatches(),
+        fetchProfiles(),
+        fetchSuccessStories(),
+      ]);
     } catch (err) {
       console.log("HOME API ERROR", err.message);
     } finally {
@@ -57,9 +129,11 @@ export default function HomeScreen() {
     }
   };
 
+
   useEffect(() => {
     fetchHomeData();
   }, []);
+
 
 
   /* ================= AGE ================= */
@@ -126,11 +200,11 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.actionRow} >
-              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("CreateProfile")}>
                 <Text style={styles.actionText}>Add Photo</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("Profile")}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("CreateProfile")}>
                 <Text style={styles.actionText}>Family Details</Text>
               </TouchableOpacity>
             </View>
@@ -208,7 +282,7 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               style={{ marginTop: 14 }}
             >
-              {premiumProfiles.map((item, index) => (
+              {newmatches.map((item, index) => (
                 <View key={index} style={styles.newMatchCard}>
                   <ImageBackground
                     source={{ uri: item.photos?.[0] }}
@@ -264,7 +338,7 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               style={{ marginTop: 14 }}
             >
-              {premiumProfiles.map((item, index) => (
+              {profiles.map((item, index) => (
                 <View key={index} style={styles.newMatchCard}>
                   <Image
                     source={{ uri: item.photos?.[0] }}

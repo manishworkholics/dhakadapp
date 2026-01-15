@@ -12,6 +12,17 @@ export default function Step3Religion({ profile, setProfile }) {
     <View style={styles.container}>
       <Text style={styles.title}>Personal & Religious Details</Text>
 
+      {/* HEIGHT */}
+      <Text style={styles.label}>Height</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="e.g. 5ft 6in"
+        value={profile.height}
+        onChangeText={(t) =>
+          setProfile({ ...profile, height: t })
+        }
+      />
+
       {/* PHYSICAL STATUS */}
       <Text style={styles.label}>Physical Status</Text>
       <View style={styles.row}>
@@ -101,13 +112,13 @@ export default function Step3Religion({ profile, setProfile }) {
       <TextInput
         style={styles.input}
         placeholder="Caste"
-        value={profile.cast}
+        value={profile.caste}
         onChangeText={(t) =>
-          setProfile({ ...profile, cast: t })
+          setProfile({ ...profile, caste: t })
         }
       />
 
-      {/* SUB CASTE (FIXED KEY) */}
+      {/* SUB CASTE */}
       <TextInput
         style={styles.input}
         placeholder="Sub-Caste"
@@ -129,7 +140,6 @@ export default function Step3Religion({ profile, setProfile }) {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

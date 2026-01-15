@@ -5,46 +5,132 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert
+  Alert,
+  ActivityIndicator
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+
+const API_BASE = "http://143.110.244.163:5000/api";
 
 export default function EmailOtpScreen() {
   const navigation = useNavigation();
-  const [otp, setOtp] = useState("");
+  const route = useRoute();
 
-  const verifyOtp = () => {
-    if (!otp) return Alert.alert("Enter OTP!");
-    // later add API verify
-    navigation.replace("Home");
+  const email = route?.params?.email || "";
+
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  /* ================= VERIFY OTP ================= */
+
+  const verifyOtp = async () => {
+    if (otp.length !== 4) {
+      return Alert.alert("Invalid OTP", "Please enter valid 4 digit OTP");
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(
+        `${API_BASE}/auth/verify-email-otp`,
+        { email, otp }
+      );
+
+      if (res.data.success) {
+        const token = res.data.token;
+        const user = res.data.user;
+
+        // clear old cache
+        await AsyncStorage.multiRemove([
+          "ownProfile",
+          "userPlan",
+          "phone"
+        ]);
+
+        // save new session
+        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem("user", JSON.stringify(user));
+
+        Alert.alert("Success", "Email verified successfully!");
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        });
+      }
+
+    } catch (err) {
+      Alert.alert(
+        "Verification Failed",
+        err?.response?.data?.message || "Invalid or expired OTP"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= RESEND OTP ================= */
+
+  const resendOtp = async () => {
+    try {
+      setResending(true);
+
+      await axios.post(`${API_BASE}/auth/resend-email-otp`, { email });
+
+      Alert.alert("OTP Sent", "New OTP sent to your email");
+
+    } catch (err) {
+      Alert.alert("Failed", "Unable to resend OTP");
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+
         <Text style={styles.title}>Verify Email</Text>
-        <Text style={styles.subtitle}>Enter the OTP sent to your email</Text>
+        <Text style={styles.subtitle}>
+          OTP sent to {email}
+        </Text>
 
         <TextInput
-          placeholder="Enter 6 digit OTP"
+          placeholder="Enter 4 digit OTP"
           keyboardType="number-pad"
-          maxLength={6}
+          maxLength={4}
           style={styles.input}
           value={otp}
-          onChangeText={setOtp}
+          onChangeText={(t) => setOtp(t.replace(/[^0-9]/g, ""))}
         />
 
-        <TouchableOpacity style={styles.verifyBtn} onPress={verifyOtp}>
-          <Text style={styles.verifyBtnText}>Verify & Continue</Text>
+        <TouchableOpacity
+          style={styles.verifyBtn}
+          onPress={verifyOtp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.verifyBtnText}>Verify & Continue</Text>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text style={styles.resend}>Resend OTP?</Text>
+        <TouchableOpacity onPress={resendOtp} disabled={resending}>
+          <Text style={styles.resend}>
+            {resending ? "Sending..." : "Resend OTP?"}
+          </Text>
         </TouchableOpacity>
+
       </View>
     </View>
   );
 }
+
+/* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
   container: {
@@ -69,7 +155,8 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: "#666",
-    marginBottom: 18
+    marginBottom: 18,
+    textAlign: "center"
   },
   input: {
     width: "100%",
@@ -79,7 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     textAlign: "center",
     fontSize: 18,
-    letterSpacing: 4
+    letterSpacing: 6
   },
   verifyBtn: {
     backgroundColor: "#ff4e50",

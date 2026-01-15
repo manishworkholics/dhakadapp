@@ -308,18 +308,12 @@ export default function RegisterScreen() {
     }
 
     if (!isValidPhone(phone)) {
-      Alert.alert(
-        "Invalid Phone Number",
-        "Please enter a valid 10-digit Indian mobile number"
-      );
+      Alert.alert("Invalid Phone Number", "Enter valid 10 digit number");
       return;
     }
 
     if (!isValidPassword(password)) {
-      Alert.alert(
-        "Weak Password",
-        "Password must be at least 6 characters long and contain at least one letter and one number"
-      );
+      Alert.alert("Weak Password", "Password must be strong");
       return;
     }
 
@@ -334,21 +328,11 @@ export default function RegisterScreen() {
         password,
       });
 
-      if (res.data.success) {
-        Alert.alert(
-          "Registration Successful",
-          "Please login to continue",
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.replace("Login"),
-            },
-          ]
-        );
+      if (res.data.success && res.data.requiresVerification) {
+        navigation.replace("EmailOtp", { email });
       }
-    } catch (err) {
-      console.log("REGISTER ERROR 👉", err?.response?.data || err.message);
 
+    } catch (err) {
       Alert.alert(
         "Registration Failed",
         err?.response?.data?.message || "Something went wrong"
@@ -357,6 +341,8 @@ export default function RegisterScreen() {
       setLoading(false);
     }
   };
+
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
