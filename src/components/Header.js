@@ -1,37 +1,74 @@
-
 // src/components/Header.js
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useProfile } from "../context/ProfileContext";
 import { useDrawer } from "../context/DrawerContext";
 
-const Header = ({ title, onMenuPress, onNotificationPress }) => {
+const Header = () => {
   const { profile } = useProfile();
   const { openDrawer } = useDrawer();
+
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => {
-        console.log("MENU CLICKED");
-        openDrawer();
-      }}>
+      {/* MENU ICON */}
+      <TouchableOpacity onPress={openDrawer}>
         <Icon name="menu-outline" size={26} color="red" />
       </TouchableOpacity>
 
-      {/* Title */}
-      <View>
-        <Text style={styles.title}>
-          {profile?.name || ''}
-        </Text>
+      {/* TITLE / SEARCH INPUT */}
+      <View style={styles.center}>
+        {isSearching ? (
+          <TextInput
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="Search here..."
+            autoFocus
+            style={styles.searchInput}
+            placeholderTextColor="#888"
+          />
+        ) : (
+          <Text style={styles.title}>
+            {profile?.name || ""}
+          </Text>
+        )}
       </View>
 
-      <TouchableOpacity onPress={openDrawer}>
-        <Icon name="search" size={24} color="red" style={styles.searchIcon} />
-      </TouchableOpacity>
+      {/* RIGHT ICONS */}
+      {isSearching ? (
+        <TouchableOpacity
+          onPress={() => {
+            setIsSearching(false);
+            setSearchText("");
+          }}
+        >
+          <Icon name="close" size={24} color="red" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.rightIcons}>
+          <TouchableOpacity onPress={() => setIsSearching(true)}>
+            <Icon name="search" size={24} color="red" />
+          </TouchableOpacity>
 
-      <TouchableOpacity onPress={openDrawer}>
-        <Icon name="notifications-outline" size={24} color="red" />
-      </TouchableOpacity>
+          <TouchableOpacity onPress={openDrawer}>
+            <Icon
+              name="notifications-outline"
+              size={24}
+              color="red"
+              style={{ marginLeft: 14 }}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -41,40 +78,34 @@ const styles = StyleSheet.create({
     height: 56,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     backgroundColor: "#fff",
     elevation: 4,
-    marginTop: 1
+     marginTop: 35,
+  },
+
+  center: {
+    flex: 1,
+    marginHorizontal: 14,
   },
 
   title: {
     fontSize: 18,
     fontWeight: "600",
   },
-  alignItems: 'center',
-  position: 'relative', notification: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
 
-    justifyContent: 'center',
+  searchInput: {
+    height: 40,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 15,
+  },
 
+  rightIcons: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  bell: {
-    fontSize: 25,
-    color: '#fff',
-  },
-  menu: {
-    fontSize: 25, color: 'black',
-  },
-  searchIcon: {
-    marginLeft: 120
-  }
-
 });
 
 export default Header;
-
-
-
