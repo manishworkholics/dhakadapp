@@ -13,6 +13,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+
 import { useProfile } from "../context/ProfileContext";
 
 
@@ -157,9 +159,16 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.upgradeBtn}>
-                <Text style={styles.upgradeText}>Upgrade Now</Text>
-              </TouchableOpacity>
+           <TouchableOpacity style={styles.upgradeBtn}>
+  <FontAwesome5
+    name="crown"
+    size={14}
+    color="#fff"
+    style={{ marginRight: 6 }}
+  />
+  <Text style={styles.upgradeText}>Upgrade Now</Text>
+</TouchableOpacity>
+
             </View>
           </View>
 
@@ -243,8 +252,8 @@ export default function HomeScreen() {
           </View>
 
 
-          {/* 🔴 NEW MATCHES */}
-          {/* 🔶 NEW MATCHES (EXACT DESIGN) */}
+          {/*  NEW MATCHES */}
+          
           <View style={styles.newMatchWrapper}>
             <Text style={styles.newMatchTitle}>New Matches </Text>
             <Text style={styles.newMatchSub}>Members who joined recently</Text>
@@ -518,7 +527,7 @@ const styles = StyleSheet.create({
   chatBtn: {
     borderWidth: 1,
     borderColor: "#ff6f00",
-    borderRadius: 20,
+    borderRadius: 8,
     paddingVertical: 6,
     alignItems: "center",
     marginTop: 10,
@@ -607,7 +616,7 @@ const styles = StyleSheet.create({
   connectBtn: {
     borderWidth: 1,
     borderColor: "#ff6f00",
-    borderRadius: 22,
+    borderRadius: 8,
     paddingVertical: 6,
     alignItems: "center",
     marginTop: 10,
@@ -656,13 +665,20 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   freeText: { color: "#fff", fontSize: 12 },
-  upgradeBtn: {
-    backgroundColor: "#f7a11b",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 22,
-  },
-  upgradeText: { color: "#fff", fontWeight: "700" },
+upgradeBtn: {
+  flexDirection: "row",     // 🔥 IMPORTANT
+  alignItems: "center",
+  backgroundColor: "#D4AF37",
+  paddingHorizontal: 14,
+  paddingVertical: 8,
+  borderRadius: 20,
+},
+upgradeText: {
+  color: "#fff",
+  fontSize: 14,
+  fontWeight: "600",
+},
+
 
   /* COMPLETE PROFILE */
   completeBox: {
@@ -687,12 +703,12 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 12 },
   actionBtn: {
     borderWidth: 1,
-    borderColor: "#ff4e50",
+    borderColor: "#E9E9E9",
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 8,
   },
-  actionText: { color: "#ff4e50", fontWeight: "600" },
+  actionText: { color: "#000000", fontWeight: "600" },
 
   /* SECTIONS */
   sectionHeader: {
@@ -816,7 +832,7 @@ const styles = StyleSheet.create({
     borderColor: "#FF6F00",
     paddingHorizontal: 22,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 8,
     marginTop: 6,
   },
   readMoreText: {

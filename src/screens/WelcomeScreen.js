@@ -9,12 +9,12 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <Image
-          source={require("../assets/images/logo.png")}  
+
           source={require("../assets/images/logo-dark.png")}
           style={styles.logo}
         />
 
-        <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate("Login")}> 
+        <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate("Login")}>
           <Text style={styles.optionText}>📱 Login</Text>
         </TouchableOpacity>
 
