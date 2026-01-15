@@ -14,7 +14,7 @@ import Footer from "../components/Footer";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { useProfile } from "../context/ProfileContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -30,25 +30,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const { hasActivePlan } = useProfile();
   const [showUpgrade, setShowUpgrade] = useState(false);
-
-  useEffect(() => {
-    const loadToken = async () => {
-      const t = await AsyncStorage.getItem("token");
-      if (t) setToken(t);
-    };
-    loadToken();
-  }, []);
-
-  const axiosAuth = axios.create({
-    baseURL: API_URL,
-  });
-
-  axiosAuth.interceptors.request.use((config) => {
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
 
 
   const handleProfilePress = (profileId) => {
