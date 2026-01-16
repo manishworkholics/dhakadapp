@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 
 export default function WelcomeScreen() {
@@ -14,20 +15,44 @@ export default function WelcomeScreen() {
           style={styles.logo}
         />
 
-        <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.optionText}>📱 Login</Text>
+        <TouchableOpacity
+          style={styles.optionBtn}
+          onPress={() => navigation.navigate("Login")}
+        >
+          <View style={styles.row}>
+            <Icon name="log-in-outline" size={22} color="#333" />
+            <Text style={styles.optionText}> Login</Text>
+          </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.optionText}>📝 Register</Text>
+        <TouchableOpacity
+          style={styles.optionBtn}
+          onPress={() => navigation.navigate("Register")}
+        >
+          <View style={styles.row}>
+            <Icon name="person-add-outline" size={22} color="#333" />
+            <Text style={styles.optionText}> Register</Text>
+          </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate("Home")}>
-          <Text style={styles.optionText}>👤 Continue as Guest</Text>
+        <TouchableOpacity
+          style={styles.optionBtn}
+          onPress={() => navigation.navigate("Home")}
+        >
+          <View style={styles.row}>
+            <Icon name="person-outline" size={22} color="#333" />
+            <Text style={styles.optionText}> Continue as Guest</Text>
+          </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.redBtn} onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.redBtnText}>Continue ➜</Text>
+        <TouchableOpacity
+          style={styles.redBtn}
+          onPress={() => navigation.navigate("Register")}
+        >
+          <View style={styles.row}>
+            <Text style={styles.redBtnText}>Continue </Text>
+            <Icon name="arrow-forward-outline" size={20} color="#fff" />
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -37,7 +62,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#7f0000", // brownish background as design
+    backgroundColor: "#FF4B4B",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -79,4 +104,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
 });

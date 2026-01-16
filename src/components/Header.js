@@ -86,7 +86,7 @@ const Header = () => {
 //     paddingHorizontal: 16,
 //     backgroundColor: "#fff",
 //     elevation: 4,
-  
+
 //   },
 
 //   center: {
@@ -114,18 +114,20 @@ const Header = () => {
 // });
 
 
-//new css 
+// my new css 
 
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#fff",
   },
   container: {
-    height: 56,
+    height: 45,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+
+
   },
   center: {
     flex: 1,

@@ -154,7 +154,9 @@ export default function ProfileDetailScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
+    <SafeAreaView 
+      edges={["left", "right", "bottom"]}
+    style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header title={profile.name} onMenuPress={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 220 }}>

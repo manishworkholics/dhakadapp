@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
 
   /* Orange curved header */
   successHeader: {
-    backgroundColor: "#FFA726",
+    backgroundColor: "#D4AF37",
     paddingVertical: 20,
     paddingHorizontal: 16,
     borderTopLeftRadius: 22,
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   successHeaderTitle: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "700",
   },
@@ -759,15 +759,16 @@ const styles = StyleSheet.create({
 
 
   /* Individual story card */
-  successStoryCard: {
-    width: 230,
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    marginRight: 14,
-    marginBottom: 10,   // ⭐ prevents touching
-    elevation: 3,
-    overflow: "hidden",
-  },
+successStoryCard: {
+  width: 230,
+  backgroundColor: "#fff",
+  borderRadius: 15,
+  marginRight: 14,
+  marginBottom: 10,     // ⭐ prevents touching
+  overflow: "hidden",
+  borderWidth: 1,
+  borderColor: "#E6E6E6",
+},
 
   successStoryImg: {
     width: "100%",
