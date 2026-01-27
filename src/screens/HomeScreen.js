@@ -14,7 +14,7 @@ import Footer from "../components/Footer";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useProfile } from "../context/ProfileContext";
 
 
@@ -64,7 +64,10 @@ export default function HomeScreen() {
 
   const fetchFeaturedProfiles = async () => {
     try {
-      const res = await axios.get(`${API_URL}/featured?limit=10`);
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/featured?limit=10`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.data?.profiles) setPremiumProfiles(res.data.profiles);
     } catch (e) {
       console.log("FEATURED API ERROR", e.message);
@@ -89,8 +92,11 @@ export default function HomeScreen() {
 
   const fetchProfiles = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
       const res = await axios.get(
-        `${API_URL}/profile/profiles?userId=undefined&page=1&limit=9`
+        `${API_URL}/profile/profiles?page=1&limit=9`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }
       );
       if (res.data?.profiles) setProfiles(res.data.profiles);
     } catch (e) {
@@ -246,6 +252,9 @@ export default function HomeScreen() {
 
           <View style={styles.newMatchWrapper}>
             <Text style={styles.newMatchTitle}>New Matches</Text>
+            <Text style={styles.premiumSub}>
+
+            </Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {loadingMatches
