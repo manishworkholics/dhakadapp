@@ -9,6 +9,7 @@ export const useProfile = () => useContext(ProfileContext);
 
 export const ProfileProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
+  const [profiles, setProfiles] = useState(null);
   const [userPlan, setUserPlan] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
@@ -33,6 +34,7 @@ export const ProfileProvider = ({ children }) => {
 
       if (res.data?.success) {
         setProfile(res.data.profile);
+        setProfiles(res.data.profile);
         await AsyncStorage.setItem(
           "ownProfile",
           JSON.stringify(res.data.profile)
@@ -101,6 +103,7 @@ export const ProfileProvider = ({ children }) => {
     <ProfileContext.Provider
       value={{
         profile,
+        profiles,
         userPlan,
         loadingProfile,
         hasActivePlan,

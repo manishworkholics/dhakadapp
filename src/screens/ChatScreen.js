@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,83 +7,145 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 const API_URL = "http://143.110.244.163:5000/api";
+const DEFAULT_AVATAR =
+  "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
 export default function ChatScreen() {
   const navigation = useNavigation();
 
   const [chats, setChats] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  /* ================= FETCH CHAT LIST ================= */
+  useEffect(() => {
+    AsyncStorage.getItem("user").then((u) => {
+      if (u) setCurrentUser(JSON.parse(u));
+    });
+  }, []);
+
   const fetchChats = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const res = await axios.get(`${API_URL}/chat/list`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setChats(res.data.chats || []);
+  };
+
+  const fetchRequests = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const res = await axios.get(`${API_URL}/chat/request`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setRequests(res.data.requests || []);
+  };
+
+  const loadAll = async (isRefresh = false) => {
     try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem("token");
+      if (!isRefresh) setLoading(true);
+      else setRefreshing(true);
 
-      const res = await axios.get(`${API_URL}/chat/list`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setChats(res.data.chats || []);
-    } catch (err) {
-      console.log("CHAT LIST ERROR", err?.response?.data || err.message);
+      await Promise.all([fetchChats(), fetchRequests()]);
+    } catch (e) {
+      alert("Failed to load chats");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    fetchChats();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadAll();
+    }, [])
+  );
 
-  /* ================= RENDER CHAT ITEM ================= */
-  const renderItem = ({ item }) => {
-    const otherUser = item.participants?.[0]; // backend should send populated user
+  const respondToRequest = async (chatRoomId, action) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      await axios.put(
+        `${API_URL}/chat/respond`,
+        { chatRoomId, action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      loadAll();
+    } catch {
+      alert("Failed to respond");
+    }
+  };
+
+  const renderChatItem = ({ item }) => {
+    const otherUser =
+      item.participants?.find((p) => p._id !== currentUser?._id);
 
     return (
       <TouchableOpacity
         style={styles.chatCard}
-        onPress={() =>
-          navigation.navigate("ChatDetail", { chatId: item._id })
-        }
+        onPress={() => {
+          if (item.status !== "active") {
+            alert("Chat request not accepted yet");
+            return;
+          }
+
+          navigation.navigate("ChatDetail", { chatId: item._id });
+        }}
       >
         <Image
-          source={{
-            uri:
-              otherUser?.photo ||
-              "https://cdn-icons-png.flaticon.com/512/847/847969.png",
-          }}
+          source={{ uri: otherUser?.photos?.[0] || DEFAULT_AVATAR }}
           style={styles.avatar}
         />
 
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{otherUser?.name || "User"}</Text>
+          <Text style={styles.name}>{otherUser?.name}</Text>
+
           <Text style={styles.lastMessage} numberOfLines={1}>
             {item.lastMessage?.message || "No messages yet"}
           </Text>
-        </View>
 
-        <Text style={styles.time}>
-          {item.lastMessage?.createdAt
-            ? new Date(item.lastMessage.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : ""}
-        </Text>
+          {item.status !== "active" && (
+            <Text style={styles.pendingText}>Request Pending</Text>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
 
-  /* ================= LOADER ================= */
+
+  const renderRequest = ({ item }) => {
+    const sender =
+      item.participants?.find((p) => p._id !== currentUser?._id);
+
+    return (
+      <View style={styles.requestCard}>
+        <Text style={styles.reqName}>{sender?.name}</Text>
+        <View style={styles.reqBtns}>
+          <TouchableOpacity
+            style={styles.acceptBtn}
+            onPress={() => respondToRequest(item._id, "accept")}
+          >
+            <Text style={styles.btnText}>Accept</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.rejectBtn}
+            onPress={() => respondToRequest(item._id, "reject")}
+          >
+            <Text style={styles.btnText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -94,44 +156,43 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      <Header  title="Chats" />
+      <Header title="Chats" />
 
-      {/* ================= EMPTY STATE ================= */}
-      {chats.length === 0 ? (
-        <View style={styles.center}>
-          <View style={styles.card}>
-            <Image
-              source={{
-                uri: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png",
-              }}
-              style={styles.image}
-            />
-
-            <Text style={styles.title}>No Conversations Yet</Text>
-
-            <Text style={styles.subTitle}>
-              When you connect with matches, your conversations will appear
-              here.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate("Matches")}
-            >
-              <Text style={styles.buttonText}>Find Matches</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        /* ================= CHAT LIST ================= */
-        <FlatList
-          data={chats}
-          keyExtractor={(item) => item._id}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
-        />
-      )}
+      <FlatList
+        data={[
+          ...(requests.length
+            ? [{ type: "requests" }]
+            : []),
+          ...chats,
+        ]}
+        keyExtractor={(item, index) =>
+          item._id || `req-${index}`
+        }
+        renderItem={({ item }) => {
+          if (item.type === "requests") {
+            return (
+              <View>
+                <Text style={styles.sectionTitle}>
+                  Chat Requests
+                </Text>
+                <FlatList
+                  data={requests}
+                  keyExtractor={(i) => i._id}
+                  renderItem={renderRequest}
+                />
+              </View>
+            );
+          }
+          return renderChatItem({ item });
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => loadAll(true)}
+          />
+        }
+        contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
+      />
 
       <Footer />
     </View>
@@ -140,71 +201,40 @@ export default function ChatScreen() {
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f6f6f6",
-  },
+  container: { flex: 1, backgroundColor: "#f6f6f6" },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  /* EMPTY STATE */
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
 
   card: {
     backgroundColor: "#fff",
     width: "100%",
     borderRadius: 18,
-    paddingVertical: 32,
-    paddingHorizontal: 22,
+    padding: 30,
     alignItems: "center",
-    elevation: 5,
+    elevation: 4,
   },
 
-  image: {
-    width: 110,
-    height: 110,
-    marginBottom: 20,
-    opacity: 0.9,
-  },
+  image: { width: 100, height: 100, marginBottom: 16 },
 
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#333",
-    marginBottom: 8,
-  },
+  title: { fontSize: 18, fontWeight: "700", marginBottom: 6 },
 
   subTitle: {
     fontSize: 14,
     color: "#777",
     textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 22,
+    marginBottom: 20,
   },
 
   button: {
     backgroundColor: "#ff4e50",
-    paddingVertical: 12,
     paddingHorizontal: 28,
-    borderRadius: 25,
+    paddingVertical: 12,
+    borderRadius: 24,
   },
 
-  buttonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
-  },
+  buttonText: { color: "#fff", fontWeight: "700" },
 
-  /* CHAT LIST */
   chatCard: {
     backgroundColor: "#fff",
     flexDirection: "row",
@@ -223,21 +253,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
   },
 
-  name: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#222",
-  },
+  name: { fontSize: 15, fontWeight: "700", color: "#222" },
 
-  lastMessage: {
-    fontSize: 13,
-    color: "#777",
-    marginTop: 2,
-  },
+  lastMessage: { fontSize: 13, color: "#777", marginTop: 2 },
 
-  time: {
-    fontSize: 11,
-    color: "#999",
-    marginLeft: 6,
-  },
+  pendingText: { fontSize: 11, color: "#ff9800", marginTop: 2 },
+
+  time: { fontSize: 11, color: "#999", marginLeft: 6 },
 });

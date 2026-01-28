@@ -286,7 +286,16 @@ export default function HomeScreen() {
 
 
           <View style={styles.newMatchWrapper}>
-            <Text style={styles.newMatchTitle}>Find Partner</Text>
+            <View style={styles.newMatchHeader}>
+              <Text style={styles.newMatchTitle}>Find Partner</Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate("FindPartner")} // or "FindPartner"
+              >
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+
             <Text style={styles.premiumSub}>
 
             </Text>
@@ -819,7 +828,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
+  newMatchHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
 
+  seeAllText: {
+    color: "#e86a00",
+    fontWeight: "700",
+    fontSize: 14,
+  },
 });
 
 

@@ -23,6 +23,13 @@ const SWIPE_THRESHOLD = 120;
 
 export default function MatchesScreen() {
   const navigation = useNavigation();
+  const [isShortlisted, setIsShortlisted] = useState(false);
+  const [checkingShortlist, setCheckingShortlist] = useState(false);
+
+  const [interestSent, setInterestSent] = useState(false);
+  const [interestStatus, setInterestStatus] = useState(null);
+  const [checkingInterest, setCheckingInterest] = useState(false);
+
 
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +45,11 @@ export default function MatchesScreen() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const res = await axios.get(`${API_URL}/featured?limit=20`);
-        setProfiles(res.data.profiles || []);
+        const token = await AsyncStorage.getItem("token");
+        const res = await axios.get(`${API_URL}/matches/new-matches`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setProfiles(res.data.matches || []);
       } catch (err) {
         console.log(err.message);
       } finally {
@@ -69,16 +79,123 @@ export default function MatchesScreen() {
   const sendInterest = async (userId) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      await axios.post(
+
+      const res = await axios.post(
         `${API_URL}/interest/request/send`,
         { receiverId: userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Alert.alert("Success", "Interest sent successfully ❤️");
-    } catch {
-      Alert.alert("Error", "Failed to send interest");
+
+      if (res.data.success) {
+        setInterestSent(true);
+        setInterestStatus("pending");
+        Alert.alert("Success", "Interest sent successfully ❤️");
+      }
+    } catch (error) {
+      const apiMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to send interest";
+
+      Alert.alert("Error", apiMsg);
     }
   };
+
+
+
+  const checkShortlistStatus = async (profileId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.get(`${API_URL}/shortlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        const exists = res.data.shortlist.some(
+          (item) => item.profile?._id === profileId
+        );
+        setIsShortlisted(exists);
+      }
+    } catch (error) {
+      console.log("Shortlist status error:", error.message);
+    }
+  };
+
+
+
+
+
+
+  const toggleShortlist = async () => {
+    try {
+      setCheckingShortlist(true);
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios({
+        url: `${API_URL}/shortlist/${profile._id}`,
+        method: isShortlisted ? "DELETE" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        setIsShortlisted(!isShortlisted);
+        Alert.alert(
+          "Success",
+          isShortlisted ? "Removed from shortlist" : "Added to shortlist"
+        );
+      }
+    } catch (error) {
+      const apiMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Something went wrong";
+
+      Alert.alert("Error", apiMsg);
+    } finally {
+      setCheckingShortlist(false);
+    }
+  };
+
+
+  const checkInterestStatus = async (targetUserId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.get(`${API_URL}/interest/request/sent`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        const found = res.data.requests.find(
+          (req) => req.receiver?._id === targetUserId
+        );
+
+        if (found) {
+          setInterestSent(true);
+          setInterestStatus(found.status); // pending / accepted / rejected
+        } else {
+          setInterestSent(false);
+          setInterestStatus(null);
+        }
+      }
+    } catch (error) {
+      console.log("Interest status error:", error.message);
+    }
+  };
+
+
+  useEffect(() => {
+    const currentProfile = profiles[currentIndex];
+    if (currentProfile?.userId) {
+      checkInterestStatus(currentProfile.userId);
+    }
+    if (profiles[currentIndex]?._id) {
+      checkShortlistStatus(profiles[currentIndex]._id);
+    }
+  }, [currentIndex, profiles]);
+
+
 
   /* ================= SWIPE HANDLER ================= */
   const forceSwipe = (direction) => {
@@ -176,9 +293,19 @@ export default function MatchesScreen() {
           <Text style={styles.viewedText}>Viewed you 4/7</Text>
 
           <View style={styles.topRight}>
-            <View style={styles.shortlistPill}>
-              <Text style={styles.shortlistText}>Shortlist</Text>
-            </View>
+            <TouchableOpacity
+              style={[
+                styles.shortlistPill,
+                { backgroundColor: isShortlisted ? "#4caf50" : "rgba(0,0,0,0.6)" },
+              ]}
+              onPress={toggleShortlist}
+              disabled={checkingShortlist}
+            >
+              <Text style={styles.shortlistText}>
+                {isShortlisted ? "Shortlisted" : "Shortlist"}
+              </Text>
+            </TouchableOpacity>
+
             <Text style={styles.menu}>⋮</Text>
           </View>
         </View>
@@ -202,7 +329,7 @@ export default function MatchesScreen() {
           </Text>
 
           <Text style={styles.meta}>
-            Never married • Profile created by parents •{" "}
+
             {calculateAge(profile.dob)} yrs
           </Text>
 
@@ -221,17 +348,28 @@ export default function MatchesScreen() {
             <Text style={styles.skipText}> Show Detail</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.skipBtn}>
-            <Text style={styles.skipText}>⏭ Skip</Text>
-          </TouchableOpacity>
+
         </View>
 
         <TouchableOpacity
-          style={styles.interestBtn}
+          style={[
+            styles.interestBtn,
+            interestSent && { backgroundColor: "#aaa" },
+          ]}
+          disabled={interestSent}
           onPress={() => sendInterest(profile.userId)}
         >
-          <Text style={styles.interestText}>❤️ Send Interest</Text>
+          <Text style={styles.interestText}>
+            {interestSent
+              ? interestStatus === "accepted"
+                ? "✅ Accepted"
+                : interestStatus === "rejected"
+                  ? "❌ Rejected"
+                  : "⏳ Pending"
+              : "❤️ Send Interest"}
+          </Text>
         </TouchableOpacity>
+
 
 
       </Animated.View>

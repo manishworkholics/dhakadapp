@@ -11,6 +11,7 @@ import {
   FlatList,
   ImageBackground
 } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -27,8 +28,11 @@ export default function ProfileDetailScreen({ route, navigation }) {
     hasActivePlan,
     hasFeature,
     userPlan,
+    profiles
   } = useProfile();
   const [interestSent, setInterestSent] = useState(false);
+  const [interestStatus, setInterestStatus] = useState(null);
+
   const [chatInterestSent, setChatInterestSent] = useState(false);
   const [isShortlisted, setIsShortlisted] = useState(false);
 
@@ -89,52 +93,143 @@ export default function ProfileDetailScreen({ route, navigation }) {
   const sendInterest = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
+
       const res = await axios.post(
         `${API_URL}/interest/request/send`,
         { receiverId: profile.userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (res.data.success) setInterestSent(true);
+
+      if (res.data.success) {
+        setInterestSent(true);
+        setInterestStatus("pending");
+        alert("Interest sent successfully ❤️");
+      }
     } catch (err) {
-      console.log("INTEREST ERROR", err.message);
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Failed to send interest";
+
+      alert(msg);
     }
   };
 
+
+  // const sendChatInterest = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem("token");
+  //     const res = await axios.post(
+  //       `${API_URL}/chat/now`,
+  //       { receiverId: profile._id },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+  //     if (res.data.success) setChatInterestSent(true);
+  //   } catch (err) {
+  //     console.log("CHAT ERROR", err.message);
+  //   }
+  // };
+
   const sendChatInterest = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      const res = await axios.post(
-        `${API_URL}/chat/now`,
-        { receiverId: profile._id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data.success) setChatInterestSent(true);
-    } catch (err) {
-      console.log("CHAT ERROR", err.message);
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    const res = await axios.post(
+      `${API_URL}/chat/now`,
+      { receiverId: profile.userId },   // ✅ use userId (same as web)
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (res.data.success) {
+      setChatInterestSent(true);
+
+      // small UX delay like web
+      setTimeout(() => {
+        navigation.navigate("Chat"); // 🔁 adjust route name if different
+      }, 800);
+    } else {
+      alert(res.data.message || "Failed to send chat request");
     }
-  };
+  } catch (err) {
+    const msg =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      "Failed to send interest";
+
+    console.error("CHAT ERROR:", msg);
+    alert(msg);
+  }
+};
+
 
   const toggleShortlist = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
 
-      if (isShortlisted) {
-        await axios.delete(`${API_URL}/shortlist/${profile._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setIsShortlisted(false);
-      } else {
-        await axios.post(
-          `${API_URL}/shortlist/${profile._id}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setIsShortlisted(true);
+      const res = await axios({
+        url: `${API_URL}/shortlist/${profile._id}`,
+        method: isShortlisted ? "DELETE" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        setIsShortlisted(!isShortlisted);
+        alert(isShortlisted ? "Removed from shortlist" : "Added to shortlist");
       }
     } catch (err) {
-      console.log("SHORTLIST ERROR", err.message);
+      const data = err?.response?.data;
+
+      if (data?.code === "PREMIUM_REQUIRED") {
+        alert("🔒 Upgrade to premium to use shortlist feature");
+        return;
+      }
+
+      alert(data?.message || "Something went wrong");
     }
   };
+
+
+
+  const checkInterestStatus = async (profileUserId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.get(
+        `${API_URL}/interest/request/sent`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        const found = res.data.requests.find(
+          (req) => req.receiver?._id === profileUserId
+        );
+
+        if (found) {
+          setInterestSent(true);
+          setInterestStatus(found.status); // pending / accepted / rejected
+        } else {
+          setInterestSent(false);
+          setInterestStatus(null);
+        }
+      }
+    } catch (err) {
+      console.log("CHECK INTEREST STATUS ERROR:", err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (profile?.userId) {
+      checkInterestStatus(profile.userId);
+      checkShortlist(profile._id);
+    }
+  }, [profile]);
+
+
 
 
   if (loading) {
@@ -152,6 +247,31 @@ export default function ProfileDetailScreen({ route, navigation }) {
       </View>
     );
   }
+
+  const timeAgo = (dateString) => {
+  if (!dateString) return "Recently active";
+
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return "1d ago";
+  if (days < 7) return `${days}d ago`;
+
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks}w ago`;
+
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+};
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
@@ -197,7 +317,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
             <View style={styles.heroBadges}>
               <View style={styles.badge}>
-                <Text>🟢 1d ago</Text>
+                <Text> <Text>🟢 {timeAgo(profile.createdAt)}</Text></Text>
               </View>
               <View style={styles.badge}>
                 <Text>👫 You & Her</Text>
@@ -233,7 +353,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
               <Text>Created by Self</Text>
             </View>
             <View style={styles.pill}>
-              <Text>ID: SHXXXX</Text>
+              <Text>ID: DH{profile?._id?.slice(0, 5)}</Text>
             </View>
           </View>
 
@@ -263,8 +383,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
           />
           <InfoRow label="Community" value={profile.caste} />
           <InfoRow label="Diet Preferences" value={profile.diet} />
+          {hasActivePlan ? "" : <PremiumBtn />}
 
-          <PremiumBtn />
         </Card>
 
         {/* ================= CONTACT DETAILS ================= */}
@@ -367,7 +487,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
           )}
 
 
-         
+
 
         </View>
 
@@ -380,10 +500,14 @@ export default function ProfileDetailScreen({ route, navigation }) {
           {/* Top curved header */}
           <View style={styles.yhHeader}>
             <View style={styles.yhAvatars}>
-              <Image
-                source={{ uri: "https://randomuser.me/api/portraits/men/32.jpg" }}
-                style={styles.yhAvatar}
-              />
+             {profiles?.images?.[0] || profiles?.photos?.[0] ? (
+                           <Image
+                             source={{ uri: profiles.images?.[0] || profiles.photos?.[0] }}
+                             style={styles.avatar}
+                           />
+                         ) : (
+                           <Icon name="person" size={30} color="#FFA821" />
+                         )}
               <View style={styles.yhLink}>
                 <Text style={{ color: "#fff", fontWeight: "700" }}>⇄</Text>
               </View>
@@ -453,8 +577,16 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
 
         <ActionBtn
-          title={interestSent ? "Interest Sent ✓" : "Send Interest"}
-          color="#D4AF37"
+          title={
+            interestSent
+              ? interestStatus === "accepted"
+                ? "✅ Accepted"
+                : interestStatus === "rejected"
+                  ? "❌ Rejected"
+                  : "⏳ Pending"
+              : "❤️ Send Interest"
+          }
+          color={interestSent ? "#999" : "#D4AF37"}
           onPress={sendInterest}
           disabled={interestSent}
         />
@@ -898,18 +1030,27 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-yhLocked: {
-  backgroundColor: "#fff",
-  margin: 16,
-  padding: 20,
-  borderRadius: 20,
-  alignItems: "center",
-},
-yhLockedText: {
-  fontSize: 14,
-  color: "#555",
-  marginBottom: 10,
-  textAlign: "center",
-},
-
+  yhLocked: {
+    backgroundColor: "#fff",
+    margin: 16,
+    padding: 20,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  yhLockedText: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1,
+    borderColor: "#BFBFBF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
 });
