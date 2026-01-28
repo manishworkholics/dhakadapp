@@ -41,16 +41,126 @@ export default function ChatScreen() {
   };
 
   useEffect(() => {
-    fetchChats();
+    setChats([
+      {
+        _id: "1",
+        participants: [
+          {
+            name: "Fatma",
+            photo: "https://randomuser.me/api/portraits/women/44.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "Hi Muskan, how are you",
+          createdAt: new Date(),
+        },
+      },
+      {
+        _id: "2",
+        participants: [
+          {
+            name: "Alice",
+            photo: "https://randomuser.me/api/portraits/women/65.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "Are you free tomorrow?",
+          createdAt: new Date(),
+        },
+      },
+      {
+        _id: "3",
+        participants: [
+          {
+            name: "Sarika Novotný",
+            photo: "https://randomuser.me/api/portraits/women/68.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "Let's talk later 🙂",
+          createdAt: new Date(),
+        },
+      },
+      {
+        _id: "4",
+        participants: [
+          {
+            name: "Alice Peres",
+            photo: "https://randomuser.me/api/portraits/women/12.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "Call me when you're free",
+          createdAt: new Date(),
+        },
+      },
+      {
+        _id: "5",
+        participants: [
+          {
+            name: "Olivia Ajroud",
+            photo: "https://randomuser.me/api/portraits/women/22.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "Good night 🌙",
+          createdAt: new Date(),
+        },
+      },
+      {
+        _id: "6",
+        participants: [
+          {
+            name: "Isla Jacobs",
+            photo: "https://randomuser.me/api/portraits/women/55.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "See you soon!",
+          createdAt: new Date(),
+        },
+      },
+
+      {
+        _id: "6",
+        participants: [
+          {
+            name: "Isla Jacobs",
+            photo: "https://randomuser.me/api/portraits/women/55.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "See you soon...!",
+          createdAt: new Date(),
+        },
+      },
+      {
+        _id: "7",
+        participants: [
+          {
+            name: "Toyin Lee",
+            photo: "https://randomuser.me/api/portraits/women/78.jpg",
+          },
+        ],
+        lastMessage: {
+          message: "Thanks for the update",
+          createdAt: new Date(),
+        },
+      },
+    ]);
+
+    setLoading(false);
   }, []);
+
+
 
   /* ================= RENDER CHAT ITEM ================= */
   const renderItem = ({ item }) => {
-    const otherUser = item.participants?.[0]; // backend should send populated user
+    const otherUser = item.participants?.[0];
 
     return (
       <TouchableOpacity
-        style={styles.chatCard}
+        style={styles.chatRow}
         onPress={() =>
           navigation.navigate("ChatDetail", { chatId: item._id })
         }
@@ -64,21 +174,36 @@ export default function ChatScreen() {
           style={styles.avatar}
         />
 
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{otherUser?.name || "User"}</Text>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {item.lastMessage?.message || "No messages yet"}
-          </Text>
-        </View>
+        <View style={styles.chatContent}>
+          <View style={styles.topRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {otherUser?.name || "User"}
+            </Text>
 
-        <Text style={styles.time}>
-          {item.lastMessage?.createdAt
-            ? new Date(item.lastMessage.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : ""}
-        </Text>
+            <Text style={styles.time}>
+              {item.lastMessage?.createdAt
+                ? new Date(item.lastMessage.createdAt).toLocaleTimeString(
+                  [],
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )
+                : ""}
+            </Text>
+          </View>
+
+          <View style={styles.bottomRow}>
+            <Text style={styles.lastMessage} numberOfLines={1}>
+              {item.lastMessage?.message || "Hi Muskan, how are you"}
+            </Text>
+
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadText}>4</Text>
+            </View>
+          </View>
+
+        </View>
       </TouchableOpacity>
     );
   };
@@ -94,9 +219,9 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      <Header  title="Chats" />
+      <Header title="Chat List" />
+      
 
-      {/* ================= EMPTY STATE ================= */}
       {chats.length === 0 ? (
         <View style={styles.center}>
           <View style={styles.card}>
@@ -104,12 +229,12 @@ export default function ChatScreen() {
               source={{
                 uri: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png",
               }}
-              style={styles.image}
+              style={styles.emptyImage}
             />
 
-            <Text style={styles.title}>No Conversations Yet</Text>
+            <Text style={styles.emptyTitle}>No Conversations Yet</Text>
 
-            <Text style={styles.subTitle}>
+            <Text style={styles.emptySubTitle}>
               When you connect with matches, your conversations will appear
               here.
             </Text>
@@ -118,18 +243,17 @@ export default function ChatScreen() {
               style={styles.button}
               onPress={() => navigation.navigate("Matches")}
             >
-              <Text style={styles.buttonText}>Find Matches </Text>
+              <Text style={styles.buttonText}>Find Matches</Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
-        /* ================= CHAT LIST ================= */
         <FlatList
           data={chats}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
+          contentContainerStyle={{ paddingBottom: 90 }}
         />
       )}
 
@@ -140,9 +264,10 @@ export default function ChatScreen() {
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
+  /* SCREEN BACKGROUND (header ke niche ka area) */
   container: {
     flex: 1,
-    backgroundColor: "#f6f6f6",
+    backgroundColor: "#F5F6FA", // 👈 light grey, header se alag
   },
 
   loader: {
@@ -163,32 +288,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     width: "100%",
     borderRadius: 18,
-    paddingVertical: 32,
+    paddingVertical: 30,
     paddingHorizontal: 22,
     alignItems: "center",
-    elevation: 5,
+    elevation: 4,
   },
 
-  image: {
+  emptyImage: {
     width: 110,
     height: 110,
     marginBottom: 20,
-    opacity: 0.9,
   },
 
-  title: {
+  emptyTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#333",
     marginBottom: 8,
   },
 
-  subTitle: {
+  emptySubTitle: {
     fontSize: 14,
     color: "#777",
     textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 22,
+    marginBottom: 20,
   },
 
   button: {
@@ -204,43 +327,85 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  /* CHAT LIST */
-  chatCard: {
-    backgroundColor: "#fff",
+  /* CHAT LIST ROW */
+  chatRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 10,
-    elevation: 2,
+
+    backgroundColor: "#FFFFFF", // 👈 card white
+    marginHorizontal: 12,       // 👈 left-right gap
+    marginTop:5,              // 👈 header ke niche gap
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+
+    borderRadius: 14,           // 👈 card look
+    elevation: 2,               // 👈 Android shadow
+    shadowColor: "#000",        // 👈 iOS shadow
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
 
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     marginRight: 12,
-    backgroundColor: "#eee",
+  },
+
+  chatContent: {
+    flex: 1,
+  },
+
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   name: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#222",
+    fontWeight: "500",
+    color: "#000000",
+    maxWidth: "70%",
+  },
+
+  time: {
+    fontSize: 12,
+    color: "#666",
+  },
+
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
   },
 
   lastMessage: {
     fontSize: 13,
-    color: "#777",
-    marginTop: 2,
+    color: "#888",
+    maxWidth: "75%",
   },
 
-  time: {
+  unreadBadge: {
+    backgroundColor: "#4CAF50",
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 5,
+  },
+
+  unreadText: {
+    color: "#FFFFFF",
     fontSize: 11,
-    color: "#999",
-    marginLeft: 6,
+    fontWeight: "600",
   },
 });
+
+
 
 
 // import React, { useEffect, useState } from "react";

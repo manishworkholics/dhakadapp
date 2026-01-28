@@ -394,7 +394,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#F1F1F1" },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 
 
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginHorizontal: 14,
     marginTop: 24,
-    borderRadius: 16,
+    // borderRadius: 16,
     padding: 14,
     elevation: 3,
   },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
 
   premiumCard: {
     width: 170,
-    borderRadius: 18,
+    borderRadius: 12,
     marginRight: 14,
     overflow: "hidden",
   },
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   completeBox: {
     backgroundColor: "#fff",
     margin: 14,
-    borderRadius: 16,
+    // borderRadius: 16,
     padding: 16,
     alignItems: "center",
   },
@@ -759,16 +759,16 @@ const styles = StyleSheet.create({
 
 
   /* Individual story card */
-successStoryCard: {
-  width: 230,
-  backgroundColor: "#fff",
-  borderRadius: 15,
-  marginRight: 14,
-  marginBottom: 10,     // ⭐ prevents touching
-  overflow: "hidden",
-  borderWidth: 1,
-  borderColor: "#E6E6E6",
-},
+  successStoryCard: {
+    width: 230,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    marginRight: 14,
+    marginBottom: 10,     // ⭐ prevents touching
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+  },
 
   successStoryImg: {
     width: "100%",

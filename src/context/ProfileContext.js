@@ -83,7 +83,6 @@
 
 
 
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -98,7 +97,6 @@ export const ProfileProvider = ({ children }) => {
   const [userPlan, setUserPlan] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  /* 🔹 FETCH OWN PROFILE */
   const fetchOwnProfile = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -116,16 +114,16 @@ export const ProfileProvider = ({ children }) => {
       if (res.data?.success) {
         setProfile(res.data.profile);
         await AsyncStorage.setItem(
-          "ownProfile",
+          `ownProfile_${parsedUser._id}`,
           JSON.stringify(res.data.profile)
         );
+
       }
     } catch (e) {
       console.log("OWN PROFILE ERROR", e.message);
     }
   };
 
-  /* 🔹 FETCH USER PLAN */
   const fetchUserPlan = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -143,23 +141,42 @@ export const ProfileProvider = ({ children }) => {
         );
       }
     } catch (e) {
-      console.log("PLAN ERROR", e.message);
       setUserPlan(null);
     }
   };
 
-  /* 🔹 LOAD CACHE FIRST */
+  // ✅ FIX HERE
   useEffect(() => {
     const loadCache = async () => {
-      const cachedProfile = await AsyncStorage.getItem("ownProfile");
-      const cachedPlan = await AsyncStorage.getItem("userPlan");
+      const user = await AsyncStorage.getItem("user");
 
-      if (cachedProfile) setProfile(JSON.parse(cachedProfile));
+      // 🔥 logout case
+      if (!user) {
+        setProfile(null);
+        setUserPlan(null);
+        setLoadingProfile(false);
+        return;
+      }
+
+
+
+      const parsedUser = JSON.parse(user);
+
+      const cachedProfile = await AsyncStorage.getItem(
+        `ownProfile_${parsedUser._id}`
+      );
+
+      if (cachedProfile) {
+        setProfile(JSON.parse(cachedProfile));
+      } else {
+        setProfile(null); // 🔥 NO OLD DATA
+      }
+
+      const cachedPlan = await AsyncStorage.getItem("userPlan");
       if (cachedPlan) setUserPlan(JSON.parse(cachedPlan));
 
       setLoadingProfile(false);
 
-      // refresh in background
       fetchOwnProfile();
       fetchUserPlan();
     };
@@ -167,17 +184,13 @@ export const ProfileProvider = ({ children }) => {
     loadCache();
   }, []);
 
-  /* 🔹 HELPERS (VERY IMPORTANT) */
   const hasActivePlan =
     userPlan?.status === "active" &&
     new Date(userPlan?.endDate) > new Date();
 
-  const hasFeature = (featureName) => {
-    return (
-      hasActivePlan &&
-      userPlan?.plan?.features?.includes(featureName)
-    );
-  };
+  const hasFeature = (featureName) =>
+    hasActivePlan &&
+    userPlan?.plan?.features?.includes(featureName);
 
   return (
     <ProfileContext.Provider
@@ -195,3 +208,4 @@ export const ProfileProvider = ({ children }) => {
     </ProfileContext.Provider>
   );
 };
+

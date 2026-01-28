@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   View,
@@ -11,36 +10,50 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useProfile } from "../context/ProfileContext";
 import { useDrawer } from "../context/DrawerContext";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const Header = () => {
   const { profile } = useProfile();
   const { openDrawer } = useDrawer();
+  const navigation = useNavigation();
+  const route = useRoute();
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchText, setSearchText] = useState("");
 
+  /* ================= TITLE LOGIC ================= */
+  const displayName =
+    profile?.fullName ||
+    profile?.name ||
+    profile?.username ||
+    "";
+
+  // 👇 Home par profile name, baaki pages par route name
+  const headerTitle =
+    route.name === "Home" ? displayName : route.name;
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.container}>
-        {/* MENU ICON */}
+        {/* LEFT ICON */}
         <TouchableOpacity onPress={openDrawer}>
           <Icon name="menu-outline" size={26} color="red" />
         </TouchableOpacity>
 
-        {/* TITLE / SEARCH INPUT */}
+        {/* CENTER */}
         <View style={styles.center}>
           {isSearching ? (
             <TextInput
               value={searchText}
               onChangeText={setSearchText}
-              placeholder="Search here..."
+              placeholder="Search Here..."
               autoFocus
               style={styles.searchInput}
               placeholderTextColor="#888"
             />
           ) : (
-            <Text style={styles.title}>
-              {profile?.name || ""}
+            <Text style={styles.title} numberOfLines={1}>
+              {headerTitle}
             </Text>
           )}
         </View>
@@ -61,7 +74,9 @@ const Header = () => {
               <Icon name="search" size={24} color="red" />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={openDrawer}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Notification")}
+            >
               <Icon
                 name="notifications-outline"
                 size={24}
@@ -76,46 +91,9 @@ const Header = () => {
   );
 };
 
+export default Header;
 
-//old css 
-// const styles = StyleSheet.create({
-//   container: {
-//     height: 56,
-//     flexDirection: "row",
-//     alignItems: "center",
-//     paddingHorizontal: 16,
-//     backgroundColor: "#fff",
-//     elevation: 4,
-
-//   },
-
-//   center: {
-//     flex: 1,
-//     marginHorizontal: 14,
-//   },
-
-//   title: {
-//     fontSize: 18,
-//     fontWeight: "600",
-//   },
-
-//   searchInput: {
-//     height: 40,
-//     backgroundColor: "#f1f1f1",
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     fontSize: 15,
-//   },
-
-//   rightIcons: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-// });
-
-
-// my new css 
-
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#fff",
@@ -126,8 +104,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-
-
   },
   center: {
     flex: 1,
@@ -137,6 +113,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#000",
+   alignItems: "flex-start",
+
   },
   searchInput: {
     height: 40,
@@ -150,6 +128,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
-
-export default Header;

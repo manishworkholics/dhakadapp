@@ -348,7 +348,7 @@ export default function RegisterScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Image
-          source={require("../assets/images/logo.png")}
+          source={require("../assets/images/dhakadlogoapp.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -385,7 +385,7 @@ export default function RegisterScreen() {
         />
 
         <TextInput
-          placeholder="Phone Number"
+          placeholder="Phone Number "
           keyboardType="number-pad"
           style={styles.input}
           maxLength={10}
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#F1F1F1",
     paddingVertical: 30,
   },
   card: {
@@ -446,8 +446,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 140,
+    height: 130,
     marginBottom: 25,
   },
   input: {
