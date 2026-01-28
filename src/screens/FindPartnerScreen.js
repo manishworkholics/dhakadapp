@@ -40,9 +40,11 @@ export default function FindPartnerScreen({ navigation }) {
 
     const fetchFilterOptions = async () => {
         try {
-            const res = await axios.get(`${API_URL}/profile/filters`);
+            const token = await AsyncStorage.getItem("token");
 
-            console.log("FILTER OPTIONS 👉", res.data);
+            const res = await axios.get(`${API_URL}/profile/filters`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
             if (res.data?.success) {
                 setFilterOptions({
@@ -56,6 +58,7 @@ export default function FindPartnerScreen({ navigation }) {
             console.log("FILTER OPTIONS ERROR:", err.message);
         }
     };
+
 
 
     useEffect(() => {
@@ -89,7 +92,7 @@ export default function FindPartnerScreen({ navigation }) {
     const fetchProfiles = async () => {
         try {
             setLoading(true);
-
+            const token = await AsyncStorage.getItem("token");
             const user = await AsyncStorage.getItem("user");
             const currentUser = user ? JSON.parse(user) : null;
 
@@ -113,7 +116,9 @@ export default function FindPartnerScreen({ navigation }) {
             params.append("limit", limit);
 
             const res = await axios.get(
-                `${API_URL}/profile/profiles?${params.toString()}`
+                `${API_URL}/profile/profiles?${params.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            }
             );
 
             console.log("FIND PARTNER RESPONSE 👉", res.data);
@@ -197,25 +202,16 @@ export default function FindPartnerScreen({ navigation }) {
                     <Text style={ui.name}>{item.name}</Text>
 
                     <Text style={ui.meta}>
-                        {age} yrs, {item.height || `5'`} · {item.occupation || "Nurse"}
+                        {age} yrs, {item.height || `'`} · {item.occupation || ""}
                     </Text>
 
                     <Text style={ui.subMeta}>
-                        {item.religion || "Hindu"}, {item.caste || "Brahmin"} · {item.location}
+                        {item.religion || ""}, {item.caste || ""} · {item.location}
                     </Text>
                 </View>
 
-                {/* ACTION BAR */}
-                <View style={ui.actionBar}>
-                    <TouchableOpacity style={ui.upgradeBtn}>
-                        <Text style={ui.crown}>👑</Text>
-                        <Text style={ui.upgradeText}>Upgrade to Connect</Text>
-                    </TouchableOpacity>
 
-                    <TouchableOpacity style={ui.checkBtn}>
-                        <Text style={ui.checkText}>✓</Text>
-                    </TouchableOpacity>
-                </View>
+
             </TouchableOpacity>
         );
     };
@@ -359,143 +355,121 @@ export default function FindPartnerScreen({ navigation }) {
 /* ================= FILTER SHEET ================= */
 
 const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) => {
-  if (!visible) return null;
+    if (!visible) return null;
 
-  return (
-    <View style={fs.overlay}>
-      <View style={fs.sheet}>
-        {/* HEADER */}
-        <Text style={fs.title}>Filters</Text>
+    return (
+        <View style={fs.overlay}>
+            <View style={fs.sheet}>
+                {/* HEADER */}
+                <Text style={fs.title}>Filters</Text>
 
-        {/* BODY */}
-        <ScrollView
-          style={fs.body}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Looking for */}
-          <Text style={fs.label}>Looking for</Text>
-          <View style={fs.genderRow}>
-            {["male", "female"].map((g) => (
-              <TouchableOpacity
-                key={g}
-                style={[
-                  fs.genderBtn,
-                  filters.gender === g && fs.genderActive,
-                ]}
-                onPress={() => setFilters({ ...filters, gender: g })}
-              >
-                <Text
-                  style={[
-                    fs.genderText,
-                    filters.gender === g && { color: "#fff" },
-                  ]}
+                {/* BODY */}
+                <ScrollView
+                    style={fs.body}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
                 >
-                  {g === "male" ? "Men" : "Women"}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                    {/* Looking for */}
+                    <Text style={fs.label}>Looking for</Text>
+                    <SelectField
+                        label="Age"
+                        value={filters.age}
+                        options={["18-25", "26-30", "31-35", "36-40", "41-50", "50+"]}
+                        onSelect={(v) => setFilters({ ...filters, age: v })}
+                    />
 
-          <SelectField
-            label="Age"
-            value={filters.age}
-            options={["18-25", "26-30", "31-35", "36-40", "41-50", "50+"]}
-            onSelect={(v) => setFilters({ ...filters, age: v })}
-          />
+                    <SelectField
+                        label="Religion"
+                        value={filters.religion}
+                        options={filterOptions.religions}
+                        onSelect={(v) => setFilters({ ...filters, religion: v })}
+                    />
 
-          <SelectField
-            label="Religion"
-            value={filters.religion}
-            options={filterOptions.religions}
-            onSelect={(v) => setFilters({ ...filters, religion: v })}
-          />
+                    <SelectField
+                        label="Location"
+                        value={filters.location}
+                        options={filterOptions.locations}
+                        onSelect={(v) => setFilters({ ...filters, location: v })}
+                    />
 
-          <SelectField
-            label="Location"
-            value={filters.location}
-            options={filterOptions.locations}
-            onSelect={(v) => setFilters({ ...filters, location: v })}
-          />
+                    <SelectField
+                        label="Education"
+                        value={filters.education}
+                        options={filterOptions.educations}
+                        onSelect={(v) => setFilters({ ...filters, education: v })}
+                    />
 
-          <SelectField
-            label="Education"
-            value={filters.education}
-            options={filterOptions.educations}
-            onSelect={(v) => setFilters({ ...filters, education: v })}
-          />
+                    <SelectField
+                        label="Profession"
+                        value={filters.profession}
+                        options={filterOptions.professions}
+                        onSelect={(v) => setFilters({ ...filters, profession: v })}
+                    />
+                </ScrollView>
 
-          <SelectField
-            label="Profession"
-            value={filters.profession}
-            options={filterOptions.professions}
-            onSelect={(v) => setFilters({ ...filters, profession: v })}
-          />
-        </ScrollView>
+                {/* FOOTER */}
+                <View style={fs.footer}>
+                    <TouchableOpacity onPress={() => {
+                        setFilters({
+                            gender: "",
+                            age: "",
+                            religion: "",
+                            location: "",
+                            education: "",
+                            profession: "",
+                            search: "",
+                        });
+                    }}>
+                        <Text style={fs.clear}>Clear</Text>
+                    </TouchableOpacity>
 
-        {/* FOOTER */}
-        <View style={fs.footer}>
-          <TouchableOpacity onPress={() => {
-            setFilters({
-              gender: "",
-              age: "",
-              religion: "",
-              location: "",
-              education: "",
-              profession: "",
-              search: "",
-            });
-          }}>
-            <Text style={fs.clear}>Clear</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={fs.applyBtn} onPress={onClose}>
-            <Text style={fs.applyText}>Apply</Text>
-          </TouchableOpacity>
+                    <TouchableOpacity style={fs.applyBtn} onPress={onClose}>
+                        <Text style={fs.applyText}>Apply</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
-      </View>
-    </View>
-  );
+    );
 };
 
 
 const SelectField = ({ label, value, options, onSelect }) => {
-  const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = React.useState(false);
 
-  return (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={fs.label}>{label}</Text>
+    return (
+        <View style={{ marginBottom: 14 }}>
+            <Text style={fs.label}>{label}</Text>
 
-      <TouchableOpacity
-        style={fs.input}
-        onPress={() => setOpen(!open)}
-      >
-        <Text style={{ color: value ? "#000" : "#aaa" }}>
-          {value || "Select"}
-        </Text>
-        <Text style={fs.arrow}>▼</Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+                style={fs.input}
+                onPress={() => setOpen(!open)}
+            >
+                <Text style={{ color: value ? "#000" : "#aaa" }}>
+                    {value || "Select"}
+                </Text>
+                <Text style={fs.arrow}>▼</Text>
+            </TouchableOpacity>
 
-      {open && (
-        <View style={fs.dropdown}>
-          <ScrollView nestedScrollEnabled>
-            {options.map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={fs.option}
-                onPress={() => {
-                  onSelect(item);
-                  setOpen(false);
-                }}
-              >
-                <Text>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            {open && (
+                <View style={fs.dropdown}>
+                    <ScrollView nestedScrollEnabled>
+                        {options.map((item) => (
+                            <TouchableOpacity
+                                key={item}
+                                style={fs.option}
+                                onPress={() => {
+                                    onSelect(item);
+                                    setOpen(false);
+                                }}
+                            >
+                                <Text>{item}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
         </View>
-      )}
-    </View>
-  );
+    );
 };
 
 
@@ -978,111 +952,111 @@ const promo = StyleSheet.create({
 });
 
 const fs = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-    inset: 0,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-    paddingBottom:65
-  },
+    overlay: {
+        position: "absolute",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        justifyContent: "flex-end",
+        paddingBottom: 65
+    },
 
-  sheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "85%",
-  },
+    sheet: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: "85%",
+    },
 
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    padding: 16,
-  },
+    title: {
+        fontSize: 18,
+        fontWeight: "700",
+        padding: 16,
+    },
 
-  body: {
-    paddingHorizontal: 16,
-  },
+    body: {
+        paddingHorizontal: 16,
+    },
 
-  label: {
-    fontWeight: "600",
-    marginBottom: 6,
-  },
+    label: {
+        fontWeight: "600",
+        marginBottom: 6,
+    },
 
-  genderRow: {
-    flexDirection: "row",
-    marginBottom: 14,
-    gap: 10,
-  },
+    genderRow: {
+        flexDirection: "row",
+        marginBottom: 14,
+        gap: 10,
+    },
 
-  genderBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
+    genderBtn: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 10,
+        paddingVertical: 10,
+        alignItems: "center",
+    },
 
-  genderActive: {
-    backgroundColor: "#ff4e50",
-    borderColor: "#ff4e50",
-  },
+    genderActive: {
+        backgroundColor: "#ff4e50",
+        borderColor: "#ff4e50",
+    },
 
-  genderText: {
-    fontWeight: "600",
-  },
+    genderText: {
+        fontWeight: "600",
+    },
 
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+    input: {
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 10,
+        padding: 12,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
 
-  arrow: {
-    color: "#999",
-  },
+    arrow: {
+        color: "#999",
+    },
 
-  dropdown: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    marginTop: 6,
-    maxHeight: 180,
-    backgroundColor: "#fff",
-  },
+    dropdown: {
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 10,
+        marginTop: 6,
+        maxHeight: 180,
+        backgroundColor: "#fff",
+    },
 
-  option: {
-    padding: 12,
-    borderBottomWidth: 0.5,
-    borderColor: "#eee",
-  },
+    option: {
+        padding: 12,
+        borderBottomWidth: 0.5,
+        borderColor: "#eee",
+    },
 
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 16,
-    borderTopWidth: 1,
-    borderColor: "#eee",
-  },
+    footer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        padding: 16,
+        borderTopWidth: 1,
+        borderColor: "#eee",
+    },
 
-  clear: {
-    color: "#666",
-    fontWeight: "600",
-  },
+    clear: {
+        color: "#666",
+        fontWeight: "600",
+    },
 
-  applyBtn: {
-    backgroundColor: "#ff4e50",
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
+    applyBtn: {
+        backgroundColor: "#ff4e50",
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 24,
+    },
 
-  applyText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
+    applyText: {
+        color: "#fff",
+        fontWeight: "700",
+    },
 });
