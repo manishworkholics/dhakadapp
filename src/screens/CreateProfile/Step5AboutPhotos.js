@@ -11,9 +11,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { launchImageLibrary } from "react-native-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator } from "react-native";
+
 import axios from "axios";
 
+
 export default function Step5AboutPhotos({ profile, setProfile, submit }) {
+
+  const [uploading, setUploading] = React.useState(false);
+  const [previewImage, setPreviewImage] = React.useState(null);
+
 
   /* ================= UPLOAD IMAGE ================= */
 
@@ -52,12 +59,12 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
     if (!result?.assets?.[0]?.uri) return;
 
     try {
+      setUploading(true);   // ✅ start loader
+
       const uploadedUrl = await uploadImage(result.assets[0].uri);
 
       setProfile((prev) => {
-        const remainingPhotos = prev.photos.filter(
-          (p) => p !== uploadedUrl
-        );
+        const remainingPhotos = prev.photos.filter((p) => p !== uploadedUrl);
 
         return {
           ...prev,
@@ -68,8 +75,11 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
     } catch (err) {
       console.log("Upload error:", err.message);
       Alert.alert("Upload Failed", "Unable to upload image");
+    } finally {
+      setUploading(false);  // ✅ stop loader
     }
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -129,6 +139,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         </View>
 
         {/* ================= ABOUT ================= */}
+        <Text style={styles.label}>About</Text>
         <TextInput
           style={[styles.input, { height: 110 }]}
           placeholder="A few words about yourself"
@@ -140,6 +151,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         />
 
         {/* ================= HOBBIES ================= */}
+        <Text style={styles.label}>Hobbies</Text>
         <TextInput
           style={[styles.input, { height: 90 }]}
           placeholder="Hobbies (e.g. music, travel, fitness)"
@@ -154,27 +166,50 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
         <Text style={styles.label}>Profile Photo</Text>
         <View style={styles.photoRow}>
           {profile.photos.length > 0 && (
-            <Image
-              source={{ uri: profile.photos[0] }}
-              style={styles.photo}
-            />
+            <TouchableOpacity onPress={() => setPreviewImage(profile.photos[0])}>
+              <Image
+                source={{ uri: profile.photos[0] }}
+                style={styles.photo}
+              />
+            </TouchableOpacity>
+
           )}
         </View>
 
         {/* ================= PHOTO BUTTON ================= */}
-        <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
-          <Text style={{ color: "#fff", fontWeight: "600" }}>
-            {profile.photos.length
-              ? "Change Profile Photo"
-              : "Select Profile Photo"}
-          </Text>
+        <TouchableOpacity style={styles.photoBtn} onPress={pickImage} disabled={uploading}>
+          {uploading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={{ color: "#fff", fontWeight: "600" }}>
+              {profile.photos.length
+                ? "Change Profile Photo"
+                : "Select Profile Photo"}
+            </Text>
+          )}
         </TouchableOpacity>
+
 
         {/* ================= SUBMIT ================= */}
         <TouchableOpacity style={styles.submitBtn} onPress={submit}>
           <Text style={styles.submitText}>Submit Profile</Text>
         </TouchableOpacity>
       </View>
+
+
+      {previewImage && (
+        <TouchableOpacity
+          style={styles.previewContainer}
+          onPress={() => setPreviewImage(null)}
+        >
+          <Image
+            source={{ uri: previewImage }}
+            style={styles.previewImage}
+          />
+        </TouchableOpacity>
+      )}
+
+
     </SafeAreaView>
   );
 }
@@ -260,7 +295,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: "center",
-    
+
   },
 
   submitText: {
@@ -268,4 +303,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
+
+  previewContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+
+  previewImage: {
+    width: "100%",
+    height: "80%",
+    resizeMode: "contain",
+  },
+
 });

@@ -49,6 +49,11 @@ const ProfileNavCard = ({ title, subtitle, onPress }) => (
 export default function ProfileScreen({ navigation }) {
 
   const { profile, loading, fetchProfile } = useProfile();
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const [deleteIndex, setDeleteIndex] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
 
   const [uploading, setUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,6 +70,31 @@ export default function ProfileScreen({ navigation }) {
       setRefreshing(false);
     }
   }, [fetchProfile]);
+
+
+  const confirmDeletePhoto = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const updatedPhotos = profile.photos.filter((_, i) => i !== deleteIndex);
+
+      await axios.put(
+        "http://143.110.244.163:5000/api/profile/update",
+        { photos: updatedPhotos },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      await fetchProfile(); // context refresh
+
+    } catch (err) {
+      console.log("Delete error", err.message);
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteIndex(null);
+    }
+  };
 
 
 
@@ -126,12 +156,36 @@ export default function ProfileScreen({ navigation }) {
       );
 
       // update local context object
-      profile.photos = updatedPhotos;
+      // profile.photos = updatedPhotos;
+      fetchProfile();
 
     } catch (err) {
       console.log("Upload error", err.response?.data || err.message);
     } finally {
       setUploading(false); // ✅ stop loader
+    }
+  };
+
+
+  const deletePhoto = async (index) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const updatedPhotos = profile.photos.filter((_, i) => i !== index);
+
+      await axios.put(
+        "http://143.110.244.163:5000/api/profile/update",
+        { photos: updatedPhotos },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      profile.photos = updatedPhotos;
+      fetchProfile(); // refresh
+
+    } catch (err) {
+      console.log("Delete error", err.message);
     }
   };
 
@@ -239,12 +293,27 @@ export default function ProfileScreen({ navigation }) {
 
             {profile.photos?.length > 0 ? (
               profile.photos.map((img, index) => (
-                <Image
+                <TouchableOpacity
                   key={index}
-                  source={{ uri: img }}
-                  style={styles.galleryImg}
-                />
+                  onPress={() => setPreviewImage(img)}
+                  style={{ position: "relative" }}
+                >
+                  <Image source={{ uri: img }} style={styles.galleryImg} />
+
+                  {/* delete button */}
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => {
+                      setDeleteIndex(index);
+                      setShowDeleteModal(true);
+                    }}
+
+                  >
+                    <Text style={{ color: "#fff", fontSize: 12 }}>X</Text>
+                  </TouchableOpacity>
+                </TouchableOpacity>
               ))
+
             ) : (
               <Text style={{ color: "#888" }}>No photos uploaded</Text>
             )}
@@ -341,6 +410,45 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={{ height: 30 }} />
       </ScrollView>
+
+      {previewImage && (
+        <TouchableOpacity
+          style={styles.previewContainer}
+          onPress={() => setPreviewImage(null)}
+        >
+          <Image source={{ uri: previewImage }} style={styles.previewImage} />
+        </TouchableOpacity>
+      )}
+
+
+      {showDeleteModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Delete Photo</Text>
+
+            <Text style={styles.modalText}>
+              Are you sure you want to delete this photo?
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text style={{ color: "#333" }}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteBtnModal}
+                onPress={confirmDeletePhoto}
+              >
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
 
       <Footer />
     </View>
@@ -477,5 +585,86 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  deleteBtn: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+
+  previewContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+
+  previewImage: {
+    width: "100%",
+    height: "80%",
+    resizeMode: "contain",
+  },
+
+  // delete model style
+
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+
+  modalBox: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 20,
+  },
+
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+
+  modalText: {
+    color: "#666",
+    marginBottom: 20,
+  },
+
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+  },
+
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#eee",
+  },
+
+  deleteBtnModal: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#ff4e50",
+  },
+
 
 });

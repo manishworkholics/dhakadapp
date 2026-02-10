@@ -10,6 +10,7 @@ import Step2Location from "./Step2Location";
 import Step3Religion from "./Step3Religion";
 import Step4EduJob from "./Step4EduJob";
 import Step5AboutPhotos from "./Step5AboutPhotos";
+import { useProfile } from "../../context/ProfileContext";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -17,6 +18,8 @@ export default function CreateProfileScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const [authUser, setAuthUser] = useState(null);
+
+  const { fetchProfile } = useProfile();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -140,6 +143,7 @@ export default function CreateProfileScreen() {
       await AsyncStorage.removeItem("ownProfile");
 
       alert("Profile updated successfully!");
+      fetchProfile();
 
       navigation.reset({
         index: 0,

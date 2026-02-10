@@ -70,9 +70,9 @@ const Header = () => {
           </TouchableOpacity>
         ) : (
           <View style={styles.rightIcons}>
-            <TouchableOpacity onPress={() => setIsSearching(true)}>
+            {/* <TouchableOpacity onPress={() => setIsSearching(true)}>
               <Icon name="search" size={24} color="red" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               onPress={() => navigation.navigate("Notification")}
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#000",
-   alignItems: "flex-start",
+    alignItems: "flex-start",
 
   },
   searchInput: {

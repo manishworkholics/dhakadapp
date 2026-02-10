@@ -68,6 +68,22 @@ export const ProfileProvider = ({ children }) => {
     }
   };
 
+  const fetchProfile = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    const userStr = await AsyncStorage.getItem("user");
+
+    if (!token || !userStr) return;
+
+    const userId = JSON.parse(userStr)?._id;
+
+    await fetchOwnProfile(userId, token);
+  } catch (e) {
+    console.log("Refresh profile error", e.message);
+  }
+};
+
+
   // ✅ KEY FUNCTION: login ke baad bhi yahi call hoga
   const bootstrap = async () => {
     try {
@@ -132,6 +148,7 @@ export const ProfileProvider = ({ children }) => {
         hasFeature,
         bootstrap,          // ✅ login ke baad call
         resetProfileState,  // ✅ logout pe call
+        fetchProfile,
       }}
     >
       {children}
