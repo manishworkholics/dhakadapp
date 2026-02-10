@@ -756,13 +756,15 @@ const ui = StyleSheet.create({
 
     /* OVERLAY */
     overlay: {
-        position: "absolute",
-        bottom: 56,
-        left: 0,
-        right: 0,
-        padding: 14,
-        backgroundColor: "rgba(0,0,0,0.45)",
-    },
+    position: "absolute",
+  bottom: 56,
+  bottom: -4,   
+    left: 0,
+    right: 0,
+    padding: 14,
+    backgroundColor: "rgba(0,0,0,0.45)",
+},
+
 
     name: {
         color: "#fff",

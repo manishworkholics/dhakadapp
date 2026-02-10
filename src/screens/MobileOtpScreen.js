@@ -11,12 +11,14 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { useProfile } from "../context/ProfileContext"; 
 
 const VERIFY_OTP_API = "http://143.110.244.163:5000/api/auth/verify-otp";
 const RESEND_OTP_API = "http://143.110.244.163:5000/api/auth/send-otp";
 
 export default function MobileOtpScreen() {
   const navigation = useNavigation();
+  const { bootstrap } = useProfile(); 
 
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,8 +26,8 @@ export default function MobileOtpScreen() {
 
   /* 🔹 VERIFY OTP */
   const verifyOtp = async () => {
-    if (otp.length !== 6) {
-      Alert.alert("Invalid OTP", "Please enter a valid 6-digit OTP");
+    if (otp.length !== 4) {
+      Alert.alert("Invalid OTP", "Please enter a valid 4-digit OTP");
       return;
     }
 
@@ -47,20 +49,33 @@ export default function MobileOtpScreen() {
       console.log("VERIFY OTP RESPONSE 👉", res.data);
 
       if (!res.data?.success) {
-        Alert.alert("Invalid OTP", res.data?.message || "OTP verification failed");
+        Alert.alert(
+          "Invalid OTP",
+          res.data?.message || "OTP verification failed"
+        );
         setOtp("");
         return;
       }
 
-      // ✅ SAVE AUTH DATA
+      // ✅ CLEAR OLD SESSION (IMPORTANT)
+      await AsyncStorage.multiRemove(["token", "user"]);
+      delete axios.defaults.headers.common["Authorization"];
+
+      // ✅ SAVE NEW AUTH DATA
       await AsyncStorage.setItem("token", res.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
+
+      // ✅ SET AXIOS HEADER FOR ALL NEXT API CALLS
+      axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+
+      // ✅ MOST IMPORTANT: refresh ProfileContext for NEW USER
+      await bootstrap();
 
       Alert.alert("Success", "OTP verified successfully");
 
       navigation.reset({
         index: 0,
-        routes: [{ name: "CreateProfile" }],
+        routes: [{ name: "Home" }],
       });
     } catch (error) {
       console.log("OTP VERIFY ERROR 👉", error?.response?.data || error.message);
@@ -103,9 +118,9 @@ export default function MobileOtpScreen() {
         <Text style={styles.subtitle}>Enter the OTP sent to your SMS</Text>
 
         <TextInput
-          placeholder="Enter 6 digit OTP"
+          placeholder="Enter 4 digit OTP"
           keyboardType="number-pad"
-          maxLength={6}
+          maxLength={4}
           style={styles.input}
           value={otp}
           onChangeText={(t) => setOtp(t.replace(/[^0-9]/g, ""))}

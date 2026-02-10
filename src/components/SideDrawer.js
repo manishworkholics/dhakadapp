@@ -11,12 +11,14 @@ import Icon from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import Clipboard from "@react-native-clipboard/clipboard";
+import axios from "axios";
+import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
 
 export default function SideDrawer({ navigation }) {
   const { open, closeDrawer } = useDrawer();
-  const { profile } = useProfile();
+  const { profile, resetProfileState } = useProfile();
 
   const go = (screen) => {
     closeDrawer();
@@ -25,12 +27,33 @@ export default function SideDrawer({ navigation }) {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.clear(); // clears everything
+      // ✅ userId nikal lo to cached keys bhi remove ho sake
+      const userStr = await AsyncStorage.getItem("user");
+      const userId = userStr ? JSON.parse(userStr)?._id : null;
+
+      const keysToRemove = ["token", "user"];
+      if (userId) {
+        keysToRemove.push(`ownProfile_${userId}`);
+        keysToRemove.push(`userPlan_${userId}`);
+      }
+
+      await AsyncStorage.multiRemove(keysToRemove);
+
+      // ✅ axios header clear
+      delete axios.defaults.headers.common["Authorization"];
+
+      // ✅ context reset
+      resetProfileState();
+
       closeDrawer();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Welcome" }],
-      });
+
+      // ✅ reset navigation stack
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "Welcome" }],
+        })
+      );
     } catch (err) {
       console.log("Logout error", err);
     }
@@ -38,29 +61,19 @@ export default function SideDrawer({ navigation }) {
 
   return (
     <Modal visible={open} transparent animationType="fade">
-      {/* Overlay */}
       <TouchableOpacity style={styles.overlay} onPress={closeDrawer} />
 
-      {/* Drawer */}
       <View style={styles.drawer}>
-        {/* Close */}
         <TouchableOpacity style={styles.closeBtn} onPress={closeDrawer}>
           <Icon name="close" size={22} color="#BFBFBF" />
         </TouchableOpacity>
 
-        {/* Profile */}
         <View style={styles.profileBox}>
           <View style={styles.avatar}>
             {profile?.images?.length > 0 ? (
-              <Image
-                source={{ uri: profile.images[0] }}
-                style={styles.avatarImg}
-              />
+              <Image source={{ uri: profile.images[0] }} style={styles.avatarImg} />
             ) : profile?.photos?.length > 0 ? (
-              <Image
-                source={{ uri: profile.photos[0] }}
-                style={styles.avatarImg}
-              />
+              <Image source={{ uri: profile.photos[0] }} style={styles.avatarImg} />
             ) : (
               <Icon name="person" size={30} color="#FFA821" />
             )}
@@ -69,11 +82,11 @@ export default function SideDrawer({ navigation }) {
           <View>
             <Text style={styles.username}>{profile?.name || "User"}</Text>
 
-            {/* USER ID + COPY */}
             <View style={styles.useridbox}>
               <Text style={styles.userid}>
                 DH{profile?._id?.slice(0, 5) || "XXXXX"}
               </Text>
+
               <TouchableOpacity
                 onPress={() => {
                   Clipboard.setString(profile?._id || "");
@@ -90,7 +103,6 @@ export default function SideDrawer({ navigation }) {
         <DrawerItem icon="home" title="Home" onPress={() => go("Home")} />
         <Divider />
 
-        {/* Profile Options */}
         <DrawerItem
           icon="person-outline"
           title="View and Edit your Profile"
@@ -105,7 +117,6 @@ export default function SideDrawer({ navigation }) {
           onPress={() => go("Premium")}
         />
 
-        {/* Matches */}
         <Text style={styles.section}>Discover Your Matches</Text>
         <Divider />
         <DrawerItem icon="people-outline" title="Matches" onPress={() => go("Matches")} />
@@ -114,7 +125,6 @@ export default function SideDrawer({ navigation }) {
         <Divider />
         <DrawerItem icon="chatbubbles-outline" title="Chat" onPress={() => go("Chat")} />
 
-        {/* Settings */}
         <Text style={styles.section}>Options & Settings</Text>
         <Divider />
         <DrawerItem
@@ -132,7 +142,6 @@ export default function SideDrawer({ navigation }) {
         <DrawerItem icon="shield-checkmark-outline" title="Be Safe Online" />
         <Divider />
 
-        {/* Logout */}
         <TouchableOpacity style={styles.logout} onPress={handleLogout}>
           <Icon name="log-out-outline" size={18} color="red" />
           <Text style={styles.logoutText}>Logout</Text>
@@ -153,10 +162,8 @@ const DrawerItem = ({ icon, title, onPress, highlight }) => (
   </TouchableOpacity>
 );
 
-/* Divider */
 const Divider = () => <View style={styles.divider} />;
 
-/* Styles */
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",

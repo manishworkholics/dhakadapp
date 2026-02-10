@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Icon from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
 
 const API_URL = "http://143.110.244.163:5000/api";
@@ -189,7 +190,7 @@ export default function ChatDetailScreen({ route, navigation }) {
           ]}
           onPress={sendMessage}
         >
-          <Text style={styles.sendText}>Send</Text>
+          <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
 
       </View>
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
 
   myMessage: {
     backgroundColor: "#ff4e50",
-    borderTopRightRadius: 4,
+    borderTopRightRadius: 5,
   },
 
 
@@ -255,6 +256,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginRight: 8,
     fontSize: 15,
+    marginBottom: 15
   },
 
 
@@ -262,9 +264,11 @@ const styles = StyleSheet.create({
 
   sendBtn: {
     backgroundColor: "#ff4e50",
-    paddingHorizontal: 18,
+    width: 44,
+    height: 44,
     borderRadius: 22,
     justifyContent: "center",
+    alignItems: "center",
   },
 
   sendDisabled: { opacity: 0.5 },

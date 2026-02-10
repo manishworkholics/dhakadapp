@@ -1,64 +1,117 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-const notifications = [
-  {
-    id: "1",
-    title: "New Interest Received",
-    message: "Ankita Kaur has sent you an interest.",
-    time: "2 hours ago",
-    unread: true,
-  },
-  {
-    id: "2",
-    title: "Interest Accepted",
-    message: "Riya Sharma accepted your interest.",
-    time: "Yesterday",
-    unread: false,
-  },
-  {
-    id: "3",
-    title: "Profile Viewed",
-    message: "Neha Patel viewed your profile.",
-    time: "2 days ago",
-    unread: false,
-  },
-  {
-    id: "4",
-    title: "Plan Expiring Soon",
-    message: "Your Silver plan expires in 3 days.",
-    time: "3 days ago",
-    unread: true,
-  },
-];
+import { useFocusEffect } from "@react-navigation/native";
+
+const API_URL = "http://143.110.244.163:5000/api";
+
+/* 🔹 TIME AGO FUNCTION */
+const timeAgo = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+
+  const intervals = [
+    { label: "year", seconds: 31536000 },
+    { label: "month", seconds: 2592000 },
+    { label: "day", seconds: 86400 },
+    { label: "hour", seconds: 3600 },
+    { label: "min", seconds: 60 },
+  ];
+
+  for (const i of intervals) {
+    const count = Math.floor(seconds / i.seconds);
+    if (count >= 1)
+      return `${count} ${i.label}${count > 1 ? "s" : ""} ago`;
+  }
+  return "just now";
+};
 
 export default function NotificationScreen({ navigation }) {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
+  /* 🔹 FETCH NOTIFICATIONS */
+  const fetchNotifications = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.get(`${API_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setNotifications(res.data.notifications || []);
+    } catch (err) {
+      console.log("NOTIFICATION ERROR 👉", err?.response?.data || err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      fetchNotifications();
+    }, [])
+  );
+
+  
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchNotifications();
+  };
+
+  /* 🔹 RENDER ITEM */
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[
         styles.card,
-        item.unread && styles.unreadCard,
+        !item.read && styles.unreadCard,
       ]}
       activeOpacity={0.8}
-      onPress={() => {
-        // later: mark as read + deep link
-      }}
+      onPress={() =>
+        navigation.navigate("ProfileDetail", {
+          id: item.senderProfileId,
+        })
+      }
     >
+      <Image
+        source={{
+          uri:
+            item.senderPhoto ||
+            "https://via.placeholder.com/70",
+        }}
+        style={styles.avatar}
+      />
+
       <View style={styles.textWrap}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.message}>{item.message}</Text>
-        <Text style={styles.time}>{item.time}</Text>
+        <Text style={styles.title}>
+          {item.sender?.name || "Someone"}
+        </Text>
+
+        <Text style={styles.message}>
+          {item.message || "Viewed your profile"}
+        </Text>
+
+        <Text style={styles.time}>
+          {timeAgo(item.createdAt)}
+        </Text>
       </View>
 
-      {item.unread && <View style={styles.dot} />}
+      {!item.read && <View style={styles.dot} />}
     </TouchableOpacity>
   );
 
@@ -69,7 +122,13 @@ export default function NotificationScreen({ navigation }) {
         onMenuPress={() => navigation.openDrawer()}
       />
 
-      {notifications.length === 0 ? (
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#ff4e50"
+          style={{ marginTop: 40 }}
+        />
+      ) : notifications.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyText}>
             You don’t have any notifications yet
@@ -78,10 +137,18 @@ export default function NotificationScreen({ navigation }) {
       ) : (
         <FlatList
           data={notifications}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 10 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ff4e50"]}
+              tintColor="#ff4e50"
+            />
+          }
         />
       )}
 
@@ -90,20 +157,34 @@ export default function NotificationScreen({ navigation }) {
   );
 }
 
+/* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 14,
     marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
-    elevation: 1,
+    elevation: 4,
   },
+
   unreadCard: {
-    borderLeftWidth: 4,
+    borderLeftWidth: 0.5,
     borderLeftColor: "#ff4e50",
+    borderRightWidth: 0.5,
+    borderRightColor: "#ff4e50",
+    borderColor:"#ff4e50",
+    borderWidth:0.5,
+  },
+
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+    backgroundColor: "#eee",
   },
 
   textWrap: {
@@ -113,24 +194,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: "700",
+    
+    
   },
 
   message: {
-    color: "#555",
+    color: "black",
     marginTop: 4,
     fontSize: 13,
   },
 
   time: {
-    color: "#999",
+    color: "black",
     fontSize: 11,
     marginTop: 6,
   },
 
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: "#ff4e50",
   },
 

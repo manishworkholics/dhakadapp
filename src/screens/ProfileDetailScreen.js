@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   Dimensions,
   FlatList,
-  ImageBackground
+  ImageBackground,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,26 +20,26 @@ import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useProfile } from "../context/ProfileContext";
+
 const API_URL = "http://143.110.244.163:5000/api";
 const { width } = Dimensions.get("window");
 
 export default function ProfileDetailScreen({ route, navigation }) {
   const { id } = route.params;
-  const {
-    hasActivePlan,
-    hasFeature,
-    userPlan,
-    profiles
-  } = useProfile();
+
+  const { hasActivePlan, hasFeature, userPlan, profiles } = useProfile();
+
   const [interestSent, setInterestSent] = useState(false);
   const [interestStatus, setInterestStatus] = useState(null);
 
   const [chatInterestSent, setChatInterestSent] = useState(false);
   const [isShortlisted, setIsShortlisted] = useState(false);
 
-
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ✅ REFRESH STATE
+  const [refreshing, setRefreshing] = useState(false);
 
   /* ================= AGE ================= */
   const calculateAge = (dob) => {
@@ -56,25 +57,6 @@ export default function ProfileDetailScreen({ route, navigation }) {
     return age;
   };
 
-  /* ================= FETCH PROFILE ================= */
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        const res = await axios.get(`${API_URL}/profile/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProfile(res.data.profile);
-      } catch (err) {
-        console.log("PROFILE ERROR:", err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
-  }, [id]);
-
-
   const checkShortlist = async (profileId) => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -87,8 +69,73 @@ export default function ProfileDetailScreen({ route, navigation }) {
           res.data.shortlist.some((i) => i.profile._id === profileId)
         );
       }
-    } catch { }
+    } catch {}
   };
+
+  const checkInterestStatus = async (profileUserId) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.get(`${API_URL}/interest/request/sent`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        const found = res.data.requests.find(
+          (req) => req.receiver?._id === profileUserId
+        );
+
+        if (found) {
+          setInterestSent(true);
+          setInterestStatus(found.status); // pending / accepted / rejected
+        } else {
+          setInterestSent(false);
+          setInterestStatus(null);
+        }
+      }
+    } catch (err) {
+      console.log("CHECK INTEREST STATUS ERROR:", err.message);
+    }
+  };
+
+  /* ================= FETCH PROFILE (COMMON FOR LOAD + REFRESH) ================= */
+  const loadProfile = async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+
+      const token = await AsyncStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/profile/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const p = res.data.profile;
+      setProfile(p);
+
+      // ✅ refresh ALL related data too
+      if (p?.userId) {
+        await checkInterestStatus(p.userId);
+      }
+      if (p?._id) {
+        await checkShortlist(p._id);
+      }
+    } catch (err) {
+      console.log("PROFILE ERROR:", err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  /* ================= INITIAL LOAD ================= */
+  useEffect(() => {
+    loadProfile(false);
+  }, [id]);
+
+  /* ================= PULL TO REFRESH ================= */
+  const onRefresh = useCallback(() => {
+    loadProfile(true);
+  }, [id]);
 
   const sendInterest = async () => {
     try {
@@ -115,57 +162,41 @@ export default function ProfileDetailScreen({ route, navigation }) {
     }
   };
 
-
-  // const sendChatInterest = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem("token");
-  //     const res = await axios.post(
-  //       `${API_URL}/chat/now`,
-  //       { receiverId: profile._id },
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     if (res.data.success) setChatInterestSent(true);
-  //   } catch (err) {
-  //     console.log("CHAT ERROR", err.message);
-  //   }
-  // };
-
   const sendChatInterest = async () => {
-  try {
-    const token = await AsyncStorage.getItem("token");
+    try {
+      const token = await AsyncStorage.getItem("token");
 
-    const res = await axios.post(
-      `${API_URL}/chat/now`,
-      { receiverId: profile.userId },   // ✅ use userId (same as web)
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const res = await axios.post(
+        `${API_URL}/chat/now`,
+        { receiverId: profile.userId }, // ✅ use userId (same as web)
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setChatInterestSent(true);
+
+        // small UX delay like web
+        setTimeout(() => {
+          navigation.navigate("Chat"); // 🔁 adjust route name if different
+        }, 800);
+      } else {
+        alert(res.data.message || "Failed to send chat request");
       }
-    );
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Failed to send interest";
 
-    if (res.data.success) {
-      setChatInterestSent(true);
-
-      // small UX delay like web
-      setTimeout(() => {
-        navigation.navigate("Chat"); // 🔁 adjust route name if different
-      }, 800);
-    } else {
-      alert(res.data.message || "Failed to send chat request");
+      console.error("CHAT ERROR:", msg);
+      alert(msg);
     }
-  } catch (err) {
-    const msg =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      "Failed to send interest";
-
-    console.error("CHAT ERROR:", msg);
-    alert(msg);
-  }
-};
-
+  };
 
   const toggleShortlist = async () => {
     try {
@@ -193,45 +224,6 @@ export default function ProfileDetailScreen({ route, navigation }) {
     }
   };
 
-
-
-  const checkInterestStatus = async (profileUserId) => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-
-      const res = await axios.get(
-        `${API_URL}/interest/request/sent`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.data.success) {
-        const found = res.data.requests.find(
-          (req) => req.receiver?._id === profileUserId
-        );
-
-        if (found) {
-          setInterestSent(true);
-          setInterestStatus(found.status); // pending / accepted / rejected
-        } else {
-          setInterestSent(false);
-          setInterestStatus(null);
-        }
-      }
-    } catch (err) {
-      console.log("CHECK INTEREST STATUS ERROR:", err.message);
-    }
-  };
-
-  useEffect(() => {
-    if (profile?.userId) {
-      checkInterestStatus(profile.userId);
-      checkShortlist(profile._id);
-    }
-  }, [profile]);
-
-
-
-
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -249,37 +241,46 @@ export default function ProfileDetailScreen({ route, navigation }) {
   }
 
   const timeAgo = (dateString) => {
-  if (!dateString) return "Recently active";
+    if (!dateString) return "Recently active";
 
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
 
-  const minutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days === 1) return "1d ago";
-  if (days < 7) return `${days}d ago`;
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return "1d ago";
+    if (days < 7) return `${days}d ago`;
 
-  const weeks = Math.floor(days / 7);
-  if (weeks < 4) return `${weeks}w ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks}w ago`;
 
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-};
-
+    const months = Math.floor(days / 30);
+    return `${months}mo ago`;
+  };
 
   return (
-    <SafeAreaView 
+    <SafeAreaView
       edges={["left", "right", "bottom"]}
-    style={{ flex: 1, backgroundColor: "#fff" }}>
+      style={{ flex: 1, backgroundColor: "#fff" }}
+    >
       <Header title={profile.name} onMenuPress={() => navigation.goBack()} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 220 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 220 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#ff4e50"]}
+          />
+        }
+      >
         {/* ================= IMAGE SLIDER ================= */}
         <View style={styles.sliderWrap}>
           <FlatList
@@ -303,7 +304,6 @@ export default function ProfileDetailScreen({ route, navigation }) {
                 />
               </ImageBackground>
             )}
-
           />
 
           <View style={styles.heroOverlay}>
@@ -319,7 +319,9 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
             <View style={styles.heroBadges}>
               <View style={styles.badge}>
-                <Text> <Text>🟢 {timeAgo(profile.createdAt)}</Text></Text>
+                <Text>
+                  <Text>🟢 {timeAgo(profile.createdAt)}</Text>
+                </Text>
               </View>
               <View style={styles.badge}>
                 <Text>👫 You & Her</Text>
@@ -329,14 +331,14 @@ export default function ProfileDetailScreen({ route, navigation }) {
         </View>
 
         {/* ================= ABOUT ================= */}
-        <Card title="About">
+        <Card title="About" style={styles.about}>
           <Text style={styles.text}>
             {profile.aboutYourself || "Not mentioned"}
           </Text>
         </Card>
 
         {/* ================= HOBBIES ================= */}
-        <Card title="Hobbies & Interests">
+        <Card title="Hobbies & Interests" style={styles.hobbies}>
           <View style={styles.chipsWrap}>
             {(profile.hobbies || "")
               .split(/\n|,/)
@@ -386,15 +388,20 @@ export default function ProfileDetailScreen({ route, navigation }) {
           <InfoRow label="Community" value={profile.caste} />
           <InfoRow label="Diet Preferences" value={profile.diet} />
           {hasActivePlan ? "" : <PremiumBtn />}
-
         </Card>
 
         {/* ================= CONTACT DETAILS ================= */}
         <Card title="Contact Details">
           {hasFeature("Privacy Controls") ? (
             <>
-              <InfoRow label="Contact No." value={profile.phone || "Not available"} />
-              <InfoRow label="Email ID" value={profile.email || "Not available"} />
+              <InfoRow
+                label="Contact No."
+                value={profile.phone || "Not available"}
+              />
+              <InfoRow
+                label="Email ID"
+                value={profile.email || "Not available"}
+              />
             </>
           ) : (
             <>
@@ -404,7 +411,6 @@ export default function ProfileDetailScreen({ route, navigation }) {
             </>
           )}
         </Card>
-
 
         {/* ================= FAMILY CTA ================= */}
         <View style={styles.familyCard}>
@@ -430,14 +436,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
             locked={!hasFeature("Verified Profile")}
           />
 
-
-
-
-          <CEItem
-            icon="💰"
-            label="Annual Income"
-            value={profile.annualIncome}
-          />
+          <CEItem icon="💰" label="Annual Income" value={profile.annualIncome} />
 
           <CEItem
             icon="🎓"
@@ -451,8 +450,6 @@ export default function ProfileDetailScreen({ route, navigation }) {
             value={profile.educationField || "Science"}
           />
 
-
-
           <CEItem
             icon="🏫"
             label="College Name"
@@ -464,21 +461,10 @@ export default function ProfileDetailScreen({ route, navigation }) {
             locked={!hasFeature("Verified Profile")}
           />
 
-          {/* Divider */}
           <View style={styles.ceDivider} />
 
-          {/* <Text style={styles.unlockText}>
-            To unlock Contact No. & Email ID
-          </Text>
-
-          <TouchableOpacity style={styles.premiumBtn}>
-            <Text style={styles.premiumBtnText}>Go Premium Now</Text>
-          </TouchableOpacity> */}
-
           {hasFeature("Best Matches") ? (
-            <View style={styles.yhCard}>
-              {/* existing You & Her UI */}
-            </View>
+            <View style={styles.yhCard}>{/* existing You & Her UI */}</View>
           ) : (
             <View style={styles.yhLocked}>
               <Text style={styles.yhLockedText}>
@@ -487,29 +473,20 @@ export default function ProfileDetailScreen({ route, navigation }) {
               <PremiumBtn />
             </View>
           )}
-
-
-
-
         </View>
-
-
-
-
 
         {/* ================= YOU & HER ================= */}
         <View style={styles.yhCard}>
-          {/* Top curved header */}
           <View style={styles.yhHeader}>
             <View style={styles.yhAvatars}>
-             {profiles?.images?.[0] || profiles?.photos?.[0] ? (
-                           <Image
-                             source={{ uri: profiles.images?.[0] || profiles.photos?.[0] }}
-                             style={styles.avatar}
-                           />
-                         ) : (
-                           <Icon name="person" size={30} color="#FFA821" />
-                         )}
+              {profiles?.images?.[0] || profiles?.photos?.[0] ? (
+                <Image
+                  source={{ uri: profiles.images?.[0] || profiles.photos?.[0] }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <Icon name="person" size={30} color="#FFA821" />
+              )}
               <View style={styles.yhLink}>
                 <Text style={{ color: "#fff", fontWeight: "700" }}>⇄</Text>
               </View>
@@ -520,16 +497,18 @@ export default function ProfileDetailScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* Body */}
           <View style={styles.yhBody}>
             <Text style={styles.yhTitle}>You & Her</Text>
             <Text style={styles.yhSub}>
-              You match <Text style={{ fontWeight: "700" }}>7/7</Text> of her Preferences
+              You match <Text style={{ fontWeight: "700" }}>7/7</Text> of her
+              Preferences
             </Text>
 
-            {/* Preference rows */}
             <YHRow label="Age" value="23 to 28" />
-            <YHRow label="Height" value={`4'5" (134cm) to 5'5" (165cm)`} />
+            <YHRow
+              label="Height"
+              value={`4'5" (134cm) to 5'5" (165cm)`}
+            />
             <YHRow label="Marital Status" value="Never Married" />
             <YHRow
               label="Religion / Community"
@@ -543,40 +522,28 @@ export default function ProfileDetailScreen({ route, navigation }) {
             />
             <YHRow label="Annual Income" value="Above INR 4 Lakh, AUD 40k" />
 
-            {/* Common section */}
-            <Text style={styles.commonTitle}>
-              Common Between the both of you
-            </Text>
+            <Text style={styles.commonTitle}>Common Between the both of you</Text>
 
             <CommonItem text="She too has a Bachelor’s degree" />
             <CommonItem text="She too is from the hindi community" />
             <CommonItem text="Check your Astro compatibility with Her" arrow />
 
-            {/* Button */}
             <TouchableOpacity style={styles.connectBtn}>
               <Text style={styles.connectText}>✔ Connect Now</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-
       </ScrollView>
-
-
-
 
       {/* ================= ACTION BAR ================= */}
       <View style={styles.actionBar}>
         <ActionBtn
           title={hasActivePlan ? "Chat Now" : "Upgrade to Chat"}
           onPress={
-            hasActivePlan
-              ? sendChatInterest
-              : () => navigation.navigate("Plans")
+            hasActivePlan ? sendChatInterest : () => navigation.navigate("Plans")
           }
           disabled={!hasActivePlan}
         />
-
 
         <ActionBtn
           title={
@@ -584,8 +551,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
               ? interestStatus === "accepted"
                 ? "✅ Accepted"
                 : interestStatus === "rejected"
-                  ? "❌ Rejected"
-                  : "⏳ Pending"
+                ? "❌ Rejected"
+                : "⏳ Pending"
               : "❤️ Send Interest"
           }
           color={interestSent ? "#999" : "#D4AF37"}
@@ -600,7 +567,6 @@ export default function ProfileDetailScreen({ route, navigation }) {
           onPress={toggleShortlist}
         />
       </View>
-
 
       <Footer />
     </SafeAreaView>
@@ -669,7 +635,6 @@ const CommonItem = ({ texting, text, arrow }) => (
   </View>
 );
 
-
 const ActionBtn = ({
   title,
   onPress,
@@ -689,7 +654,6 @@ const ActionBtn = ({
     <Text style={{ color: textColor, fontWeight: "700" }}>{title}</Text>
   </TouchableOpacity>
 );
-
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
@@ -742,7 +706,7 @@ const styles = StyleSheet.create({
 
   text: { color: "#555", lineHeight: 22 },
 
-  chipsWrap: { flexDirection: "row", flexWrap: "wrap" },
+  chipsWrap: { flexDirection: "row", flexWrap: "wrap", },
   chip: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -750,6 +714,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     margin: 4,
+    
+    
   },
 
   pillRow: { flexDirection: "row", marginBottom: 8 },
@@ -795,19 +761,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  connectMainBtn: {
-    backgroundColor: "#ff4e50",
-    marginTop: 16,
-    padding: 14,
-    borderRadius: 28,
-    alignItems: "center",
-  },
-
   actionBar: {
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 65, // footer height
+    bottom: 65,
     flexDirection: "row",
     backgroundColor: "#fff",
     padding: 10,
@@ -883,29 +841,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
     marginVertical: 14,
   },
-
-  unlockText: {
-    textAlign: "center",
-    color: "#777",
-    fontSize: 13,
-    marginBottom: 10,
-  },
-
-  premiumBtn: {
-    alignSelf: "center",
-    backgroundColor: "#ff4e50",
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    borderRadius: 22,
-  },
-
-  premiumBtnText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-
-
 
   yhCard: {
     backgroundColor: "#fff",
@@ -1055,4 +990,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
+  about:{
+    
+
+  }
 });

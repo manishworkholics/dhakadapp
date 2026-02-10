@@ -11,10 +11,10 @@ import {
   Animated,
   PanResponder,
 } from "react-native";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/Header"; 
+import Footer from "../components/Footer"; 
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";  
 import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
@@ -345,7 +345,7 @@ export default function MatchesScreen() {
           <TouchableOpacity style={styles.skipBtn} onPress={() =>
             navigation.navigate("ProfileDetail", { id: profile._id })
           }>
-            <Text style={styles.skipText}> Show Detail</Text>
+            <Text style={styles.skipText}> Show Detail </Text>
           </TouchableOpacity>
 
 
@@ -382,7 +382,7 @@ export default function MatchesScreen() {
 
 const HEADER_HEIGHT = 56;
 const FOOTER_HEIGHT = 65;
-const CARD_MARGIN = 40;
+const CARD_MARGIN = 70; 
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({

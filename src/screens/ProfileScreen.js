@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -47,8 +48,25 @@ const ProfileNavCard = ({ title, subtitle, onPress }) => (
 
 export default function ProfileScreen({ navigation }) {
 
-  const { profile, loading } = useProfile();
+  const { profile, loading, fetchProfile } = useProfile();
+
   const [uploading, setUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+
+
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      await fetchProfile();
+    } catch (e) {
+      console.log("Refresh error", e.message);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchProfile]);
+
+
 
   const uploadPhoto = async () => {
     try {
@@ -121,7 +139,7 @@ export default function ProfileScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <Text>Loading profile...</Text>
+        <ActivityIndicator size="large" color="#ff4e50" />
       </View>
     );
   }
@@ -148,7 +166,7 @@ export default function ProfileScreen({ navigation }) {
           style={styles.completeBtn}
           onPress={() => navigation.navigate("CreateProfile")}
         >
-          <Text style={styles.completeBtnText}>Complete Your Profile</Text>
+          <Text style={styles.completeBtnText}>Complete Your Profile  </Text>
         </TouchableOpacity>
       </View>
     );
@@ -171,7 +189,18 @@ export default function ProfileScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 70 }}>
       <Header title="My Profile" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#ff4e50"]}
+          />
+        }
+      >
+
+
         {/* 🔹 PROFILE HEADER */}
         <View style={styles.profileCard}>
           <Image
@@ -198,7 +227,7 @@ export default function ProfileScreen({ navigation }) {
             }
           >
             <Text style={styles.editText}>
-              {profile.isCompleted ? "Edit Profile" : "Complete Profile"}
+              {profile.isCompleted ? "Edit Profile" : "Complete Profile "}
             </Text>
           </TouchableOpacity>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import Header from "../components/Header";
-import Footer from '../components/Footer';
+import Footer from "../components/Footer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
@@ -19,10 +20,13 @@ export default function ShortlistScreen({ navigation }) {
   const [shortlistedProfiles, setShortlistedProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   /* 🔹 FETCH SHORTLIST */
   const fetchShortlistedProfiles = async () => {
     try {
-      setLoading(true);
+      if (!refreshing) setLoading(true);
+
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get(`${API_URL}/shortlist`, {
@@ -35,39 +39,34 @@ export default function ShortlistScreen({ navigation }) {
         setShortlistedProfiles(res.data.shortlist || []);
       }
     } catch (err) {
-      console.log(
-        "SHORTLIST ERROR 👉",
-        err?.response?.data || err.message
-      );
+      console.log("SHORTLIST ERROR 👉", err?.response?.data || err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchShortlistedProfiles();
+  }, []);
 
   /* 🔹 REMOVE FROM SHORTLIST */
   const handleRemoveShortlist = async (profileId) => {
     try {
       const token = await AsyncStorage.getItem("token");
 
-      const res = await axios.delete(
-        `${API_URL}/shortlist/${profileId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.delete(`${API_URL}/shortlist/${profileId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (res.data.success) {
         setShortlistedProfiles((prev) =>
-          prev.filter(
-            (item) => item.profile?._id !== profileId
-          )
+          prev.filter((item) => item.profile?._id !== profileId)
         );
       }
     } catch (err) {
-      console.log(
-        "REMOVE SHORTLIST ERROR 👉",
-        err?.response?.data || err.message
-      );
+      console.log("REMOVE SHORTLIST ERROR 👉", err?.response?.data || err.message);
     }
   };
 
@@ -94,18 +93,18 @@ export default function ShortlistScreen({ navigation }) {
 
     return (
       <View style={styles.card}>
-        <Image
-          source={{ uri: profile?.photos?.[0] }}
-          style={styles.image}
-        />
+        <Image source={{ uri: profile?.photos?.[0] }} style={styles.image} />
 
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{profile?.name}</Text>
-          <Text style={styles.details}>
-            {profile?.location || "N/A"} • Age{" "}
-            {calculateAge(profile?.dob)}
+        <View style={styles.content}>
+          <Text style={styles.name} numberOfLines={1}>
+            {profile?.name}
           </Text>
-          <Text style={styles.occupation}>
+
+          <Text style={styles.details} numberOfLines={1}>
+            {profile?.location || "N/A"} • {calculateAge(profile?.dob)} yrs
+          </Text>
+
+          <Text style={styles.occupation} numberOfLines={1}>
             {profile?.occupation || "N/A"}
           </Text>
 
@@ -123,9 +122,7 @@ export default function ShortlistScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.removeBtn}
-              onPress={() =>
-                handleRemoveShortlist(profile?._id)
-              }
+              onPress={() => handleRemoveShortlist(profile?._id)}
             >
               <Text style={styles.removeText}>Remove</Text>
             </TouchableOpacity>
@@ -152,8 +149,17 @@ export default function ShortlistScreen({ navigation }) {
           data={shortlistedProfiles}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: 10 }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ff4e50"]}
+              title="Refreshing..."
+              titleColor="#ff4e50"
+            />
+          }
         />
       )}
 
@@ -162,7 +168,6 @@ export default function ShortlistScreen({ navigation }) {
   );
 }
 
-/* 🔹 STYLES */
 
 const styles = StyleSheet.create({
   card: {
@@ -171,62 +176,91 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 14,
     marginBottom: 12,
-    elevation: 2,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
   },
+
   image: {
-    width: 80,
-    height: 100,
-    borderRadius: 10,
+    width: 78,
+    height: 96,
+    borderRadius: 12,
     marginRight: 12,
     backgroundColor: "#eee",
   },
+
+  content: {
+    flex: 1,
+    justifyContent: "center",
+  },
+
   name: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: "#222",
   },
+
   details: {
     color: "#777",
-    marginTop: 2,
-  },
-  occupation: {
-    color: "#555",
-    marginTop: 2,
+    marginTop: 4,
     fontSize: 13,
   },
+
+  occupation: {
+    color: "#444",
+    marginTop: 3,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
   actions: {
     flexDirection: "row",
-    marginTop: 8,
+    marginTop: 10,
+    gap: 10,
   },
+
   viewBtn: {
+    flex: 1,
     borderWidth: 1,
-    borderColor: "#ff4e50",
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    marginRight: 8,
+    borderColor: "#FF4500",
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
   },
+
   viewText: {
-    color: "#ff4e50",
-    fontWeight: "600",
+    color: "#FF4500",
+    fontWeight: "800",
     fontSize: 13,
   },
+
   removeBtn: {
-    backgroundColor: "#eee",
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    flex: 1,
+    backgroundColor: "#f7f7f7",
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    alignItems: "center",
   },
+
   removeText: {
-    color: "#555",
-    fontWeight: "600",
+    color: "#333",
+    fontWeight: "800",
     fontSize: 13,
   },
+
   empty: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
+
   emptyText: {
     color: "#888",
     textAlign: "center",

@@ -16,6 +16,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 const API_URL = "http://143.110.244.163:5000/api";
+const BASE_URL = "http://143.110.244.163:5000"; 
+
 const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
@@ -84,9 +86,20 @@ export default function ChatScreen() {
     }
   };
 
+  // ✅ Web jaisa logic: photo field handle + relative url fix
+  const getImageUri = (photo) => {
+    if (!photo) return DEFAULT_AVATAR;
+    if (typeof photo !== "string") return DEFAULT_AVATAR;
+
+    if (photo.startsWith("http://") || photo.startsWith("https://")) return photo;
+    if (photo.startsWith("/")) return `${BASE_URL}${photo}`;
+    return `${BASE_URL}/${photo}`;
+  };
+
   const renderChatItem = ({ item }) => {
-    const otherUser =
-      item.participants?.find((p) => p._id !== currentUser?._id);
+    const otherUser = item.participants?.find(
+      (p) => p._id !== currentUser?._id
+    );
 
     return (
       <TouchableOpacity
@@ -96,13 +109,12 @@ export default function ChatScreen() {
             alert("Chat request not accepted yet");
             return;
           }
-
           navigation.navigate("ChatDetail", { chatId: item._id });
         }}
       >
         <Image
-          source={{ uri: otherUser?.photos?.[0] || DEFAULT_AVATAR }}
-          style={styles.avatar}
+          source={{ uri: getImageUri(otherUser?.photo) }} // ✅ FIX (web jaisa)
+          style={styles.chatAvatar}
         />
 
         <View style={{ flex: 1 }}>
@@ -120,26 +132,39 @@ export default function ChatScreen() {
     );
   };
 
-
   const renderRequest = ({ item }) => {
-    const sender =
-      item.participants?.find((p) => p._id !== currentUser?._id);
+    const sender = item.participants?.find(
+      (p) => p._id !== currentUser?._id
+    );
 
     return (
       <View style={styles.requestCard}>
-        <Text style={styles.reqName}>{sender?.name}</Text>
+        <View style={styles.leftSection}>
+          {/* ✅ Request me bhi web jaisa photo */}
+          <Image
+            source={{ uri: getImageUri(sender?.photo) }}
+            style={styles.reqPhoto}
+          />
+
+          <View>
+            <Text style={styles.reqName}>{sender?.name}</Text>
+            <Text style={styles.reqSub}>Chat Request</Text>
+          </View>
+        </View>
+
         <View style={styles.reqBtns}>
           <TouchableOpacity
             style={styles.acceptBtn}
             onPress={() => respondToRequest(item._id, "accept")}
           >
-            <Text style={styles.btnText}>Accept</Text>
+            <Text style={styles.acceptText}>Accept</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.rejectBtn}
             onPress={() => respondToRequest(item._id, "reject")}
           >
-            <Text style={styles.btnText}>Reject</Text>
+            <Text style={styles.rejectText}>Reject</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -159,22 +184,13 @@ export default function ChatScreen() {
       <Header title="Chats" />
 
       <FlatList
-        data={[
-          ...(requests.length
-            ? [{ type: "requests" }]
-            : []),
-          ...chats,
-        ]}
-        keyExtractor={(item, index) =>
-          item._id || `req-${index}`
-        }
+        data={[...(requests.length ? [{ type: "requests" }] : []), ...chats]}
+        keyExtractor={(item, index) => item._id || `req-${index}`}
         renderItem={({ item }) => {
           if (item.type === "requests") {
             return (
               <View>
-                <Text style={styles.sectionTitle}>
-                  Chat Requests
-                </Text>
+                <Text style={styles.sectionTitle}>Chat Requests</Text>
                 <FlatList
                   data={requests}
                   keyExtractor={(i) => i._id}
@@ -189,6 +205,8 @@ export default function ChatScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadAll(true)}
+            colors={["#ff4e50"]}
+            tintColor="#ff4e50"
           />
         }
         contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
@@ -204,362 +222,93 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f6f6f6" },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-
-  card: {
-    backgroundColor: "#fff",
-    width: "100%",
-    borderRadius: 18,
-    padding: 30,
-    alignItems: "center",
-    elevation: 4,
-  },
-
-  image: { width: 100, height: 100, marginBottom: 16 },
-
-  title: { fontSize: 18, fontWeight: "700", marginBottom: 6 },
-
-  emptySubTitle: {
+  sectionTitle: {
     fontSize: 14,
-    color: "#777",
-    textAlign: "center",
-    marginBottom: 20,
+    fontWeight: "700",
+    color: "#222",
+    marginTop: 10,
+    marginBottom: 6,
+    marginLeft: 6,
   },
-
-  button: {
-    backgroundColor: "#ff4e50",
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-
-  buttonText: { color: "#fff", fontWeight: "700" },
 
   chatCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     flexDirection: "row",
     alignItems: "center",
-
-    backgroundColor: "#FFFFFF", // 👈 card white
-    marginHorizontal: 12,       // 👈 left-right gap
-    marginTop:5,              // 👈 header ke niche gap
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-
-    borderRadius: 14,           // 👈 card look
-    elevation: 2,               // 👈 Android shadow
-    shadowColor: "#000",        // 👈 iOS shadow
+    marginHorizontal: 6,
+    marginTop: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 19,
+    borderRadius: 13,
+    borderColor: "#C0C0C0",
+    borderWidth: 1,
+    elevation: 2,
+    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
 
-  avatar: {
+  // ✅ chat list image style
+  chatAvatar: {
     width: 62,
     height: 62,
     borderRadius: 31,
     marginRight: 12,
-  },
-
-  chatContent: {
-    flex: 1,
-  },
-
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: "#eee",
   },
 
   name: { fontSize: 15, fontWeight: "700", color: "#222" },
-
   lastMessage: { fontSize: 13, color: "#777", marginTop: 2 },
-
   pendingText: { fontSize: 11, color: "#ff9800", marginTop: 2 },
 
-  time: { fontSize: 11, color: "#999", marginLeft: 6 },
+  requestCard: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 8,
+    marginHorizontal: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  leftSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  // ✅ request photo (web jaisa)
+  reqPhoto: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    backgroundColor: "#eee",
+  },
+
+  reqName: { fontSize: 15, fontWeight: "600", color: "#000" },
+  reqSub: { fontSize: 12, color: "#777", marginTop: 2 },
+
+  reqBtns: { flexDirection: "row", justifyContent: "flex-end" },
+
+  acceptBtn: {
+    backgroundColor: "#22C55E",
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+
+  rejectBtn: {
+    backgroundColor: "#FEE2E2",
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+  },
+
+  acceptText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  rejectText: { color: "#DC2626", fontSize: 13, fontWeight: "600" },
 });
-
-
-
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   Image,
-//   TouchableOpacity,
-//   FlatList,
-//   ActivityIndicator,
-// } from "react-native";
-// import Header from "../components/Header";
-// import Footer from "../components/Footer";
-// import axios from "axios";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { useNavigation } from "@react-navigation/native";
-
-// const API_URL = "http://143.110.244.163:5000/api";
-
-// export default function ChatScreen() {
-//   const navigation = useNavigation();
-
-//   const [chats, setChats] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   /* ================= FETCH CHAT LIST ================= */
-//   const fetchChats = async () => {
-//     try {
-//       setLoading(true);
-//       const token = await AsyncStorage.getItem("token");
-
-//       const res = await axios.get(`${API_URL}/chat/list`, {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       });
-
-//       setChats(res.data.chats || []);
-//     } catch (err) {
-//       console.log("CHAT LIST ERROR", err?.response?.data || err.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchChats();
-//   }, []);
-
-//   /* ================= RENDER CHAT ITEM ================= */
-//   const renderItem = ({ item }) => {
-//     const otherUser = item.participants?.[0];
-
-//     return (
-//       <TouchableOpacity
-//         style={styles.chatRow}
-//         onPress={() =>
-//           navigation.navigate("ChatDetail", { chatId: item._id })
-//         }
-//       >
-//         {/* AVATAR */}
-//         <Image
-//           source={{
-//             uri:
-//               otherUser?.photo ||
-//               "https://cdn-icons-png.flaticon.com/512/847/847969.png",
-//           }}
-//           style={styles.avatar}
-//         />
-
-//         {/* CENTER */}
-//         <View style={styles.content}>
-//           <Text style={styles.name}>{otherUser?.name || "User"}</Text>
-//           <Text style={styles.lastMessage} numberOfLines={1}>
-//             {item.lastMessage?.message || "Hi Muskan, how are you"}
-//           </Text>
-//         </View>
-
-//         {/* RIGHT */}
-//         <View style={styles.right}>
-//           <Text style={styles.time}>
-//             {item.lastMessage?.createdAt
-//               ? new Date(item.lastMessage.createdAt).toLocaleTimeString([], {
-//                   hour: "2-digit",
-//                   minute: "2-digit",
-//                 })
-//               : "9:00 PM"}
-//           </Text>
-
-//           {/* UNREAD COUNT */}
-//           <View style={styles.badge}>
-//             <Text style={styles.badgeText}>3</Text>
-//           </View>
-//         </View>
-//       </TouchableOpacity>
-//     );
-//   };
-
-//   /* ================= LOADER ================= */
-//   if (loading) {
-//     return (
-//       <View style={styles.loader}>
-//         <ActivityIndicator size="large" color="#ff4e50" />
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <Header title="Chat List" />
-
-//       {/* EMPTY STATE */}
-//       {chats.length === 0 ? (
-//         <View style={styles.center}>
-//           <View style={styles.card}>
-//             <Image
-//               source={{
-//                 uri: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png",
-//               }}
-//               style={styles.image}
-//             />
-
-//             <Text style={styles.emptyTitle}>No Conversations Yet</Text>
-
-//             <Text style={styles.subTitle}>
-//               When you connect with matches, your conversations will appear
-//               here.
-//             </Text>
-
-//             <TouchableOpacity
-//               style={styles.button}
-//               onPress={() => navigation.navigate("Matches")}
-//             >
-//               <Text style={styles.buttonText}>Find Matches</Text>
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-//       ) : (
-//         /* CHAT LIST */
-//         <FlatList
-//           data={chats}
-//           keyExtractor={(item) => item._id}
-//           renderItem={renderItem}
-//           showsVerticalScrollIndicator={false}
-//           contentContainerStyle={{ paddingBottom: 90 }}
-//         />
-//       )}
-
-//       <Footer />
-//     </View>
-//   );
-// }
-
-// /* ================= STYLES ================= */
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#fff",
-//   },
-
-//   loader: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-
-//   /* EMPTY STATE */
-//   center: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     paddingHorizontal: 20,
-//   },
-
-//   card: {
-//     backgroundColor: "#fff",
-//     width: "100%",
-//     borderRadius: 18,
-//     paddingVertical: 32,
-//     paddingHorizontal: 22,
-//     alignItems: "center",
-//     elevation: 5,
-//   },
-
-//   image: {
-//     width: 110,
-//     height: 110,
-//     marginBottom: 20,
-//     opacity: 0.9,
-//   },
-
-//   emptyTitle: {
-//     fontSize: 18,
-//     fontWeight: "700",
-//     color: "#333",
-//     marginBottom: 8,
-//   },
-
-//   subTitle: {
-//     fontSize: 14,
-//     color: "#777",
-//     textAlign: "center",
-//     lineHeight: 20,
-//     marginBottom: 22,
-//   },
-
-//   button: {
-//     backgroundColor: "#ff4e50",
-//     paddingVertical: 12,
-//     paddingHorizontal: 28,
-//     borderRadius: 25,
-//   },
-
-//   buttonText: {
-//     color: "#fff",
-//     fontSize: 15,
-//     fontWeight: "600",
-//   },
-
-//   /* CHAT ROW */
-//   chatRow: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     paddingVertical: 14,
-//     paddingHorizontal: 16,
-//     borderBottomWidth: 1,
-//     borderColor: "#f0f0f0",
-//   },
-
-//   avatar: {
-//     width: 54,
-//     height: 54,
-//     borderRadius: 27,
-//     marginRight: 12,
-//     backgroundColor: "#eee",
-//   },
-
-//   content: {
-//     flex: 1,
-//   },
-
-//   name: {
-//     fontSize: 15,
-//     fontWeight: "700",
-//     color: "#111",
-//   },
-
-//   lastMessage: {
-//     fontSize: 13,
-//     color: "#999",
-//     marginTop: 4,
-//   },
-
-//   right: {
-//     alignItems: "flex-end",
-//     justifyContent: "space-between",
-//     height: 44,
-//   },
-
-//   time: {
-//     fontSize: 11,
-//     color: "#999",
-//   },
-
-//   badge: {
-//     backgroundColor: "#4CAF50",
-//     width: 20,
-//     height: 20,
-//     borderRadius: 10,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     marginTop: 6,
-//   },
-
-//   badgeText: {
-//     color: "#fff",
-//     fontSize: 11,
-//     fontWeight: "700",
-//   },
-// });
-

@@ -159,19 +159,22 @@ export default function HomeScreen() {
                 <Text style={styles.profileId}>DH{profile?._id?.slice(0, 5)}</Text>
 
                 <View style={styles.freeBadge}>
-                  <Text style={styles.freeText}>Account : Free</Text>
+                  <Text style={styles.freeText}>
+                    Account : {hasActivePlan ? "Premium" : "Free"}
+                  </Text>
                 </View>
-              </View>
 
-              <TouchableOpacity style={styles.upgradeBtn}>
-                <FontAwesome5
-                  name="crown"
-                  size={14}
-                  color="#fff"
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.upgradeText}>Upgrade Now</Text>
-              </TouchableOpacity>
+              </View>
+              {!hasActivePlan && (
+                <TouchableOpacity
+                  style={styles.upgradeBtn}
+                  onPress={() => navigation.navigate("Premium")}
+                >
+                  <FontAwesome5 name="crown" size={14} color="#fff" style={{ marginRight: 6 }} />
+                  <Text style={styles.upgradeText}>Upgrade Now</Text>
+                </TouchableOpacity>
+              )}
+
 
             </View>
           </View>
@@ -290,7 +293,7 @@ export default function HomeScreen() {
               <Text style={styles.newMatchTitle}>Find Partner</Text>
 
               <TouchableOpacity
-                onPress={() => navigation.navigate("FindPartner")} // or "FindPartner"
+                onPress={() => navigation.navigate("FindPartner")}
               >
                 <Text style={styles.seeAllText}>See All</Text>
               </TouchableOpacity>
@@ -573,12 +576,12 @@ const styles = StyleSheet.create({
   premiumImg: {
     width: "100%",
     height: 200,
-    borderRadius: 18,
+    borderRadius: 2,
   },
 
   premiumOverlay: {
     position: "absolute",
-    bottom: 56,
+    bottom: 30,
     left: 10,
     right: 10,
   },
@@ -587,6 +590,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "700",
+
   },
 
   premiumAge: {

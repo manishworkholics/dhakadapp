@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -32,8 +33,7 @@ const Chip = ({ label, selected, onPress }) => (
   </TouchableOpacity>
 );
 
-export default function EditPartnerPreferenceScreen({ navigation }) {
-    
+export default function PartnerPreferenceScreen({ navigation }) {
   const [form, setForm] = useState({
     ageFrom: "",
     ageTo: "",
@@ -51,47 +51,42 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
 
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+
+  const [showState, setShowState] = useState(false);
+  const [showCity, setShowCity] = useState(false);
+  const [stateBtnY, setStateBtnY] = useState(0);
+  const [cityBtnY, setCityBtnY] = useState(0);
+
+
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const { width, height } = Dimensions.get("window");
 
-  /* ================= FETCH STATES ================= */
+
+  /* ================= API ================= */
   const fetchStates = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/location/states`);
-      setStates(res.data || []);
-    } catch {}
+    const res = await axios.get(`${API_URL}/location/states`);
+    setStates(res.data || []);
   };
 
-  /* ================= FETCH CITIES ================= */
   const fetchCities = async (state) => {
-    try {
-      const res = await axios.get(`${API_URL}/location/cities/${state}`);
-      setCities((prev) =>
-        Array.from(new Set([...(prev || []), ...(res.data?.cities || [])]))
-      );
-    } catch {}
+    const res = await axios.get(`${API_URL}/location/cities/${state}`);
+    setCities(res.data?.cities || []);
   };
 
-  /* ================= FETCH PREFERENCE ================= */
   const fetchPreference = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      const res = await axios.get(`${API_URL}/partner-preference/my`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const token = await AsyncStorage.getItem("token");
+    const res = await axios.get(`${API_URL}/partner-preference/my`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (res.data?.preference) {
-        setForm(res.data.preference);
-
-        for (const s of res.data.preference.preferredState || []) {
-          await fetchCities(s);
-        }
+    if (res.data?.preference) {
+      setForm(res.data.preference);
+      if (res.data.preference.preferredState?.[0]) {
+        fetchCities(res.data.preference.preferredState[0]);
       }
-    } catch {
-      console.log("No preference found");
-    } finally {
-      setPageLoading(false);
     }
+    setPageLoading(false);
   };
 
   useEffect(() => {
@@ -99,49 +94,23 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
     fetchPreference();
   }, []);
 
-  /* ================= HELPERS ================= */
   const toggleMulti = (field, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter((v) => v !== value)
-        : [...prev[field], value],
+    setForm((p) => ({
+      ...p,
+      [field]: p[field].includes(value)
+        ? p[field].filter((v) => v !== value)
+        : [...p[field], value],
     }));
   };
 
-  const addState = async (state) => {
-    if (!state || form.preferredState.includes(state)) return;
-    setForm((prev) => ({
-      ...prev,
-      preferredState: [...prev.preferredState, state],
-    }));
-    await fetchCities(state);
-  };
-
-  const addCity = (city) => {
-    if (!city || form.preferredCity.includes(city)) return;
-    setForm((prev) => ({
-      ...prev,
-      preferredCity: [...prev.preferredCity, city],
-    }));
-  };
-
-  /* ================= SAVE ================= */
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem("token");
-
-      await axios.post(`${API_URL}/partner-preference/save`, form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      navigation.goBack();
-    } catch {
-      alert("Failed to save preferences");
-    } finally {
-      setLoading(false);
-    }
+  const save = async () => {
+    setLoading(true);
+    const token = await AsyncStorage.getItem("token");
+    await axios.post(`${API_URL}/partner-preference/save`, form, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setLoading(false);
+    navigation.goBack();
   };
 
   if (pageLoading) {
@@ -153,49 +122,53 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
   }
 
   return (
-    <View style={{ flex: 1 ,paddingBottom: 70 }}>
-      <Header  title="Edit Partner Preference" back />
+    <View style={{ flex: 1, paddingBottom: 70 }}>
+      <Header title="Partner Preference" />
 
-      <ScrollView contentContainerStyle={{ padding: 14 }}>
-        {/* BASIC */}
+      {/* 🔥 MAIN SCROLL LOCK */}
+      <ScrollView
+        contentContainerStyle={{ padding: 16 }}
+        scrollEnabled={!showState && !showCity}
+      >
+        {/* AGE */}
         <Label text="Age Range (Years)" />
         <View style={styles.row}>
           <TextInput
+            style={styles.input}
             placeholder="From"
             keyboardType="numeric"
-            style={styles.input}
-            value={form.ageFrom?.toString()}
+            value={form.ageFrom}
             onChangeText={(v) => setForm({ ...form, ageFrom: v })}
           />
           <TextInput
+            style={styles.input}
             placeholder="To"
             keyboardType="numeric"
-            style={styles.input}
-            value={form.ageTo?.toString()}
+            value={form.ageTo}
             onChangeText={(v) => setForm({ ...form, ageTo: v })}
           />
         </View>
 
+        {/* HEIGHT */}
         <Label text="Height Range (Feet)" />
         <View style={styles.row}>
           <TextInput
-            placeholder="From (eg 5.2)"
             style={styles.input}
+            placeholder="From"
             value={form.heightFrom}
             onChangeText={(v) => setForm({ ...form, heightFrom: v })}
           />
           <TextInput
-            placeholder="To (eg 5.8)"
             style={styles.input}
+            placeholder="To"
             value={form.heightTo}
             onChangeText={(v) => setForm({ ...form, heightTo: v })}
           />
         </View>
 
-        {/* RELIGION */}
+        {/* TEXT */}
         <Label text="Religion" />
         <TextInput
-          placeholder="Enter religion"
           style={styles.inputFull}
           value={form.religion}
           onChangeText={(v) => setForm({ ...form, religion: v })}
@@ -203,7 +176,6 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
 
         <Label text="Caste" />
         <TextInput
-          placeholder="Enter caste"
           style={styles.inputFull}
           value={form.caste}
           onChangeText={(v) => setForm({ ...form, caste: v })}
@@ -211,13 +183,12 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
 
         <Label text="Mother Tongue" />
         <TextInput
-          placeholder="Enter mother tongue"
           style={styles.inputFull}
           value={form.motherTongue}
           onChangeText={(v) => setForm({ ...form, motherTongue: v })}
         />
 
-        {/* MULTI SELECT */}
+        {/* CHIPS */}
         <Label text="Marital Status" />
         <View style={styles.wrap}>
           {["Never married", "Widower", "Divorced"].map((m) => (
@@ -254,45 +225,101 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
           ))}
         </View>
 
-        {/* LOCATION */}
+        {/* STATE */}
         <Label text="Preferred State" />
-        <View style={styles.wrap}>
-          {states.map((s) => (
-            <Chip
-              key={s.state}
-              label={s.state}
-              selected={form.preferredState.includes(s.state)}
-              onPress={() => addState(s.state)}
-            />
-          ))}
-        </View>
-
-        <Label text="Preferred City" />
-        <View style={styles.wrap}>
-          {cities.map((c) => (
-            <Chip
-              key={c}
-              label={c}
-              selected={form.preferredCity.includes(c)}
-              onPress={() => addCity(c)}
-            />
-          ))}
-        </View>
-
-        {/* SAVE */}
         <TouchableOpacity
-          style={styles.saveBtn}
-          onPress={handleSave}
-          disabled={loading}
+          style={styles.dropdown}
+          onLayout={(e) => setStateBtnY(e.nativeEvent.layout.y)}
+          onPress={() => {
+            setShowState(!showState);
+            setShowCity(false);
+          }}
         >
+          <Text>{form.preferredState[0] || "Select State"}</Text>
+        </TouchableOpacity>
+
+
+        {showState && (
+          <View
+            style={[
+              styles.dropdownBox,
+              { bottom: height - stateBtnY + 10 }
+            ]}
+          >
+            <ScrollView
+              nestedScrollEnabled
+              style={{ maxHeight: 220 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {states.map((s) => (
+                <TouchableOpacity
+                  key={s.state}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setForm({
+                      ...form,
+                      preferredState: [s.state],
+                      preferredCity: [],
+                    });
+                    fetchCities(s.state);
+                    setShowState(false);
+                  }}
+                >
+                  <Text>{s.state}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+
+        {/* CITY */}
+        <Label text="Preferred City" />
+        <TouchableOpacity
+          style={styles.dropdown}
+          onLayout={(e) => setCityBtnY(e.nativeEvent.layout.y)}
+          onPress={() => setShowCity(!showCity)}
+        >
+          <Text>{form.preferredCity[0] || "Select City"}</Text>
+        </TouchableOpacity>
+
+
+        {showCity && (
+          <View
+            style={[
+              styles.dropdownBox,
+              { bottom: height - cityBtnY + 10 }
+            ]}
+          >
+            <ScrollView
+              nestedScrollEnabled
+              style={{ maxHeight: 220 }}
+            >
+              {cities.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setForm({ ...form, preferredCity: [c] });
+                    setShowCity(false);
+                  }}
+                >
+                  <Text>{c}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+
+        <TouchableOpacity style={styles.saveBtn} onPress={save}>
           <Text style={styles.saveText}>
             {loading ? "Saving..." : "Save Preferences"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
 
-
-       <Footer />
+      <Footer />
     </View>
   );
 }
@@ -300,80 +327,63 @@ export default function EditPartnerPreferenceScreen({ navigation }) {
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  label: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#333",
-    marginTop: 14,
-    marginBottom: 6,
-  },
+  label: { fontWeight: "700", marginTop: 14, marginBottom: 6 },
 
-  row: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  row: { flexDirection: "row", gap: 10 },
 
-  input: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 6,
-  },
+  input: { flex: 1, backgroundColor: "#fff", borderRadius: 10, padding: 12 },
 
-  inputFull: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 6,
-  },
+  inputFull: { backgroundColor: "#fff", borderRadius: 10, padding: 12 },
 
-  wrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  wrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 
   chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    padding: 10,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#ccc",
   },
 
-  chipActive: {
-    backgroundColor: "#ff4e50",
-    borderColor: "#ff4e50",
+  chipActive: { backgroundColor: "#ff4e50", borderColor: "#ff4e50" },
+
+  chipTextActive: { color: "#fff" },
+
+  dropdown: {
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
 
-  chipText: {
-    color: "#333",
-    fontWeight: "600",
+  dropdownBox: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    zIndex: 999,
+    elevation: 12,
+    marginTop: 6,
   },
 
-  chipTextActive: {
-    color: "#fff",
+  dropdownItem: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
 
   saveBtn: {
     backgroundColor: "#ff4e50",
-    paddingVertical: 14,
-    borderRadius: 28,
+    padding: 16,
+    borderRadius: 30,
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 30,
+    marginTop: 40,
   },
 
-  saveText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
+  saveText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });

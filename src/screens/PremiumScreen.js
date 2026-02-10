@@ -1,5 +1,4 @@
-// src/screens/PlanScreen.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import RazorpayCheckout from "react-native-razorpay";
 import {
   View,
@@ -9,12 +8,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useFocusEffect } from "@react-navigation/native";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -24,6 +25,7 @@ export default function PlanScreen() {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   /* ================= API CALLS ================= */
 
@@ -33,6 +35,7 @@ export default function PlanScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) setMyPlan(res.data.userPlan);
+      else setMyPlan(null);
     } catch {
       setMyPlan(null);
     }
@@ -58,18 +61,32 @@ export default function PlanScreen() {
     }
   };
 
-  useEffect(() => {
-    const init = async () => {
-      const token = await AsyncStorage.getItem("token");
-      await Promise.all([
-        fetchMyPlan(token),
-        fetchAllPlans(),
-        fetchPaymentHistory(token),
-      ]);
-      setLoading(false);
-    };
-    init();
-  }, []);
+  /* ================= LOAD ALL ================= */
+
+  const loadAll = async () => {
+    const token = await AsyncStorage.getItem("token");
+    await Promise.all([
+      fetchMyPlan(token),
+      fetchAllPlans(),
+      fetchPaymentHistory(token),
+    ]);
+    setLoading(false);
+    setRefreshing(false);
+  };
+
+  /* 🔁 SCREEN FOCUS REFRESH */
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      loadAll();
+    }, [])
+  );
+
+  /* 🔁 PULL TO REFRESH */
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadAll();
+  };
 
   /* ================= PAYMENT ================= */
 
@@ -110,8 +127,7 @@ export default function PlanScreen() {
 
           if (verifyRes.data.success) {
             alert("🎉 Payment Successful & Plan Activated!");
-            fetchMyPlan(token);
-            fetchPaymentHistory(token);
+            loadAll();
           } else {
             alert("❌ Payment verification failed");
           }
@@ -137,10 +153,20 @@ export default function PlanScreen() {
     <View style={styles.container}>
       <Header title="Premium Membership" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#ff4e50"]}
+            tintColor="#ff4e50"
+          />
+        }
+      >
         {/* ===== Banner ===== */}
         <View style={styles.banner}>
-          <Icon name="diamond" size={42} color="#fff" />
+          <Icon name="diamond" size={45} color="#fff" />
           <Text style={styles.bannerTitle}>Upgrade to Premium</Text>
           <Text style={styles.bannerSub}>
             Find your perfect life partner faster
@@ -165,7 +191,7 @@ export default function PlanScreen() {
         </View>
 
         {/* ===== All Plans ===== */}
-        <Text style={styles.sectionTitle}>Choose Your Plan</Text>
+        <Text style={styles.sectionTitle1}>Choose Your Plan</Text>
 
         {plans.map((plan) => {
           const gst = Math.round((plan.price * plan.gstPercent) / 100);
@@ -178,7 +204,9 @@ export default function PlanScreen() {
               <Text style={styles.planPrice}>₹{total}</Text>
 
               {plan.features?.map((f, i) => (
-                <Text key={i} style={styles.featureText}>✔ {f}</Text>
+                <Text key={i} style={styles.featureText}>
+                  ✔ {f}
+                </Text>
               ))}
 
               <TouchableOpacity
@@ -204,6 +232,7 @@ export default function PlanScreen() {
             <FlatList
               data={paymentHistory}
               keyExtractor={(item) => item._id}
+              scrollEnabled={false}
               renderItem={({ item, index }) => (
                 <View style={styles.historyRow}>
                   <Text style={styles.historyIndex}>{index + 1}.</Text>
@@ -320,4 +349,14 @@ const styles = StyleSheet.create({
   historyMeta: { color: "#555", fontSize: 12 },
 
   historyDate: { color: "#999", fontSize: 11 },
+
+  sectionTitle1:{
+     fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#333",
+    marginLeft:18
+    
+
+  }
 });

@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { launchImageLibrary } from "react-native-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -45,7 +46,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
   const pickImage = async () => {
     const result = await launchImageLibrary({
       mediaType: "photo",
-      selectionLimit: 1, // ✅ single image only
+      selectionLimit: 1,
     });
 
     if (!result?.assets?.[0]?.uri) return;
@@ -60,7 +61,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
 
         return {
           ...prev,
-          photos: [uploadedUrl, ...remainingPhotos], // ✅ always first
+          photos: [uploadedUrl, ...remainingPhotos],
         };
       });
 
@@ -71,115 +72,121 @@ export default function Step5AboutPhotos({ profile, setProfile, submit }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Additional Details</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Additional Details</Text>
 
-      {/* ================= FAMILY STATUS ================= */}
-      <Text style={styles.label}>Family Status</Text>
-      <View style={styles.row}>
-        {["Middle class", "Upper middle class", "Rich / Affluent (Elite)"].map((v) => (
-          <TouchableOpacity
-            key={v}
-            style={[
-              styles.chip,
-              profile.familyStatus === v && styles.chipActive,
-            ]}
-            onPress={() =>
-              setProfile({ ...profile, familyStatus: v })
-            }
-          >
-            <Text
+        {/* ================= FAMILY STATUS ================= */}
+        <Text style={styles.label}>Family Status</Text>
+        <View style={styles.row}>
+          {["Middle class", "Upper middle class", "Rich / Affluent (Elite)"].map((v) => (
+            <TouchableOpacity
+              key={v}
               style={[
-                styles.chipText,
-                profile.familyStatus === v && { color: "#fff" },
+                styles.chip,
+                profile.familyStatus === v && styles.chipActive,
               ]}
+              onPress={() =>
+                setProfile({ ...profile, familyStatus: v })
+              }
             >
-              {v}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text
+                style={[
+                  styles.chipText,
+                  profile.familyStatus === v && { color: "#fff" },
+                ]}
+              >
+                {v}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      {/* ================= DIET ================= */}
-      <Text style={styles.label}>Diet</Text>
-      <View style={styles.row}>
-        {["Veg", "Nonveg", "Vegan", "Occasionally Non-Veg"].map((v) => (
-          <TouchableOpacity
-            key={v}
-            style={[
-              styles.chip,
-              profile.diet === v && styles.chipActive,
-            ]}
-            onPress={() =>
-              setProfile({ ...profile, diet: v })
-            }
-          >
-            <Text
+        {/* ================= DIET ================= */}
+        <Text style={styles.label}>Diet</Text>
+        <View style={styles.row}>
+          {["Veg", "Nonveg", "Vegan", "Occasionally Non-Veg"].map((v) => (
+            <TouchableOpacity
+              key={v}
               style={[
-                styles.chipText,
-                profile.diet === v && { color: "#fff" },
+                styles.chip,
+                profile.diet === v && styles.chipActive,
               ]}
+              onPress={() =>
+                setProfile({ ...profile, diet: v })
+              }
             >
-              {v}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.chipText,
+                  profile.diet === v && { color: "#fff" },
+                ]}
+              >
+                {v}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* ================= ABOUT ================= */}
+        <TextInput
+          style={[styles.input, { height: 110 }]}
+          placeholder="A few words about yourself"
+          multiline
+          value={profile.aboutYourself}
+          onChangeText={(t) =>
+            setProfile({ ...profile, aboutYourself: t })
+          }
+        />
+
+        {/* ================= HOBBIES ================= */}
+        <TextInput
+          style={[styles.input, { height: 90 }]}
+          placeholder="Hobbies (e.g. music, travel, fitness)"
+          multiline
+          value={profile.hobbies}
+          onChangeText={(t) =>
+            setProfile({ ...profile, hobbies: t })
+          }
+        />
+
+        {/* ================= PHOTO PREVIEW ================= */}
+        <Text style={styles.label}>Profile Photo</Text>
+        <View style={styles.photoRow}>
+          {profile.photos.length > 0 && (
+            <Image
+              source={{ uri: profile.photos[0] }}
+              style={styles.photo}
+            />
+          )}
+        </View>
+
+        {/* ================= PHOTO BUTTON ================= */}
+        <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
+          <Text style={{ color: "#fff", fontWeight: "600" }}>
+            {profile.photos.length
+              ? "Change Profile Photo"
+              : "Select Profile Photo"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* ================= SUBMIT ================= */}
+        <TouchableOpacity style={styles.submitBtn} onPress={submit}>
+          <Text style={styles.submitText}>Submit Profile</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* ================= ABOUT ================= */}
-      <TextInput
-        style={[styles.input, { height: 110 }]}
-        placeholder="A few words about yourself"
-        multiline
-        value={profile.aboutYourself}
-        onChangeText={(t) =>
-          setProfile({ ...profile, aboutYourself: t })
-        }
-      />
-
-      {/* ================= HOBBIES ================= */}
-      <TextInput
-        style={[styles.input, { height: 90 }]}
-        placeholder="Hobbies (e.g. music, travel, fitness)"
-        multiline
-        value={profile.hobbies}
-        onChangeText={(t) =>
-          setProfile({ ...profile, hobbies: t })
-        }
-      />
-
-      {/* ================= PHOTO PREVIEW ================= */}
-      <Text style={styles.label}>Profile Photo</Text>
-
-      <View style={styles.photoRow}>
-        {profile.photos.length > 0 && (
-          <Image
-            source={{ uri: profile.photos[0] }}
-            style={styles.photo}
-          />
-        )}
-      </View>
-
-      {/* ================= PHOTO BUTTON ================= */}
-      <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
-        <Text style={{ color: "#fff", fontWeight: "600" }}>
-          {profile.photos.length
-            ? "Change Profile Photo"
-            : "Select Profile Photo"}
-        </Text>
-      </TouchableOpacity>
-
-      {/* ================= SUBMIT ================= */}
-      <TouchableOpacity style={styles.submitBtn} onPress={submit}>
-        <Text style={styles.submitText}>Submit Profile</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+
   container: {
     flex: 1,
     padding: 22,
@@ -242,22 +249,23 @@ const styles = StyleSheet.create({
 
   photoBtn: {
     backgroundColor: "#555",
-    padding: 14,
+    padding: 13,
     borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: 10,
     alignItems: "center",
   },
 
   submitBtn: {
     backgroundColor: "#FF4D4D",
-    padding: 16,
-    borderRadius: 40,
+    padding: 12,
+    borderRadius: 10,
     alignItems: "center",
+    
   },
 
   submitText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
   },
 });

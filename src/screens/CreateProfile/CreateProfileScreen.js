@@ -203,10 +203,10 @@ const styles = StyleSheet.create({
   },
   continueBtn: {
     backgroundColor: "#FF4D4D",
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 40,
     elevation: 4,
   },
-  btnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  btnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
 });

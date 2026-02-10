@@ -12,17 +12,16 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useProfile } from "../context/ProfileContext";
 
-const EMAIL_LOGIN_API =
-  "http://143.110.244.163:5000/api/auth/email-login";
-
-const SEND_OTP_API =
-  "http://143.110.244.163:5000/api/auth/send-otp";
+const EMAIL_LOGIN_API = "http://143.110.244.163:5000/api/auth/email-login";
+const SEND_OTP_API = "http://143.110.244.163:5000/api/auth/send-otp";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const { bootstrap } = useProfile(); // ✅ ADD
 
-  const [loginMode, setLoginMode] = useState("email"); // email | otp
+  const [loginMode, setLoginMode] = useState("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -30,7 +29,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  /* ================= EMAIL LOGIN ================= */
   const handleEmailLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Email and password are required");
@@ -48,30 +46,29 @@ export default function LoginScreen() {
         return;
       }
 
-      // email not verified
       if (data.requiresVerification) {
         navigation.navigate("EmailOtp", { email: data.user.email });
         return;
       }
 
-      // clear old cache
-      await AsyncStorage.multiRemove([
-        "token",
-        "user",
-        "ownProfile",
-        "userPlan",
-        "phone"
-      ]);
+      // ✅ remove old session + old caches (user-wise remove we do in logout too)
+      await AsyncStorage.multiRemove(["token", "user", "phone"]);
 
-      // save new session
+      // ✅ save new session
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
+      // ✅ set axios default header
+      axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+
+      // ✅ VERY IMPORTANT: refresh context for new user
+      await bootstrap();
+
+      // ✅ reset to home
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
       });
-
     } catch (error) {
       Alert.alert(
         "Error",
@@ -82,235 +79,355 @@ export default function LoginScreen() {
     }
   };
 
+ const handleSendOtp = async () => {
+  if (!phone || phone.length !== 10) {
+    Alert.alert("Invalid Number", "Enter valid 10-digit mobile number");
+    return;
+  }
 
+  try {
+    setLoading(true);
 
-  /* ================= MOBILE OTP ================= */
-  const handleSendOtp = async () => {
-    if (!phone || phone.length !== 10) {
-      Alert.alert("Invalid Number", "Enter valid 10-digit mobile number");
-      return;
+    // ✅ YAHI SABSE IMPORTANT FIX HAI
+    await AsyncStorage.multiRemove(["token", "user"]);
+    delete axios.defaults.headers.common["Authorization"];
+
+    const res = await axios.post(SEND_OTP_API, { phone });
+
+    if (res.data?.success) {
+      await AsyncStorage.setItem("phone", phone);
+      Alert.alert("OTP Sent", "OTP sent to your mobile number");
+      navigation.navigate("MobileOtp");
+    } else {
+      Alert.alert("Failed", res.data?.message || "Failed to send OTP");
     }
+  } catch (error) {
+    Alert.alert("Error", error?.response?.data?.message || "Server error");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      setLoading(true);
 
-      const res = await axios.post(SEND_OTP_API, {
-        phone,
-      });
+return (
+  <View style={styles.container}>
+    <View style={styles.bgCircle1} />
+    <View style={styles.bgCircle2} />
 
-      console.log("SEND OTP 👉", res.data);
+    <View style={styles.card}>
+      <Image
+        source={require("../assets/images/logo-dark.png")}
+        style={styles.logo}
+        resizeMode="contain"
+      />
 
-      if (res.data?.success) {
-        await AsyncStorage.setItem("phone", phone);
-        Alert.alert("OTP Sent", "OTP sent to your mobile number");
-        navigation.navigate("MobileOtp");
-      } else {
-        Alert.alert("Failed", res.data?.message || "Failed to send OTP");
-      }
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        error?.response?.data?.message || "Server error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      <Text style={styles.title}>Welcome Back</Text>
+      <Text style={styles.subTitle}>Login to continue</Text>
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Image
-          source={require("../assets/images/logo-dark.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-
-        {/* ================= EMAIL LOGIN ================= */}
-        {loginMode === "email" && (
-          <>
-            <TextInput
-              placeholder="Enter Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-            />
-
-            <View style={styles.passwordWrap}>
-              <TextInput
-                placeholder="Password"
-                secureTextEntry={!showPassword}
-                style={styles.passwordInput}
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text style={styles.showText}>
-                  {showPassword ? "Hide" : "Show"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.loginBtn}
-              onPress={handleEmailLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.loginBtnText}>Login</Text>
-              )}
-            </TouchableOpacity>
-          </>
-        )}
-
-        {/* ================= OTP LOGIN ================= */}
-        {loginMode === "otp" && (
-          <>
-            <TextInput
-              placeholder="Enter Mobile Number"
-              keyboardType="number-pad"
-              maxLength={10}
-              style={styles.input}
-              value={phone}
-              onChangeText={(t) =>
-                setPhone(t.replace(/[^0-9]/g, ""))
-              }
-            />
-
-            <TouchableOpacity
-              style={styles.loginBtn}
-              onPress={handleSendOtp}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.loginBtnText}>Send OTP</Text>
-              )}
-            </TouchableOpacity>
-          </>
-        )}
-
-        <Text style={styles.or}>──────────── OR ────────────</Text>
-
-        {/* 🔁 TOGGLE LOGIN MODE */}
+      {/* Tabs */}
+      <View style={styles.tabRow}>
         <TouchableOpacity
-          style={styles.otpBtn}
-          onPress={() =>
-            setLoginMode(loginMode === "email" ? "otp" : "email")
-          }
+          style={[styles.tab, loginMode === "email" && styles.tabActive]}
+          onPress={() => setLoginMode("email")}
         >
-          <Text style={styles.otpBtnText}>
-            {loginMode === "email"
-              ? "Login with OTP"
-              : "Login with Email"}
+          <Text
+            style={[
+              styles.tabText,
+              loginMode === "email" && styles.tabTextActive,
+            ]}
+          >
+            Email
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.registerWrap}
-          onPress={() => navigation.navigate("Register")}
+          style={[styles.tab, loginMode === "otp" && styles.tabActive]}
+          onPress={() => setLoginMode("otp")}
         >
-          <Text style={styles.regText}>
-            Don’t have an account?{" "}
-            <Text style={styles.regHighlight}>Create Account</Text>
+          <Text
+            style={[
+              styles.tabText,
+              loginMode === "otp" && styles.tabTextActive,
+            ]}
+          >
+            OTP
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* EMAIL */}
+      {loginMode === "email" && (
+        <>
+          <TextInput
+            placeholder="Enter Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholderTextColor="#9AA0A6"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+          />
+
+          <View style={styles.passwordWrap}>
+            <TextInput
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              placeholderTextColor="#9AA0A6"
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Text style={styles.showText}>
+                {showPassword ? "Hide" : "Show"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={handleEmailLogin}
+            disabled={loading}
+            activeOpacity={0.9}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginBtnText}>Login</Text>
+            )}
+          </TouchableOpacity>
+        </>
+      )}
+
+      {/* OTP */}
+      {loginMode === "otp" && (
+        <>
+          <TextInput
+            placeholder="Enter Mobile Number"
+            keyboardType="number-pad"
+            maxLength={10}
+            placeholderTextColor="#9AA0A6"
+            style={styles.input}
+            value={phone}
+            onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ""))}
+          />
+
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={handleSendOtp}
+            disabled={loading}
+            activeOpacity={0.9}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginBtnText}>Send OTP</Text>
+            )}
+          </TouchableOpacity>
+        </>
+      )}
+
+      <View style={styles.dividerRow}>
+        <View style={styles.divider} />
+        <Text style={styles.or}>OR</Text>
+        <View style={styles.divider} />
+      </View>
+
+      <TouchableOpacity
+        style={styles.registerWrap}
+        onPress={() => navigation.navigate("Register")}
+      >
+        <Text style={styles.regText}>
+          Don’t have an account?{" "}
+          <Text style={styles.regHighlight}>Create Account</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
-  );
+
+    <Text style={styles.footerText}>Secure • Verified • Trusted</Text>
+  </View>
+);
+
 }
 
-/* ================= STYLES ================= */
+// ✅ your same styles (paste your styles here)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F7F7FB",
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 18,
   },
+
+  bgCircle1: {
+    position: "absolute",
+    top: -120,
+    left: -100,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: "rgba(255, 78, 80, 0.14)",
+  },
+  bgCircle2: {
+    position: "absolute",
+    bottom: -140,
+    right: -120,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "rgba(255, 78, 80, 0.10)",
+  },
+
   card: {
-    width: "85%",
-    padding: 25,
-    borderRadius: 18,
+    width: "100%",
     backgroundColor: "#fff",
-    elevation: 5,
+    borderRadius: 20,
+    padding: 18,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+  },
+
+  logo: {
+    width: 170,
+    height: 70,
+    alignSelf: "center",
+    marginTop: 4,
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#111",
+    textAlign: "center",
+    marginTop: 6,
+  },
+  subTitle: {
+    fontSize: 12.5,
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 4,
+    marginBottom: 14,
+  },
+
+  tabRow: {
+    flexDirection: "row",
+    backgroundColor: "#F2F3F7",
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 14,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
     alignItems: "center",
   },
-  logo: {
-    width: 180,
-    height: 120,
-    marginBottom: 25,
+  tabActive: {
+    backgroundColor: "#fff",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
+  tabText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+  },
+  tabTextActive: {
+    color: "#ff4e50",
+  },
+
   input: {
-    width: "100%",
-    backgroundColor: "#f8f8f8",
-    padding: 14,
-    borderRadius: 10,
-    marginVertical: 8,
-    fontSize: 15,
+    borderWidth: 1,
+    borderColor: "#E6E7EE",
+    backgroundColor: "#FBFBFD",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#111",
+    marginBottom: 12,
   },
+
   passwordWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8f8f8",
-    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E6E7EE",
+    backgroundColor: "#FBFBFD",
+    borderRadius: 14,
     paddingHorizontal: 14,
-    marginVertical: 8,
-    width: "100%",
+    marginBottom: 12,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: 14,
-    fontSize: 15,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#111",
   },
   showText: {
     color: "#ff4e50",
-    fontWeight: "600",
+    fontWeight: "800",
+    fontSize: 12.5,
   },
+
   loginBtn: {
     backgroundColor: "#ff4e50",
-    width: "100%",
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 10,
+    borderRadius: 14,
+    paddingVertical: 13,
     alignItems: "center",
+    marginTop: 4,
   },
   loginBtnText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "900",
+    fontSize: 14,
+    letterSpacing: 0.2,
+  },
+
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E9EAF1",
   },
   or: {
-    color: "#999",
-    marginVertical: 18,
+    marginHorizontal: 10,
+    color: "#9CA3AF",
+    fontWeight: "800",
+    fontSize: 12,
   },
-  otpBtn: {
-    backgroundColor: "#7f0000",
-    width: "100%",
-    padding: 12,
-    borderRadius: 10,
-  },
-  otpBtnText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 15,
-    fontWeight: "500",
-  },
+
   registerWrap: {
-    marginTop: 18,
+    alignItems: "center",
+    paddingVertical: 8,
   },
   regText: {
-    color: "#666",
+    color: "#374151",
+    fontSize: 13,
+    fontWeight: "600",
   },
   regHighlight: {
     color: "#ff4e50",
-    fontWeight: "600",
+    fontWeight: "900",
+  },
+
+  footerText: {
+    marginTop: 12,
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
+

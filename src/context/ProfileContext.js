@@ -13,42 +13,40 @@ export const ProfileProvider = ({ children }) => {
   const [userPlan, setUserPlan] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const fetchOwnProfile = async () => {
+  // ✅ Logout pe call
+  const resetProfileState = () => {
+    setProfile(null);
+    setProfiles(null);
+    setUserPlan(null);
+    setLoadingProfile(false);
+  };
+
+  const fetchOwnProfile = async (userId, token) => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      const user = await AsyncStorage.getItem("user");
+      if (!userId || !token) return;
 
-      if (!token || !user) {
-        console.log("TOKEN OR USER NOT FOUND IN STORAGE");
-        return;
-      }
-
-
-      const parsedUser = JSON.parse(user);
-
-      const res = await axios.get(
-        `${API_URL}/profile/own-profile/${parsedUser._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.get(`${API_URL}/profile/own-profile/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (res.data?.success) {
         setProfile(res.data.profile);
         setProfiles(res.data.profile);
+
+        // ✅ user-wise cache
         await AsyncStorage.setItem(
-          `ownProfile_${parsedUser._id}`,
+          `ownProfile_${userId}`,
           JSON.stringify(res.data.profile)
         );
-
       }
     } catch (e) {
-      console.log("OWN PROFILE ERROR", e.message);
+      console.log("OWN PROFILE ERROR", e?.response?.data || e?.message);
     }
   };
 
-  const fetchUserPlan = async () => {
+  const fetchUserPlan = async (userId, token) => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) return;
+      if (!userId || !token) return;
 
       const res = await axios.get(`${API_URL}/plan/my-plan`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -56,62 +54,72 @@ export const ProfileProvider = ({ children }) => {
 
       if (res.data?.success) {
         setUserPlan(res.data.userPlan);
+
+        // ✅ user-wise cache (IMPORTANT)
         await AsyncStorage.setItem(
-          "userPlan",
+          `userPlan_${userId}`,
           JSON.stringify(res.data.userPlan)
         );
+      } else {
+        setUserPlan(null);
       }
     } catch (e) {
       setUserPlan(null);
     }
   };
 
-  // ✅ FIX HERE
-  useEffect(() => {
-    const loadCache = async () => {
-      const user = await AsyncStorage.getItem("user");
+  // ✅ KEY FUNCTION: login ke baad bhi yahi call hoga
+  const bootstrap = async () => {
+    try {
+      setLoadingProfile(true);
 
-      // 🔥 logout case
-      if (!user) {
-        setProfile(null);
-        setUserPlan(null);
-        setLoadingProfile(false);
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user"); 
+
+      if (!token || !userStr) {
+        resetProfileState();
         return;
       }
 
+      // ✅ set axios default auth (optional but useful)
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      const parsedUser = JSON.parse(userStr);
+      const userId = parsedUser?._id;
 
-      const parsedUser = JSON.parse(user);
-
-      const cachedProfile = await AsyncStorage.getItem(
-        `ownProfile_${parsedUser._id}`
-      );
-
-      if (cachedProfile) {
-        setProfile(JSON.parse(cachedProfile));
-      } else {
-        setProfile(null); // 🔥 NO OLD DATA
+      if (!userId) {
+        resetProfileState();
+        return;
       }
 
-      const cachedPlan = await AsyncStorage.getItem("userPlan");
-      if (cachedPlan) setUserPlan(JSON.parse(cachedPlan));
+      // ✅ load user-wise cached profile
+      const cachedProfile = await AsyncStorage.getItem(`ownProfile_${userId}`);
+      setProfile(cachedProfile ? JSON.parse(cachedProfile) : null);
+
+      // ✅ load user-wise cached plan
+      const cachedPlan = await AsyncStorage.getItem(`userPlan_${userId}`);
+      setUserPlan(cachedPlan ? JSON.parse(cachedPlan) : null);
 
       setLoadingProfile(false);
 
-      fetchOwnProfile();
-      fetchUserPlan();
-    };
+      // ✅ background fresh fetch
+      fetchOwnProfile(userId, token);
+      fetchUserPlan(userId, token);
+    } catch (e) {
+      resetProfileState();
+    }
+  };
 
-    loadCache();
+  // ✅ app start
+  useEffect(() => {
+    bootstrap();
   }, []);
 
   const hasActivePlan =
-    userPlan?.status === "active" &&
-    new Date(userPlan?.endDate) > new Date();
+    userPlan?.status === "active" && new Date(userPlan?.endDate) > new Date();
 
   const hasFeature = (featureName) =>
-    hasActivePlan &&
-    userPlan?.plan?.features?.includes(featureName);
+    hasActivePlan && userPlan?.plan?.features?.includes(featureName);
 
   return (
     <ProfileContext.Provider
@@ -122,12 +130,11 @@ export const ProfileProvider = ({ children }) => {
         loadingProfile,
         hasActivePlan,
         hasFeature,
-        refreshProfile: fetchOwnProfile,
-        refreshPlan: fetchUserPlan,
+        bootstrap,          // ✅ login ke baad call
+        resetProfileState,  // ✅ logout pe call
       }}
     >
       {children}
     </ProfileContext.Provider>
   );
 };
-
