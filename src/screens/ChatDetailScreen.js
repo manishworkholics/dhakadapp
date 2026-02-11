@@ -158,29 +158,37 @@ export default function ChatDetailScreen({ route, navigation }) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "#f4f6f8" }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}  // ✅ adjust if header height changes
     >
       <Header
         title={otherUser?.name || "Chat"}
         onMenuPress={() => navigation.goBack()}
       />
 
-
-
+      {/* ✅ Chat list */}
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 12, paddingBottom: 80 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 12 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        style={{ flex: 1 }}
       />
 
+      {/* ✅ Input fixed bottom (like Instagram) */}
       <View style={styles.inputWrap}>
         <TextInput
           value={text}
           onChangeText={setText}
           placeholder="Type a message..."
+          placeholderTextColor="#000000"
           style={styles.input}
+          multiline
         />
 
         <TouchableOpacity
@@ -189,10 +197,11 @@ export default function ChatDetailScreen({ route, navigation }) {
             !text.trim() && styles.sendDisabled,
           ]}
           onPress={sendMessage}
+          disabled={!text.trim()}
+          activeOpacity={0.85}
         >
           <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
-
       </View>
     </KeyboardAvoidingView>
   );
@@ -242,7 +251,10 @@ const styles = StyleSheet.create({
 
   inputWrap: {
     flexDirection: "row",
-    padding: 10,
+    alignItems: "flex-end",
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === "ios" ? 18 : 10,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderColor: "#eee",
@@ -250,17 +262,14 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
-    backgroundColor: "#f2f2f2",
-    borderRadius: 25,
-    paddingHorizontal: 16,
+    backgroundColor: "#DCDCDC",
+    borderRadius: 22,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    marginRight: 8,
     fontSize: 15,
-    marginBottom: 15
+    fontWeight:600,
+    maxHeight: 110,      // ✅ instagram style multiline limit
   },
-
-
-  inputDisabled: { backgroundColor: "#eee" },
 
   sendBtn: {
     backgroundColor: "#ff4e50",
@@ -269,7 +278,11 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 8,
   },
+
+  sendDisabled: { opacity: 0.5 },
+
 
   sendDisabled: { opacity: 0.5 },
 

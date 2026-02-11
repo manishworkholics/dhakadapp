@@ -171,19 +171,25 @@ export default function CreateProfileScreen() {
       )}
 
       {/* FOOTER */}
-      <View style={styles.bottomContainer}>
-        {step > 1 && (
-          <TouchableOpacity onPress={prev} style={styles.backBtn}>
-            <Text>← Back</Text>
+      {/* FOOTER */}
+      <View style={styles.bottomBar}>
+        {step > 1 ? (
+          <TouchableOpacity onPress={prev} style={styles.backAction}>
+            <Text style={styles.backActionText}>← Back</Text>
           </TouchableOpacity>
+        ) : (
+          <View style={{ flex: 1 }} />
         )}
 
-        {step < 5 && (
+        {step < 5 ? (
           <TouchableOpacity style={styles.continueBtn} onPress={next}>
-            <Text style={styles.btnText}>Continue →</Text>
+            <Text style={styles.continueText}>Continue →</Text>
           </TouchableOpacity>
+        ) : (
+          <View style={{ flex: 1.3 }} />
         )}
       </View>
+
     </View>
   );
 }
@@ -213,4 +219,46 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   btnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
+   bottomBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 27,
+    backgroundColor: "#f5f5f5",
+    borderTopWidth: 1,
+    borderTopColor: "#e9e9e9",
+    flexDirection: "row",
+    gap: 12,
+  },
+
+  backAction: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#FF4D4D",
+    paddingVertical: 12,
+    borderRadius: 26,
+    alignItems: "center",
+  },
+  backActionText: {
+    color: "#FF4D4D",
+    fontWeight: "800",
+  },
+
+  continueBtn: {
+    flex: 1.3,
+    backgroundColor: "#FF4D4D",
+    paddingVertical: 12,
+    borderRadius: 26,
+    alignItems: "center",
+    elevation: 3,
+  },
+  continueText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 14,
+  },
 });

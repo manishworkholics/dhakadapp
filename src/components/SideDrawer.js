@@ -15,6 +15,7 @@ import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
+import FindPartnerScreen from './../screens/FindPartnerScreen';
 
 export default function SideDrawer({ navigation }) {
   const { open, closeDrawer } = useDrawer();
@@ -133,7 +134,7 @@ export default function SideDrawer({ navigation }) {
           onPress={() => go("PartnerPreference")}
         />
         <Divider />
-        <DrawerItem icon="filter-outline" title="Contact Filters" />
+        <DrawerItem icon="filter-outline" title="Contact Filters"   onPress={() => go("FindPartner")} />
         <Divider />
         <DrawerItem icon="settings-outline" title="Account Settings" />
         <Divider />
