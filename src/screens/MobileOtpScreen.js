@@ -11,14 +11,27 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { useProfile } from "../context/ProfileContext"; 
+import { useProfile } from "../context/ProfileContext";
 
 const VERIFY_OTP_API = "http://143.110.244.163:5000/api/auth/verify-otp";
 const RESEND_OTP_API = "http://143.110.244.163:5000/api/auth/send-otp";
 
 export default function MobileOtpScreen() {
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success"); // success | warning | error
+
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
+
   const navigation = useNavigation();
-  const { bootstrap } = useProfile(); 
+  const { bootstrap } = useProfile();
 
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +40,7 @@ export default function MobileOtpScreen() {
   /* 🔹 VERIFY OTP */
   const verifyOtp = async () => {
     if (otp.length !== 4) {
-      Alert.alert("Invalid OTP", "Please enter a valid 4-digit OTP");
+      showModal("Please enter a valid 4-digit OTP", "error");
       return;
     }
 
@@ -36,7 +49,7 @@ export default function MobileOtpScreen() {
 
       const phone = await AsyncStorage.getItem("phone");
       if (!phone) {
-        Alert.alert("Error", "Phone number missing. Please login again.");
+        showModal("Phone number missing. Please login again.", "error");
         navigation.replace("Login");
         return;
       }
@@ -49,10 +62,8 @@ export default function MobileOtpScreen() {
       console.log("VERIFY OTP RESPONSE 👉", res.data);
 
       if (!res.data?.success) {
-        Alert.alert(
-          "Invalid OTP",
-          res.data?.message || "OTP verification failed"
-        );
+        showModal(res.data?.message || "OTP verification failed", "error");
+
         setOtp("");
         return;
       }
@@ -70,16 +81,18 @@ export default function MobileOtpScreen() {
 
       // ✅ MOST IMPORTANT: refresh ProfileContext for NEW USER
       await bootstrap();
+      showModal("OTP verified successfully", "success");
 
-      Alert.alert("Success", "OTP verified successfully");
+      setTimeout(() => {
+        setModalVisible(false);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" }],
+        });
+      }, 1200);
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Home" }],
-      });
     } catch (error) {
-      console.log("OTP VERIFY ERROR 👉", error?.response?.data || error.message);
-      Alert.alert("Error", "Invalid or expired OTP");
+      showModal("Invalid or expired OTP", "error");
       setOtp("");
     } finally {
       setLoading(false);
@@ -93,23 +106,28 @@ export default function MobileOtpScreen() {
 
       const phone = await AsyncStorage.getItem("phone");
       if (!phone) {
-        Alert.alert("Error", "Phone number missing");
+        showModal("Phone number missing", "error");
         return;
       }
 
       const res = await axios.post(RESEND_OTP_API, { phone });
 
       if (res.data?.success) {
-        Alert.alert("OTP Sent", "New OTP sent to your mobile");
+        showModal("New OTP sent to your mobile", "success");
+
+        setTimeout(() => {
+          setModalVisible(false);
+        }, 1200);
       } else {
-        Alert.alert("Failed", res.data?.message || "Failed to resend OTP");
+        showModal(res.data?.message || "Failed to resend OTP", "error");
       }
     } catch (error) {
-      Alert.alert("Error", "Unable to resend OTP");
+      showModal("Unable to resend OTP", "error");
     } finally {
       setResending(false);
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -144,6 +162,50 @@ export default function MobileOtpScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+
+      {modalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+
+            <Text
+              style={[
+                styles.modalTitle,
+                modalType === "success" && { color: "#22c55e" },
+                modalType === "warning" && { color: "#f59e0b" },
+                modalType === "error" && { color: "#ef4444" },
+              ]}
+            >
+              {modalType === "success"
+                ? "Success"
+                : modalType === "warning"
+                  ? "Warning"
+                  : "Error"}
+            </Text>
+
+            <Text style={styles.modalText}>{modalMessage}</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.modalBtn,
+                modalType === "success" && { backgroundColor: "#22c55e" },
+                modalType === "warning" && { backgroundColor: "#f59e0b" },
+                modalType === "error" && { backgroundColor: "#ef4444" },
+              ]}
+              onPress={() => {
+                if (modalType !== "success") setModalVisible(false);
+              }}
+
+            >
+              <Text style={{ color: "#fff", fontWeight: "700" }}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+
+
+
     </View>
   );
 }
@@ -203,4 +265,51 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 20,
   },
+
+
+  // custom model styles
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+
+  modalBox: {
+    width: "80%",
+    backgroundColor: "#fff",
+    padding: 22,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+
+  modalText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 16,
+    color: "#333",
+    fontWeight: "600",
+  },
+
+  modalBtn: {
+    backgroundColor: "#ff4e50",
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+
+
 });

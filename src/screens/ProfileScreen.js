@@ -167,29 +167,6 @@ export default function ProfileScreen({ navigation }) {
   };
 
 
-  const deletePhoto = async (index) => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-
-      const updatedPhotos = profile.photos.filter((_, i) => i !== index);
-
-      await axios.put(
-        "http://143.110.244.163:5000/api/profile/update",
-        { photos: updatedPhotos },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      profile.photos = updatedPhotos;
-      fetchProfile(); // refresh
-
-    } catch (err) {
-      console.log("Delete error", err.message);
-    }
-  };
-
-
   if (loading) {
     return (
       <View style={styles.center}>
@@ -268,7 +245,7 @@ export default function ProfileScreen({ navigation }) {
           </Text>
 
           <Text style={styles.profileId}>
-            Profile ID: {profile._id}
+            Profile ID: DH{profile?._id?.slice(0, 5)}
           </Text>
 
           <TouchableOpacity

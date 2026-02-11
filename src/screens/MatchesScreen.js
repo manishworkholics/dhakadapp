@@ -7,21 +7,35 @@ import {
   Dimensions,
   ActivityIndicator,
   TouchableOpacity,
-  Alert,
   Animated,
   PanResponder,
 } from "react-native";
-import Header from "../components/Header"; 
-import Footer from "../components/Footer"; 
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";  
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import AppModal from "../components/AppModal";
+
 
 const { width } = Dimensions.get("window");
 const API_URL = "http://143.110.244.163:5000/api";
 const SWIPE_THRESHOLD = 120;
 
 export default function MatchesScreen() {
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
+
+
   const navigation = useNavigation();
   const [isShortlisted, setIsShortlisted] = useState(false);
   const [checkingShortlist, setCheckingShortlist] = useState(false);
@@ -89,7 +103,8 @@ export default function MatchesScreen() {
       if (res.data.success) {
         setInterestSent(true);
         setInterestStatus("pending");
-        Alert.alert("Success", "Interest sent successfully ❤️");
+        showModal("Interest sent successfully ❤️", "success");
+
       }
     } catch (error) {
       const apiMsg =
@@ -97,7 +112,8 @@ export default function MatchesScreen() {
         error?.response?.data?.error ||
         "Failed to send interest";
 
-      Alert.alert("Error", apiMsg);
+      showModal(apiMsg, "error");
+
     }
   };
 
@@ -140,10 +156,13 @@ export default function MatchesScreen() {
 
       if (res.data.success) {
         setIsShortlisted(!isShortlisted);
-        Alert.alert(
-          "Success",
-          isShortlisted ? "Removed from shortlist" : "Added to shortlist"
+        showModal(
+          isShortlisted
+            ? "Removed from shortlist"
+            : "Added to shortlist",
+          "success"
         );
+
       }
     } catch (error) {
       const apiMsg =
@@ -151,7 +170,8 @@ export default function MatchesScreen() {
         error?.response?.data?.error ||
         "Something went wrong";
 
-      Alert.alert("Error", apiMsg);
+      showModal(apiMsg, "error");
+
     } finally {
       setCheckingShortlist(false);
     }
@@ -290,7 +310,7 @@ export default function MatchesScreen() {
 
         {/* TOP BAR */}
         <View style={styles.topBar}>
-          <Text style={styles.viewedText}>Viewed you 4/7</Text>
+          <Text style={styles.viewedText}></Text>
 
           <View style={styles.topRight}>
             <TouchableOpacity
@@ -376,13 +396,22 @@ export default function MatchesScreen() {
 
 
       <Footer />
+
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => setModalVisible(false)}
+      />
+
+
     </View>
   );
 }
 
 const HEADER_HEIGHT = 56;
 const FOOTER_HEIGHT = 65;
-const CARD_MARGIN = 70; 
+const CARD_MARGIN = 70;
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({

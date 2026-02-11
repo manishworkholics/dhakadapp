@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
@@ -21,6 +20,19 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const { bootstrap } = useProfile(); // ✅ ADD
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success"); // success | warning | error
+
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
+
+
   const [loginMode, setLoginMode] = useState("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +43,9 @@ export default function LoginScreen() {
 
   const handleEmailLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Email and password are required");
+      showModal("Email and password are required", "warning");
+
+
       return;
     }
 
@@ -42,7 +56,7 @@ export default function LoginScreen() {
       const data = res.data;
 
       if (!data.success) {
-        Alert.alert("Login Failed", data.message || "Invalid credentials");
+        showModal(data.message || "Invalid credentials", "error");
         return;
       }
 
@@ -62,191 +76,245 @@ export default function LoginScreen() {
       axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
       // ✅ VERY IMPORTANT: refresh context for new user
-      await bootstrap();
+      // await bootstrap();
 
       // ✅ reset to home
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Home" }],
-      });
+      showModal("Login successful", "success");
+
+      setTimeout(async () => {
+        await bootstrap();
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" }],
+        });
+      }, 1200);
+
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error?.response?.data?.message || "Something went wrong"
-      );
+      showModal(error?.response?.data?.message || "Something went wrong", "error");
     } finally {
       setLoading(false);
     }
   };
 
- const handleSendOtp = async () => {
-  if (!phone || phone.length !== 10) {
-    Alert.alert("Invalid Number", "Enter valid 10-digit mobile number");
-    return;
-  }
+  const handleSendOtp = async () => {
+    if (!phone || phone.length !== 10) {
 
-  try {
-    setLoading(true);
-
-    // ✅ YAHI SABSE IMPORTANT FIX HAI
-    await AsyncStorage.multiRemove(["token", "user"]);
-    delete axios.defaults.headers.common["Authorization"];
-
-    const res = await axios.post(SEND_OTP_API, { phone });
-
-    if (res.data?.success) {
-      await AsyncStorage.setItem("phone", phone);
-      Alert.alert("OTP Sent", "OTP sent to your mobile number");
-      navigation.navigate("MobileOtp");
-    } else {
-      Alert.alert("Failed", res.data?.message || "Failed to send OTP");
+      showModal("Enter valid 10-digit mobile number", "error");
+      return;
     }
-  } catch (error) {
-    Alert.alert("Error", error?.response?.data?.message || "Server error");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      setLoading(true);
+
+      // ✅ YAHI SABSE IMPORTANT FIX HAI
+      await AsyncStorage.multiRemove(["token", "user"]);
+      delete axios.defaults.headers.common["Authorization"];
+
+      const res = await axios.post(SEND_OTP_API, { phone });
+
+      if (res.data?.success) {
+        await AsyncStorage.setItem("phone", phone);
+        showModal("OTP sent to your mobile number", "success");
+
+        setTimeout(() => {
+          setModalVisible(false);
+          navigation.navigate("MobileOtp");
+        }, 1200);
+      } else {
+
+        showModal("Failed", res.data?.message || "Failed to send OTP", "error");
+      }
+    } catch (error) {
+
+      showModal("Error", error?.response?.data?.message || "Server error", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
-return (
-  <View style={styles.container}>
-    <View style={styles.bgCircle1} />
-    <View style={styles.bgCircle2} />
+  return (
+    <View style={styles.container}>
+      <View style={styles.bgCircle1} />
+      <View style={styles.bgCircle2} />
 
-    <View style={styles.card}>
-      <Image
-        source={require("../assets/images/logo-dark.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      <View style={styles.card}>
+        <Image
+          source={require("../assets/images/logo-dark.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
 
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.subTitle}>Login to continue</Text>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subTitle}>Login to continue</Text>
 
-      {/* Tabs */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, loginMode === "email" && styles.tabActive]}
-          onPress={() => setLoginMode("email")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              loginMode === "email" && styles.tabTextActive,
-            ]}
+        {/* Tabs */}
+        <View style={styles.tabRow}>
+          <TouchableOpacity
+            style={[styles.tab, loginMode === "email" && styles.tabActive]}
+            onPress={() => setLoginMode("email")}
           >
-            Email
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.tabText,
+                loginMode === "email" && styles.tabTextActive,
+              ]}
+            >
+              Email
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, loginMode === "otp" && styles.tabActive]}
+            onPress={() => setLoginMode("otp")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                loginMode === "otp" && styles.tabTextActive,
+              ]}
+            >
+              OTP
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* EMAIL */}
+        {loginMode === "email" && (
+          <>
+            <TextInput
+              placeholder="Enter Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#9AA0A6"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+            />
+
+            <View style={styles.passwordWrap}>
+              <TextInput
+                placeholder="Password"
+                secureTextEntry={!showPassword}
+                placeholderTextColor="#9AA0A6"
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Text style={styles.showText}>
+                  {showPassword ? "Hide" : "Show"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.loginBtn}
+              onPress={handleEmailLogin}
+              disabled={loading}
+              activeOpacity={0.9}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginBtnText}>Login</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* OTP */}
+        {loginMode === "otp" && (
+          <>
+            <TextInput
+              placeholder="Enter Mobile Number"
+              keyboardType="number-pad"
+              maxLength={10}
+              placeholderTextColor="#9AA0A6"
+              style={styles.input}
+              value={phone}
+              onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ""))}
+            />
+
+            <TouchableOpacity
+              style={styles.loginBtn}
+              onPress={handleSendOtp}
+              disabled={loading}
+              activeOpacity={0.9}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginBtnText}>Send OTP</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        <View style={styles.dividerRow}>
+          <View style={styles.divider} />
+          <Text style={styles.or}>OR</Text>
+          <View style={styles.divider} />
+        </View>
 
         <TouchableOpacity
-          style={[styles.tab, loginMode === "otp" && styles.tabActive]}
-          onPress={() => setLoginMode("otp")}
+          style={styles.registerWrap}
+          onPress={() => navigation.navigate("Register")}
         >
-          <Text
-            style={[
-              styles.tabText,
-              loginMode === "otp" && styles.tabTextActive,
-            ]}
-          >
-            OTP
+          <Text style={styles.regText}>
+            Don’t have an account?{" "}
+            <Text style={styles.regHighlight}>Create Account</Text>
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* EMAIL */}
-      {loginMode === "email" && (
-        <>
-          <TextInput
-            placeholder="Enter Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#9AA0A6"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
+      <Text style={styles.footerText}>Secure • Verified • Trusted</Text>
 
-          <View style={styles.passwordWrap}>
-            <TextInput
-              placeholder="Password"
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#9AA0A6"
-              style={styles.passwordInput}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Text style={styles.showText}>
-                {showPassword ? "Hide" : "Show"}
-              </Text>
+
+      {modalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+
+            <Text
+              style={[
+                styles.modalTitle,
+                modalType === "success" && { color: "#22c55e" },
+                modalType === "warning" && { color: "#f59e0b" },
+                modalType === "error" && { color: "#ef4444" },
+              ]}
+            >
+              {modalType === "success"
+                ? "Success"
+                : modalType === "warning"
+                  ? "Warning"
+                  : "Error"}
+            </Text>
+
+            <Text style={styles.modalText}>{modalMessage}</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.modalBtn,
+                modalType === "success" && { backgroundColor: "#22c55e" },
+                modalType === "warning" && { backgroundColor: "#f59e0b" },
+                modalType === "error" && { backgroundColor: "#ef4444" },
+              ]}
+              onPress={() => {
+                if (modalType !== "success") setModalVisible(false);
+              }}
+
+            >
+              <Text style={{ color: "#fff", fontWeight: "700" }}>OK</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.loginBtn}
-            onPress={handleEmailLogin}
-            disabled={loading}
-            activeOpacity={0.9}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginBtnText}>Login</Text>
-            )}
-          </TouchableOpacity>
-        </>
+        </View>
       )}
 
-      {/* OTP */}
-      {loginMode === "otp" && (
-        <>
-          <TextInput
-            placeholder="Enter Mobile Number"
-            keyboardType="number-pad"
-            maxLength={10}
-            placeholderTextColor="#9AA0A6"
-            style={styles.input}
-            value={phone}
-            onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ""))}
-          />
 
-          <TouchableOpacity
-            style={styles.loginBtn}
-            onPress={handleSendOtp}
-            disabled={loading}
-            activeOpacity={0.9}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginBtnText}>Send OTP</Text>
-            )}
-          </TouchableOpacity>
-        </>
-      )}
 
-      <View style={styles.dividerRow}>
-        <View style={styles.divider} />
-        <Text style={styles.or}>OR</Text>
-        <View style={styles.divider} />
-      </View>
-
-      <TouchableOpacity
-        style={styles.registerWrap}
-        onPress={() => navigation.navigate("Register")}
-      >
-        <Text style={styles.regText}>
-          Don’t have an account?{" "}
-          <Text style={styles.regHighlight}>Create Account</Text>
-        </Text>
-      </TouchableOpacity>
     </View>
-
-    <Text style={styles.footerText}>Secure • Verified • Trusted</Text>
-  </View>
-);
+  );
 
 }
 
@@ -429,5 +497,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
+
+  // custom model styles
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+
+  modalBox: {
+    width: "80%",
+    backgroundColor: "#fff",
+    padding: 22,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+
+  modalText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 16,
+    color: "#333",
+    fontWeight: "600",
+  },
+
+  modalBtn: {
+    backgroundColor: "#ff4e50",
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+
+
 });
 

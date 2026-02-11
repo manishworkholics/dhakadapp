@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-
+import AppModal from "../components/AppModal";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useProfile } from "../context/ProfileContext";
@@ -25,6 +25,17 @@ const API_URL = "http://143.110.244.163:5000/api";
 const { width } = Dimensions.get("window");
 
 export default function ProfileDetailScreen({ route, navigation }) {
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
   const { id } = route.params;
 
   const { hasActivePlan, hasFeature, userPlan, profiles } = useProfile();
@@ -69,7 +80,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
           res.data.shortlist.some((i) => i.profile._id === profileId)
         );
       }
-    } catch {}
+    } catch { }
   };
 
   const checkInterestStatus = async (profileUserId) => {
@@ -150,7 +161,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
       if (res.data.success) {
         setInterestSent(true);
         setInterestStatus("pending");
-        alert("Interest sent successfully ❤️");
+        showModal("Interest sent successfully ❤️", "success");
+
       }
     } catch (err) {
       const msg =
@@ -158,7 +170,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
         err?.response?.data?.error ||
         "Failed to send interest";
 
-      alert(msg);
+      showModal(msg, "error");
+
     }
   };
 
@@ -185,7 +198,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
           navigation.navigate("Chat"); // 🔁 adjust route name if different
         }, 800);
       } else {
-        alert(res.data.message || "Failed to send chat request");
+        showModal(res.data.message || "Failed to send chat request", "error");
+
       }
     } catch (err) {
       const msg =
@@ -194,7 +208,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
         "Failed to send interest";
 
       console.error("CHAT ERROR:", msg);
-      alert(msg);
+      showModal(msg, "error");
+
     }
   };
 
@@ -210,17 +225,25 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
       if (res.data.success) {
         setIsShortlisted(!isShortlisted);
-        alert(isShortlisted ? "Removed from shortlist" : "Added to shortlist");
+        showModal(
+          isShortlisted
+            ? "Removed from shortlist"
+            : "Added to shortlist",
+          "success"
+        );
+
       }
     } catch (err) {
       const data = err?.response?.data;
 
       if (data?.code === "PREMIUM_REQUIRED") {
-        alert("🔒 Upgrade to premium to use shortlist feature");
+        showModal("Upgrade to premium to use shortlist feature", "warning");
+
         return;
       }
 
-      alert(data?.message || "Something went wrong");
+      showModal(data?.message || "Something went wrong", "error");
+
     }
   };
 
@@ -551,8 +574,8 @@ export default function ProfileDetailScreen({ route, navigation }) {
               ? interestStatus === "accepted"
                 ? "✅ Accepted"
                 : interestStatus === "rejected"
-                ? "❌ Rejected"
-                : "⏳ Pending"
+                  ? "❌ Rejected"
+                  : "⏳ Pending"
               : "❤️ Send Interest"
           }
           color={interestSent ? "#999" : "#D4AF37"}
@@ -569,6 +592,14 @@ export default function ProfileDetailScreen({ route, navigation }) {
       </View>
 
       <Footer />
+
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => setModalVisible(false)}
+      />
+
     </SafeAreaView>
   );
 }
@@ -714,8 +745,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     margin: 4,
-    
-    
+
+
   },
 
   pillRow: { flexDirection: "row", marginBottom: 8 },
@@ -990,8 +1021,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  about:{
-    
+  about: {
+
 
   }
 });
