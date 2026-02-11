@@ -25,6 +25,7 @@ const API_URL = "http://143.110.244.163:5000/api";
 const { width } = Dimensions.get("window");
 
 export default function ProfileDetailScreen({ route, navigation }) {
+  const [compatibility, setCompatibility] = useState(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -116,13 +117,13 @@ export default function ProfileDetailScreen({ route, navigation }) {
       else setLoading(true);
 
       const token = await AsyncStorage.getItem("token");
-      const res = await axios.get(`${API_URL}/profile/${id}`, {
+      const res = await axios.get(`${API_URL}/matches/matches/profile/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const p = res.data.profile;
       setProfile(p);
-
+      setCompatibility(res.data.compatibility);
       // ✅ refresh ALL related data too
       if (p?.userId) {
         await checkInterestStatus(p.userId);
@@ -436,13 +437,13 @@ export default function ProfileDetailScreen({ route, navigation }) {
         </Card>
 
         {/* ================= FAMILY CTA ================= */}
-        <View style={styles.familyCard}>
+        {/* <View style={styles.familyCard}>
           <Text style={styles.familyTitle}>Add your details</Text>
           <Text>to see {profile.name} family details</Text>
           <TouchableOpacity style={styles.familyBtn}>
             <Text>Add Now</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* ================= CAREER ================= */}
         <View style={styles.ceCard}>
@@ -523,35 +524,32 @@ export default function ProfileDetailScreen({ route, navigation }) {
           <View style={styles.yhBody}>
             <Text style={styles.yhTitle}>You & Her</Text>
             <Text style={styles.yhSub}>
-              You match <Text style={{ fontWeight: "700" }}>7/7</Text> of her
-              Preferences
+              You match <Text style={{ fontWeight: "700" }}>
+                {compatibility?.matchedCount}/{compatibility?.totalChecks}
+              </Text> of her Preferences
             </Text>
 
-            <YHRow label="Age" value="23 to 28" />
-            <YHRow
-              label="Height"
-              value={`4'5" (134cm) to 5'5" (165cm)`}
-            />
-            <YHRow label="Marital Status" value="Never Married" />
-            <YHRow
-              label="Religion / Community"
-              value="Hindu: Brahmin - Other, Hindu: Brahmin..."
-              more
-            />
-            <YHRow label="Mother Tongue" value="Hindi, English" />
-            <YHRow
-              label="Country Living in"
-              value="Australia, Canada, India, USA"
-            />
-            <YHRow label="Annual Income" value="Above INR 4 Lakh, AUD 40k" />
+
+            {compatibility?.preferenceMatches?.map((item, i) => (
+              <YHRow
+                key={i}
+                label={item.field}
+                value={item.value}
+                matched={item.matched}
+              />
+            ))}
+
 
             <Text style={styles.commonTitle}>Common Between the both of you</Text>
 
-            <CommonItem text="She too has a Bachelor’s degree" />
-            <CommonItem text="She too is from the hindi community" />
-            <CommonItem text="Check your Astro compatibility with Her" arrow />
+            {compatibility?.commonPoints?.map((c, i) => (
+              <CommonItem key={i} text={c} />
+            ))}
 
-            <TouchableOpacity style={styles.connectBtn}>
+
+            <TouchableOpacity style={styles.connectBtn} onPress={
+              hasActivePlan ? sendChatInterest : () => navigation.navigate("Plans")
+            }>
               <Text style={styles.connectText}>✔ Connect Now</Text>
             </TouchableOpacity>
           </View>
@@ -641,20 +639,24 @@ const CEItem = ({ icon, label, value, locked }) => (
   </View>
 );
 
-const YHRow = ({ label, value, more }) => (
+const YHRow = ({ label, value, matched }) => (
   <View style={styles.yhRow}>
     <View style={{ flex: 1 }}>
       <Text style={styles.yhLabel}>{label}</Text>
-      <Text style={styles.yhValue}>
-        {value} {more && <Text style={{ color: "#ff4e50" }}>More</Text>}
-      </Text>
+      <Text style={styles.yhValue}>{value}</Text>
     </View>
 
-    <View style={styles.yhCheck}>
-      <Text style={{ color: "#ff4e50", fontWeight: "700" }}>✓</Text>
+    <View
+      style={[
+        styles.yhCheck,
+        { borderColor: matched ? "#4caf50" : "#ccc" },
+      ]}
+    >
+      <Text style={{ color: matched ? "#4caf50" : "#ccc" }}>✓</Text>
     </View>
   </View>
 );
+
 
 const CommonItem = ({ texting, text, arrow }) => (
   <View style={styles.commonRow}>
