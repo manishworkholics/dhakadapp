@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useProfile } from "../context/ProfileContext";
+import AppModal from "../components/AppModal";
 
 const EMAIL_LOGIN_API = "http://143.110.244.163:5000/api/auth/email-login";
 const SEND_OTP_API = "http://143.110.244.163:5000/api/auth/send-otp";
@@ -20,18 +21,16 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const { bootstrap } = useProfile(); // ✅ ADD
 
+
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [modalType, setModalType] = useState("success"); // success | warning | error
-
+  const [modalType, setModalType] = useState("success");
 
   const showModal = (msg, type = "success") => {
     setModalMessage(msg);
     setModalType(type);
     setModalVisible(true);
   };
-
-
 
   const [loginMode, setLoginMode] = useState("email");
   const [email, setEmail] = useState("");
@@ -207,7 +206,18 @@ export default function LoginScreen() {
                   {showPassword ? "Hide" : "Show"}
                 </Text>
               </TouchableOpacity>
+
+
+
             </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPassword")}
+              style={{ alignSelf: "flex-start", marginBottom: 10, marginTop: -4 }}
+            >
+              <Text style={{ color: "#D4AF37", fontWeight: "800" }}>
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.loginBtn}
@@ -272,46 +282,14 @@ export default function LoginScreen() {
       <Text style={styles.footerText}>Secure • Verified • Trusted</Text>
 
 
-      {modalVisible && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-
-            <Text
-              style={[
-                styles.modalTitle,
-                modalType === "success" && { color: "#22c55e" },
-                modalType === "warning" && { color: "#f59e0b" },
-                modalType === "error" && { color: "#ef4444" },
-              ]}
-            >
-              {modalType === "success"
-                ? "Success"
-                : modalType === "warning"
-                  ? "Warning"
-                  : "Error"}
-            </Text>
-
-            <Text style={styles.modalText}>{modalMessage}</Text>
-
-            <TouchableOpacity
-              style={[
-                styles.modalBtn,
-                modalType === "success" && { backgroundColor: "#22c55e" },
-                modalType === "warning" && { backgroundColor: "#f59e0b" },
-                modalType === "error" && { backgroundColor: "#ef4444" },
-              ]}
-              onPress={() => {
-                if (modalType !== "success") setModalVisible(false);
-              }}
-
-            >
-              <Text style={{ color: "#fff", fontWeight: "700" }}>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
 
 
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => setModalVisible(false)}
+      />
 
     </View>
   );
@@ -498,49 +476,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // custom model styles
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    marginBottom: 8,
-  },
 
 
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999,
-  },
 
-  modalBox: {
-    width: "80%",
-    backgroundColor: "#fff",
-    padding: 22,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-
-  modalText: {
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 16,
-    color: "#333",
-    fontWeight: "600",
-  },
-
-  modalBtn: {
-    backgroundColor: "#ff4e50",
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
 
 
 });

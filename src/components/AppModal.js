@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
         zIndex: 999,
     },
     box: {
-        width: "80%",
+        width: "90%",
         backgroundColor: "#fff",
         padding: 22,
         borderRadius: 14,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     btn: {
-        paddingHorizontal: 22,
+        paddingHorizontal: 30,
         paddingVertical: 10,
         borderRadius: 10,
     },

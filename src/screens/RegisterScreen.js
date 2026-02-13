@@ -17,6 +17,9 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import { Modal, Pressable } from "react-native";
+import AppModal from "../components/AppModal";
+
 
 const API_URL = "http://143.110.244.163:5000/api/auth/register";
 
@@ -30,6 +33,27 @@ export default function RegisterScreen() {
     createdfor: "",
     password: "",
   });
+  const [openFor, setOpenFor] = useState(false);
+
+  const createdForOptions = [
+    { label: "Self", value: "self" },
+    { label: "Son", value: "son" },
+    { label: "Daughter", value: "daughter" },
+    { label: "Brother", value: "brother" },
+    { label: "Sister", value: "sister" },
+  ];
+
+
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
 
   const [loading, setLoading] = useState(false);
 
@@ -63,22 +87,22 @@ export default function RegisterScreen() {
     const { name, email, phone, createdfor, password } = form;
 
     if (!name || !email || !phone || !createdfor || !password) {
-      Alert.alert("Missing Fields", "Please fill all fields");
+      showModal("Please fill all fields", "error");
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert("Invalid Email", "Please enter a valid email address");
+      showModal("Please enter a valid email address", "error");
       return;
     }
 
     if (!isValidPhone(phone)) {
-      Alert.alert("Invalid Phone Number", "Enter valid 10 digit number");
+      showModal("Enter valid 10 digit number", "error");
       return;
     }
 
     if (!isValidPassword(password)) {
-      Alert.alert("Weak Password", "Password must be strong");
+      showModal("Password must be strong", "error");
       return;
     }
 
@@ -94,18 +118,25 @@ export default function RegisterScreen() {
       });
 
       if (res.data.success && res.data.requiresVerification) {
-        navigation.replace("EmailOtp", { email });
+        showModal("Registration successful! OTP sent to your email.", "success");
+        setTimeout(() => {
+          navigation.replace("EmailOtp", { email });
+        }, 800);
+      } else if (res.data.success) {
+        showModal("Registration successful!", "success");
+      } else {
+        showModal(res.data.message || "Registration Failed", "error");
       }
-
     } catch (err) {
-      Alert.alert(
-        "Registration Failed",
-        err?.response?.data?.message || "Something went wrong"
+      showModal(
+        err?.response?.data?.message || "Something went wrong",
+        "error"
       );
     } finally {
       setLoading(false);
     }
   };
+
 
 
 
@@ -120,17 +151,60 @@ export default function RegisterScreen() {
 
         {/* CREATED FOR */}
         <View style={styles.dropdownWrap}>
-          <Picker
-            selectedValue={form.createdfor}
-            onValueChange={(v) => handleChange("createdfor", v)}
+          {/* CREATED FOR - Custom Designed Dropdown */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.dropdownField}
+            onPress={() => setOpenFor(true)}
           >
-            <Picker.Item label="Profile Created For" value="" />
-            <Picker.Item label="Self" value="self" />
-            <Picker.Item label="Son" value="son" />
-            <Picker.Item label="Daughter" value="daughter" />
-            <Picker.Item label="Brother" value="brother" />
-            <Picker.Item label="Sister" value="sister" />
-          </Picker>
+            <Text
+              style={[
+                styles.dropdownText,
+                !form.createdfor && { color: "#999" },
+              ]}
+            >
+              {form.createdfor
+                ? createdForOptions.find((o) => o.value === form.createdfor)?.label
+                : "Profile Created For"}
+            </Text>
+
+            <Text style={styles.dropdownIcon}>▾</Text>
+          </TouchableOpacity>
+
+          {/* Modal Dropdown */}
+          <Modal
+            transparent
+            visible={openFor}
+            animationType="fade"
+            onRequestClose={() => setOpenFor(false)}
+          >
+            <Pressable style={styles.modalBackdrop} onPress={() => setOpenFor(false)}>
+              <Pressable style={styles.modalCard} onPress={() => { }}>
+                <Text style={styles.modalTitle}>Profile Created For</Text>
+
+                {createdForOptions.map((item) => {
+                  const selected = form.createdfor === item.value;
+                  return (
+                    <TouchableOpacity
+                      key={item.value}
+                      style={[styles.optionRow, selected && styles.optionRowSelected]}
+                      onPress={() => {
+                        handleChange("createdfor", item.value); // ✅ same logic
+                        setOpenFor(false);
+                      }}
+                    >
+                      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                        {item.label}
+                      </Text>
+
+                      {selected ? <Text style={styles.checkMark}>✓</Text> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </Pressable>
+            </Pressable>
+          </Modal>
+
         </View>
 
         <TextInput
@@ -188,6 +262,14 @@ export default function RegisterScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => setModalVisible(false)}
+      />
     </ScrollView>
   );
 }
@@ -251,4 +333,83 @@ const styles = StyleSheet.create({
     color: "#ff4e50",
     fontWeight: "600",
   },
+  dropdownField: {
+    width: "100%",
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    height: 52,
+    marginVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    borderWidth: 1,
+    borderColor: "#ececec",
+  },
+  dropdownText: {
+    fontSize: 15,
+    color: "#222",
+    fontWeight: "600",
+  },
+  dropdownIcon: {
+    fontSize: 18,
+    color: "#555",
+    marginTop: -2,
+  },
+
+
+  /* Modal */
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    paddingHorizontal: 36,
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 19,
+    overflow: "hidden",
+
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111",
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  optionRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  optionRowSelected: {
+    backgroundColor: "#fff3f3",
+  },
+  optionText: {
+    fontSize: 15,
+    color: "#222",
+    fontWeight: "600",
+
+  },
+  optionTextSelected: {
+    color: "#ff4e50",
+  },
+  checkMark: {
+    fontSize: 16,
+    color: "#ff4e50",
+    fontWeight: "900",
+  },
+
 });

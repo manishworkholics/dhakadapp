@@ -35,7 +35,7 @@ export default function WelcomeScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.optionBtn}
           onPress={() => navigation.navigate("Home")}
         >
@@ -43,7 +43,7 @@ export default function WelcomeScreen() {
             <Icon name="person-outline" size={22} color="#333" />
             <Text style={styles.optionText}> Continue as Guest</Text>
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           style={styles.redBtn}

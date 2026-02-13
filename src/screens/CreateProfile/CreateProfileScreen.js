@@ -11,6 +11,10 @@ import Step3Religion from "./Step3Religion";
 import Step4EduJob from "./Step4EduJob";
 import Step5AboutPhotos from "./Step5AboutPhotos";
 import { useProfile } from "../../context/ProfileContext";
+import AppModal from "../../components/AppModal";
+
+
+
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -20,6 +24,16 @@ export default function CreateProfileScreen() {
   const [authUser, setAuthUser] = useState(null);
 
   const { fetchProfile } = useProfile();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
 
   useEffect(() => {
     const loadUser = async () => {
@@ -99,6 +113,7 @@ export default function CreateProfileScreen() {
   }, []);
 
   /* 🔹 FINAL SUBMIT */
+
   const submitForm = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -131,28 +146,22 @@ export default function CreateProfileScreen() {
         photos: profileData.photos,
       };
 
-
-      delete payload.education;
-
       await axios.post(`${API_URL}/profile/create`, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       await AsyncStorage.removeItem("ownProfile");
 
-      alert("Profile updated successfully!");
+      // ✅ pehle modal show karo
+      showModal("Profile updated successfully! ❤️", "success");
+
+      // ✅ profile refresh (safe)
       fetchProfile();
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Home" }],
-      });
 
     } catch (err) {
       console.log(err.response?.data || err.message);
-      alert("Failed to update profile");
+      showModal("Failed to update profile", "error");
     }
   };
 
@@ -171,7 +180,7 @@ export default function CreateProfileScreen() {
       )}
 
       {/* FOOTER */}
-      {/* FOOTER */}
+
       <View style={styles.bottomBar}>
         {step > 1 ? (
           <TouchableOpacity onPress={prev} style={styles.backAction}>
@@ -189,6 +198,24 @@ export default function CreateProfileScreen() {
           <View style={{ flex: 1.3 }} />
         )}
       </View>
+
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => {
+          setModalVisible(false);
+
+
+          if (modalType === "success") {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Home" }],
+            });
+          }
+        }}
+      />
+
 
     </View>
   );
@@ -219,14 +246,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   btnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
-   bottomBar: {
+  bottomBar: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 27,
+    paddingBottom: 20,
     backgroundColor: "#f5f5f5",
     borderTopWidth: 1,
     borderTopColor: "#e9e9e9",

@@ -185,8 +185,8 @@ export default function ChatDetailScreen({ route, navigation }) {
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Type a message..."
-          placeholderTextColor="#000000"
+          placeholder="Type here ..."
+          placeholderTextColor="#939393"
           style={styles.input}
           multiline
         />

@@ -51,15 +51,18 @@ export default function HomeScreen() {
   const [loadingStories, setLoadingStories] = useState(true);
 
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [upgradeUserImage, setUpgradeUserImage] = useState(null);
 
 
-  const handleProfilePress = (profileId) => {
+  const handleProfilePress = (profileId, photo) => {
     if (!hasActivePlan) {
+      setUpgradeUserImage(photo || null);   // ✅ clicked profile image set
       setShowUpgrade(true);
       return;
     }
     navigation.navigate("ProfileDetail", { id: profileId });
   };
+
 
 
   const fetchFeaturedProfiles = async () => {
@@ -241,10 +244,11 @@ export default function HomeScreen() {
 
                     <TouchableOpacity
                       style={styles.connectBtn}
-                      onPress={() => handleProfilePress(item._id)}
+                      onPress={() => handleProfilePress(item._id, item.photos?.[0])}
                     >
                       <Text style={styles.connectText}>✓ Connect Now</Text>
                     </TouchableOpacity>
+
                   </View>
                 ))}
             </ScrollView>
@@ -278,10 +282,11 @@ export default function HomeScreen() {
 
                     <TouchableOpacity
                       style={styles.chatBtn}
-                      onPress={() => handleProfilePress(item._id)}
+                      onPress={() => handleProfilePress(item._id, item.photos?.[0])}
                     >
                       <Text style={styles.chatBtnText}>Chat</Text>
                     </TouchableOpacity>
+
                   </View>
                 ))}
             </ScrollView>
@@ -334,12 +339,11 @@ export default function HomeScreen() {
                     {/* Chat Button */}
                     <TouchableOpacity
                       style={styles.chatBtn}
-                      onPress={() =>
-                        navigation.navigate("ProfileDetail", { id: item._id })
-                      }
+                      onPress={() => handleProfilePress(item._id, item.photos?.[0])}
                     >
                       <Text style={styles.chatBtnText}>View-Detail</Text>
                     </TouchableOpacity>
+
                   </View>
                 ))}
             </ScrollView>
@@ -350,7 +354,7 @@ export default function HomeScreen() {
 
 
           {/* 🔴 SUCCESS STORIES */}
-          {/* 🔶 SUCCESS STORIES (EXACT DESIGN) */}
+          
           {successStories.length > 0 && (
             <View style={styles.successOuterWrap}>
 
@@ -402,12 +406,14 @@ export default function HomeScreen() {
         <Footer />
         <UpgradeModal
           visible={showUpgrade}
+          imageUri={upgradeUserImage}   // ✅ new prop
           onClose={() => setShowUpgrade(false)}
           onUpgrade={() => {
             setShowUpgrade(false);
-            navigation.navigate("Plans");
+            navigation.navigate("Premium");
           }}
         />
+
 
       </View>
     </DrawerLayout>
@@ -752,13 +758,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#D4AF37",
     paddingVertical: 20,
     paddingHorizontal: 16,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     alignItems: "center",
+
   },
   successHeaderTitle: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
   },
   successHeaderSub: {
@@ -771,18 +778,18 @@ const styles = StyleSheet.create({
   /* White background card behind stories */
   successCardWrapper: {
     backgroundColor: "#fff",
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
+    borderBottomLeftRadius: 19,
+    borderBottomRightRadius: 19,
     paddingVertical: 20,
     paddingLeft: 10,
     paddingBottom: 26,   // ⭐ KEY FIX
-    elevation: 4,
+    elevation: 1,
   },
 
 
   /* Individual story card */
   successStoryCard: {
-    width: 230,
+    width: 210,
     backgroundColor: "#fff",
     borderRadius: 15,
     marginRight: 14,
@@ -821,6 +828,7 @@ const styles = StyleSheet.create({
   /* Read More button – EXACT */
   readMoreBtn: {
     borderWidth: 1,
+
     borderColor: "#FF6F00",
     paddingHorizontal: 22,
     paddingVertical: 6,
@@ -830,7 +838,7 @@ const styles = StyleSheet.create({
   readMoreText: {
     color: "#FF6F00",
     fontWeight: "600",
-    fontSize: 13,
+    fontSize: 14,
   },
 
   newMatchHeader: {
@@ -848,7 +856,7 @@ const styles = StyleSheet.create({
 });
 
 
-const UpgradeModal = ({ visible, onClose, onUpgrade }) => {
+const UpgradeModal = ({ visible, onClose, onUpgrade, imageUri }) => {
   if (!visible) return null;
 
   return (
@@ -856,10 +864,14 @@ const UpgradeModal = ({ visible, onClose, onUpgrade }) => {
       <View style={modalStyles.card}>
         <Image
           source={{
-            uri: "https://randomuser.me/api/portraits/women/44.jpg",
+            uri:
+              imageUri ||
+              "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=687&auto=format&fit=crop",
           }}
           style={modalStyles.avatar}
         />
+        {/* बाकी same */}
+
 
         <Text style={modalStyles.title}>
           Upgrade Now to get full access

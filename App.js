@@ -29,7 +29,9 @@ import ChatDetailScreen from "./src/screens/ChatDetailScreen";
 import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
 import PremiumScreen from "./src/screens/PremiumScreen";
 import DetailSuccessStory from "./src/screens/DetailSuccessStory";
-
+import ForgotPassword from "./src/screens/ForgotPasswordScreen"
+import VerifyForgotOtp from './src/screens/VerifyForgotOtpScreen';
+import ResetPassword from './src/screens/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -61,6 +63,9 @@ export default function App() {
             <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
             <Stack.Screen name="Premium" component={PremiumScreen} />
             <Stack.Screen name="DetailSuccess" component={DetailSuccessStory} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+            <Stack.Screen name="VerifyForgotOtp" component={VerifyForgotOtp} />
+            <Stack.Screen name="ResetPassword" component={ResetPassword} />
           </Stack.Navigator>
         </NavigationContainer>
       </ProfileProvider>

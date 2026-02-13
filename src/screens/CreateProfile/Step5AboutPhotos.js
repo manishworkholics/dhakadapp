@@ -1,8 +1,4 @@
-// Step5AboutPhotos.js (FULL WORKING CODE)
-// ✅ No API / logic change (same upload + submit)
-// ✅ Buttons overlap fix (Back + Submit always visible)
-// ✅ SafeAreaView + KeyboardAvoidingView + Scroll padding fixed
-// ✅ Removed "gap" usage (RN layout issue) and used margin instead
+
 
 import React from "react";
 import {
@@ -325,7 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom:50
+    marginBottom:65
   },
 
   submitText: { color: "#fff", fontSize: 15, fontWeight: "800" },
