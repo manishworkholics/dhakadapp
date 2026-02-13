@@ -1,76 +1,88 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
 
 export default function AppModal({
-    visible,
-    message,
-    type = "success", // success | warning | error
-    onClose,
+  visible,
+  message,
+  type = "success",
+  onClose,
 }) {
-    if (!visible) return null;
+  const title =
+    type === "success" ? "Success" : type === "warning" ? "Warning" : "Error";
 
-    const title =
-        type === "success" ? "Success" : type === "warning" ? "Warning" : "Error";
+  const accent =
+    type === "success" ? "#22c55e" :
+    type === "warning" ? "#f59e0b" :
+    "#ff4d4f"; // your app red tone
 
-    const color =
-        type === "success" ? "#22c55e" : type === "warning" ? "#f59e0b" : "#ef4444";
+  return (
+    <Modal transparent visible={visible} animationType="fade">
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          
+          {/* Accent Top Line */}
+          <View style={[styles.accent, { backgroundColor: accent }]} />
 
-    return (
-        <View style={styles.overlay}>
-            <View style={styles.box}>
-                <Text style={[styles.title, { color }]}>{title}</Text>
+          <Text style={styles.title}>{title}</Text>
 
-                <Text style={styles.text}>{message}</Text>
+          <Text style={styles.message}>{message}</Text>
 
-                <TouchableOpacity
-                    style={[styles.btn, { backgroundColor: color }]}
-                    onPress={onClose}
-                >
-                    <Text style={styles.btnText}>OK</Text>
-                </TouchableOpacity>
-            </View>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#ff4d4f" }]}
+            onPress={onClose}
+          >
+            <Text style={styles.buttonText}>OK</Text>
+          </TouchableOpacity>
         </View>
-    );
+      </View>
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
-    overlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0,0,0,0.45)",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 999,
-    },
-    box: {
-        width: "90%",
-        backgroundColor: "#fff",
-        padding: 22,
-        borderRadius: 14,
-        alignItems: "center",
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: "800",
-        marginBottom: 8,
-    },
-    text: {
-        fontSize: 14,
-        textAlign: "center",
-        marginBottom: 16,
-        color: "#333",
-        fontWeight: "600",
-    },
-    btn: {
-        paddingHorizontal: 30,
-        paddingVertical: 10,
-        borderRadius: 10,
-    },
-    btnText: {
-        color: "#fff",
-        fontWeight: "700",
-    },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  container: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 22,
+    alignItems: "center",
+    elevation: 10,
+  },
+  accent: {
+    height: 5,
+    width: "40%",
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111",
+    marginBottom: 10,
+  },
+  message: {
+    fontSize: 14,
+    textAlign: "center",
+    color: "#555",
+    marginBottom: 20,
+    fontWeight: "600",
+    lineHeight: 20,
+  },
+  button: {
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+    borderRadius: 30,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
 });
