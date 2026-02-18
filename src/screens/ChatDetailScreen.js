@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
+import { socket } from "../socket";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -28,12 +29,35 @@ export default function ChatDetailScreen({ route, navigation }) {
 
   const flatListRef = useRef(null);
 
+  /* LOAD USER */
   useEffect(() => {
     AsyncStorage.getItem("user").then((u) => {
       if (u) setCurrentUser(JSON.parse(u));
     });
   }, []);
 
+  /* JOIN ROOM */
+  useEffect(() => {
+    if (!chatId) return;
+    socket.emit("joinRoom", chatId);
+  }, [chatId]);
+
+  /* RECEIVE MESSAGE */
+  useEffect(() => {
+    const handler = (data) => {
+      if (data.chatRoomId === chatId) {
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === data._id)) return prev;
+          return [...prev, data];
+        });
+      }
+    };
+
+    socket.on("receiveMessage", handler);
+    return () => socket.off("receiveMessage", handler);
+  }, [chatId]);
+
+  /* FETCH CHAT */
   const fetchChat = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -45,6 +69,8 @@ export default function ChatDetailScreen({ route, navigation }) {
 
       setChat(res.data.chat);
       setMessages(res.data.messages || []);
+
+      socket.emit("joinRoom", chatId);
 
       await axios.put(
         `${API_URL}/chat/seen/${chatId}`,
@@ -66,41 +92,38 @@ export default function ChatDetailScreen({ route, navigation }) {
     flatListRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
+  /* SEND MESSAGE */
   const sendMessage = async () => {
     if (!text.trim()) return;
 
+    const receiver =
+      chat?.participants?.find(
+        (p) => p._id !== currentUser?._id
+      );
+
     const temp = {
       _id: `temp-${Date.now()}`,
+      chatRoomId: chatId,
+      senderId: currentUser?._id,
+      receiverId: receiver?._id,
+      sender: { _id: currentUser?._id },
       message: text,
       createdAt: new Date(),
-      senderId: currentUser?._id,
     };
-
 
     setMessages((p) => [...p, temp]);
     setText("");
 
-    try {
-      const token = await AsyncStorage.getItem("token");
+    socket.emit("sendMessage", temp);
 
-      await axios.post(
-        `${API_URL}/chat/messages/send`,
-        { chatRoomId: chatId, message: temp.message },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (err) {
-      setMessages((p) => p.filter((m) => m._id !== temp._id));
+    const token = await AsyncStorage.getItem("token");
 
-      const code = err?.response?.data?.code;
-
-      if (code === "PREMIUM_REQUIRED")
-        alert("Upgrade to premium to send messages");
-      else if (code === "PLAN_EXPIRED")
-        alert("Your plan expired");
-      else alert("Failed to send message");
-    }
+    await axios.post(
+      `${API_URL}/chat/messages/send`,
+      { chatRoomId: chatId, message: temp.message },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
   };
-
 
   const otherUser =
     chat?.participants?.find(
@@ -111,11 +134,6 @@ export default function ChatDetailScreen({ route, navigation }) {
     const isMine =
       item.senderId === currentUser?._id ||
       item.sender?._id === currentUser?._id;
-
-    const time = new Date(item.createdAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
     return (
       <View
@@ -130,22 +148,13 @@ export default function ChatDetailScreen({ route, navigation }) {
             isMine ? styles.myMessage : styles.otherMessage,
           ]}
         >
-          <Text
-            style={[
-              styles.messageText,
-              isMine && { color: "#fff" },
-            ]}
-          >
+          <Text style={[styles.messageText, isMine && { color: "#fff" }]}>
             {item.message}
           </Text>
-
-          <Text style={styles.timeText}>{time}</Text>
         </View>
       </View>
     );
   };
-
-
 
   if (loading) {
     return (
@@ -159,46 +168,33 @@ export default function ChatDetailScreen({ route, navigation }) {
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "#f4f6f8" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}  // ✅ adjust if header height changes
     >
       <Header
         title={otherUser?.name || "Chat"}
         onMenuPress={() => navigation.goBack()}
       />
 
-      {/* ✅ Chat list */}
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 12, paddingBottom: 12 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        contentContainerStyle={{ padding: 12 }}
         style={{ flex: 1 }}
       />
 
-      {/* ✅ Input fixed bottom (like Instagram) */}
       <View style={styles.inputWrap}>
         <TextInput
           value={text}
           onChangeText={setText}
           placeholder="Type here ..."
-          placeholderTextColor="#939393"
           style={styles.input}
           multiline
         />
 
         <TouchableOpacity
-          style={[
-            styles.sendBtn,
-            !text.trim() && styles.sendDisabled,
-          ]}
+          style={styles.sendBtn}
           onPress={sendMessage}
-          disabled={!text.trim()}
-          activeOpacity={0.85}
         >
           <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
@@ -206,6 +202,11 @@ export default function ChatDetailScreen({ route, navigation }) {
     </KeyboardAvoidingView>
   );
 }
+
+
+/* STYLES SAME AS YOURS */
+
+
 
 
 /* ================= STYLES ================= */
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    fontWeight:600,
+    fontWeight: 600,
     maxHeight: 110,      // ✅ instagram style multiline limit
   },
 

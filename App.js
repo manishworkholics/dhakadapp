@@ -5,6 +5,11 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { DrawerProvider } from "./src/context/DrawerContext";
 import { ProfileProvider } from "./src/context/ProfileContext";
 
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { socket } from "./src/socket";
+
+
 
 /* 🔹 SCREENS */
 import SplashScreen from "./src/screens/SplashScreen";
@@ -36,6 +41,35 @@ import ResetPassword from './src/screens/ResetPasswordScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const userStr = await AsyncStorage.getItem("user");
+      if (!userStr) return;
+
+      const user = JSON.parse(userStr);
+      setUserId(user._id);
+    };
+
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    socket.connect();
+
+    socket.on("connect", () => {
+      console.log("SOCKET CONNECTED");
+      socket.emit("join", userId);
+      console.log("JOINED USER ROOM:", userId);
+    });
+
+    return () => socket.off("connect");
+  }, [userId]);
+
   return (
     <DrawerProvider>
       <ProfileProvider>
