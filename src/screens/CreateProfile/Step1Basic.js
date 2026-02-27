@@ -49,6 +49,7 @@ export default function Step1Basic({ profile, setProfile }) {
             style={[styles.input, styles.disabled]}
             value={profile.name}
             editable={false}
+            placeholderTextColor="#777"
           />
 
           {/* GENDER SELECT */}
@@ -108,6 +109,7 @@ export default function Step1Basic({ profile, setProfile }) {
             value={profile.email}
             editable={false}
             placeholder="Email"
+            placeholderTextColor="#777"
           />
 
           {/* MOTHER TONGUE */}

@@ -16,6 +16,8 @@ import { useNavigation } from "@react-navigation/native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useProfile } from "../context/ProfileContext";
+import { Dimensions, Animated } from "react-native";
+import { useRef } from "react";
 
 
 const API_URL = "http://143.110.244.163:5000/api";
@@ -83,15 +85,28 @@ export default function HomeScreen() {
 
   const fetchTestimonials = async () => {
     try {
-      const res = await axios.get(
-        `${API_URL}/review/testimonials?limit=8`
-      );
+      setLoadingTestimonials(true);
 
-      if (res.data?.data) {
-        setTestimonials(res.data.data);
-      }
+      const token = await AsyncStorage.getItem("token"); // ✅ just in case backend requires auth
+
+      const res = await axios.get(`${API_URL}/review/testimonials?limit=8`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      console.log("TESTIMONIAL RES =>", res.data);
+
+      // ✅ handle multiple possible response shapes
+      const list =
+        res.data?.data ||
+        res.data?.testimonials ||
+        res.data?.reviews ||
+        res.data?.result ||
+        [];
+
+      setTestimonials(Array.isArray(list) ? list : []);
     } catch (error) {
-      console.log("TESTIMONIAL API ERROR", error.message);
+      console.log("TESTIMONIAL API ERROR", error?.response?.data || error.message);
+      setTestimonials([]);
     } finally {
       setLoadingTestimonials(false);
     }
@@ -165,7 +180,26 @@ export default function HomeScreen() {
     return age;
   };
 
+  const screenWidth = Dimensions.get("window").width;
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const testimonialRef = useRef(null);
 
+  useEffect(() => {
+    if (testimonials.length === 0) return;
+
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index = (index + 1) % testimonials.length;
+
+      testimonialRef.current?.scrollTo({
+        x: index * (screenWidth - 60),
+        animated: true,
+      });
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [testimonials]);
 
   return (
     <DrawerLayout navigation={navigation}>
@@ -419,7 +453,7 @@ export default function HomeScreen() {
           )}
 
 
-          {/* ================= TESTIMONIALS ================= */}
+          {/* ================= PREMIUM TESTIMONIALS ================= */}
 
           <View style={styles.testimonialWrapper}>
             <Text style={styles.testimonialTitle}>
@@ -427,36 +461,43 @@ export default function HomeScreen() {
             </Text>
 
             {loadingTestimonials ? (
-              <Text style={{ textAlign: "center", marginTop: 10 }}>
-                Loading testimonials...
-              </Text>
+              <View style={{ flexDirection: "row" }}>
+                {[1, 2].map((i) => (
+                  <View key={i} style={styles.testimonialSkeleton} />
+                ))}
+              </View>
             ) : testimonials.length === 0 ? (
-              <Text style={{ textAlign: "center", marginTop: 10 }}>
+              <Text style={{ textAlign: "center" }}>
                 No testimonials available yet.
               </Text>
             ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {testimonials.map((item) => (
-                  <View key={item._id} style={styles.testimonialCard}>
+              <>
+                <Animated.ScrollView
+                  ref={testimonialRef}
+                  horizontal
+                  pagingEnabled
+                  snapToInterval={screenWidth - 60}
+                  decelerationRate="fast"
+                  showsHorizontalScrollIndicator={false}
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                    { useNativeDriver: false }
+                  )}
+                  scrollEventThrottle={16}
+                >
+                  {testimonials.map((item) => (
+                    <View key={item._id} style={[styles.testimonialCard, { width: screenWidth - 60 }]}>
 
-                    {/* Stars */}
-                    <Text style={styles.testimonialStars}>
-                      {"★".repeat(item.rating)}
-                    </Text>
+                      {/* Stars */}
+                      <Text style={styles.testimonialStars}>
+                        {"★".repeat(item.rating)}
+                      </Text>
 
-                    {/* Comment */}
-                    <Text style={styles.testimonialComment} numberOfLines={4}>
-                      "{item.comment}"
-                    </Text>
+                      {/* Comment */}
+                      <Text style={styles.testimonialComment}>
+                        "{item.comment}"
+                      </Text>
 
-                    {/* User Info */}
-                    <View style={styles.testimonialUser}>
-                      {item.user?.profileImage && (
-                        <Image
-                          source={{ uri: item.user.profileImage }}
-                          style={styles.testimonialAvatar}
-                        />
-                      )}
 
                       <View>
                         <Text style={styles.testimonialName}>
@@ -466,11 +507,45 @@ export default function HomeScreen() {
                           {item.user?.city}
                         </Text>
                       </View>
-                    </View>
 
-                  </View>
-                ))}
-              </ScrollView>
+
+                    </View>
+                  ))}
+                </Animated.ScrollView>
+
+                {/* Pagination Dots */}
+                <View style={styles.pagination}>
+                  {testimonials.map((_, i) => {
+                    const inputRange = [
+                      (i - 1) * (screenWidth - 60),
+                      i * (screenWidth - 60),
+                      (i + 1) * (screenWidth - 60),
+                    ];
+
+                    const dotWidth = scrollX.interpolate({
+                      inputRange,
+                      outputRange: [8, 18, 8],
+                      extrapolate: "clamp",
+                    });
+
+                    const opacity = scrollX.interpolate({
+                      inputRange,
+                      outputRange: [0.4, 1, 0.4],
+                      extrapolate: "clamp",
+                    });
+
+                    return (
+                      <Animated.View
+                        key={i}
+                        style={[
+                          styles.dot,
+                          { width: dotWidth, opacity },
+                        ]}
+                      />
+                    );
+                  })}
+                </View>
+              </>
             )}
           </View>
 
@@ -819,7 +894,7 @@ const styles = StyleSheet.create({
   },
   outlineText: { color: "#ff4e50", fontWeight: "600" },
 
-  /* SUCCESS STORIES */
+
   /* ================= SUCCESS STORIES ================= */
 
   successOuterWrap: {
@@ -932,61 +1007,82 @@ const styles = StyleSheet.create({
 
   /* ================= TESTIMONIALS ================= */
 
-testimonialWrapper: {
-  marginTop: 24,
-  marginHorizontal: 14,
-  marginBottom: 20,
-},
+  testimonialWrapper: {
+    marginTop: 30,
+    marginHorizontal: 14,
+  },
 
-testimonialTitle: {
-  fontSize: 18,
-  fontWeight: "700",
-  marginBottom: 14,
-},
+  testimonialTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
 
-testimonialCard: {
-  width: 260,
-  backgroundColor: "#fff",
-  padding: 16,
-  borderRadius: 16,
-  marginRight: 14,
-  elevation: 3,
-},
+  testimonialCard: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 15,
+    marginRight: 14,
+    elevation: 2,
+    marginBottom: 5
+  },
 
-testimonialStars: {
-  color: "#F3B400",
-  fontSize: 16,
-  marginBottom: 6,
-},
+  testimonialStars: {
+    color: "#F3B400",
+    fontSize: 18,
+    marginBottom: 10,
+  },
 
-testimonialComment: {
-  fontSize: 13,
-  color: "#555",
-  fontStyle: "italic",
-  marginBottom: 14,
-},
+  testimonialComment: {
+    fontSize: 14,
+    color: "#444",
+    fontStyle: "italic",
+    marginBottom: 18,
+    lineHeight: 20,
+  },
 
-testimonialUser: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 10,
-},
+  testimonialUser: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 
-testimonialAvatar: {
-  width: 45,
-  height: 45,
-  borderRadius: 22,
-},
+  testimonialAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
 
-testimonialName: {
-  fontWeight: "700",
-  fontSize: 14,
-},
+  testimonialName: {
+    fontWeight: "700",
+    fontSize: 14,
+  },
 
-testimonialCity: {
-  fontSize: 12,
-  color: "#888",
-},
+  testimonialCity: {
+    fontSize: 12,
+    color: "#888",
+  },
+
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 15,
+  },
+
+  dot: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF6F00",
+    marginHorizontal: 4,
+  },
+
+  testimonialSkeleton: {
+    width: 260,
+    height: 160,
+    borderRadius: 18,
+    backgroundColor: "#e0e0e0",
+    marginRight: 14,
+  },
 
 });
 

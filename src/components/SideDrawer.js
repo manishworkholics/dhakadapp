@@ -15,6 +15,7 @@ import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
+import RateReviewScreen from './../screens/RateReviewScreen';
 
 
 export default function SideDrawer({ navigation }) {
@@ -140,7 +141,7 @@ export default function SideDrawer({ navigation }) {
         <Divider />
         <DrawerItem icon="help-circle-outline" title="Help & Support" />
         <Divider />
-       <DrawerItem icon="filter-outline" title="RateServive" onPress={() => go("RateReview")} />
+       <DrawerItem icon="star-outline" title="RateReview" onPress={() => go("RateReview")} />
         <Divider />
 
         <TouchableOpacity style={styles.logout} onPress={handleLogout}>

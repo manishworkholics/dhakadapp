@@ -141,6 +141,7 @@ export default function MobileOtpScreen() {
           maxLength={4}
           style={styles.input}
           value={otp}
+          placeholderTextColor="#777" 
           onChangeText={(t) => setOtp(t.replace(/[^0-9]/g, ""))}
         />
 

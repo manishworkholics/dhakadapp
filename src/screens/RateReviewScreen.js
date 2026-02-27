@@ -8,6 +8,7 @@ import {
   ScrollView,
   StatusBar,
   Alert,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -120,22 +121,43 @@ export default function RateReviewScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9DCE6" />
 
+      {/* Top Image */}
+      <Image
+        source={require("../assets/images/couple 1.png")} 
+        style={styles.topImage}
+        resizeMode="contain"
+      />
+
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
-          onPress={() => setActiveTab("write")}
-        >
-          <Text style={styles.tabText}>⭐ Write Review</Text>
-        </TouchableOpacity>
+  <TouchableOpacity
+    style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
+    onPress={() => setActiveTab("write")}
+  >
+    <Text
+      style={[
+        styles.tabText,
+        activeTab === "write" && styles.activeTabText
+      ]}
+    >
+      ⭐ Write Review
+    </Text>
+  </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
-          onPress={() => setActiveTab("my")}
-        >
-          <Text style={styles.tabText}>📋 My Reviews</Text>
-        </TouchableOpacity>
-      </View>
+  <TouchableOpacity
+    style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
+    onPress={() => setActiveTab("my")}
+  >
+    <Text
+      style={[
+        styles.tabText,
+        activeTab === "my" && styles.activeTabText
+      ]}
+    >
+      📋 My Reviews
+    </Text>
+  </TouchableOpacity>
+</View>
 
       {/* ================= WRITE REVIEW ================= */}
       {activeTab === "write" && (
@@ -155,6 +177,7 @@ export default function RateReviewScreen() {
           <TextInput
             style={styles.input}
             placeholder="Review Title (Optional)"
+            placeholderTextColor="#777"   
             value={title}
             onChangeText={setTitle}
           />
@@ -162,6 +185,7 @@ export default function RateReviewScreen() {
           <TextInput
             style={styles.textArea}
             placeholder="Write your experience..."
+            placeholderTextColor="#777"  
             value={comment}
             onChangeText={setComment}
             multiline
@@ -198,24 +222,35 @@ export default function RateReviewScreen() {
                 </View>
 
                 <Text style={{ marginVertical: 4 }}>
-                  {"★".repeat(review.rating)}
+                  {"⭐".repeat(review.rating)}
                 </Text>
 
                 <Text>{review.comment}</Text>
 
-                <View style={{ flexDirection: "row", marginTop: 10 }}>
+                <View style={{ flexDirection: "row", marginTop: 8 }}>
                   <TouchableOpacity
                     style={styles.editBtn}
-                    onPress={() => handleEdit(review)}
+                    onPress={() => handleEdit(review)}     // ✅ add
+                    activeOpacity={0.8}
                   >
-                    <Text>Edit</Text>
+                    <Text style={styles.editText}>Edit</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.deleteBtn}
-                    onPress={() => handleDelete(review._id)}
+                    onPress={() =>
+                      Alert.alert(
+                        "Delete Review",
+                        "Are you sure you want to delete this review?",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Delete", style: "destructive", onPress: () => handleDelete(review._id) },
+                        ]
+                      )
+                    }
+                    activeOpacity={0.8}
                   >
-                    <Text style={{ color: "white" }}>Delete</Text>
+                    <Text style={styles.btnText}>Delete</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -234,14 +269,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     padding: 10,
+    marginTop: 30
   },
 
   tabBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 10,
     backgroundColor: "#fff",
-    marginHorizontal: 6,
+    marginHorizontal: 10,
   },
 
   activeTab: {
@@ -250,11 +286,12 @@ const styles = StyleSheet.create({
 
   tabText: {
     fontWeight: "bold",
-    color: "#333",
+    color: "black",
+    fontSize: 15,
   },
 
   container: {
-    padding: 16,
+    padding: 18,
   },
 
   heading: {
@@ -271,13 +308,13 @@ const styles = StyleSheet.create({
   },
 
   star: {
-    fontSize: 36,
+    fontSize: 40,
     color: "#ddd",
     marginHorizontal: 4,
   },
 
   starActive: {
-    color: "#F3B400",
+    color: "#FFD700",
   },
 
   input: {
@@ -297,9 +334,10 @@ const styles = StyleSheet.create({
 
   submitBtn: {
     backgroundColor: "#E75480",
-    padding: 14,
-    borderRadius: 25,
+    padding: 15,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: 10
   },
 
   submitText: {
@@ -310,20 +348,45 @@ const styles = StyleSheet.create({
   reviewCard: {
     backgroundColor: "#fff",
     padding: 14,
-    borderRadius: 14,
-    marginBottom: 12,
+    borderRadius: 10,
+    marginBottom: 15,
   },
 
   editBtn: {
-    padding: 8,
+    width: 80,
+    height: 36,
     backgroundColor: "#eee",
     borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 10,
   },
 
   deleteBtn: {
-    padding: 8,
-    backgroundColor: "red",
+    width: 80,
+    height: 36,
+    backgroundColor: "#ff3b30",
     borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
+  btnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  editText: {
+    color: "#333",
+    fontWeight: "700",
+  },
+  topImage: {
+  width: "100%",
+  height: 150,
+},
+topImage: {
+  width: "100%",
+  height: 200,
+  alignSelf: "center",
+  marginTop: 6,
+}
 });

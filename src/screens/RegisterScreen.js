@@ -211,6 +211,7 @@ export default function RegisterScreen() {
           placeholder="Full Name"
           style={styles.input}
           value={form.name}
+           placeholderTextColor="#777" 
           onChangeText={(t) => handleChange("name", t)}
         />
 
@@ -220,6 +221,7 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           value={form.email}
+           placeholderTextColor="#777" 
           onChangeText={(t) => handleChange("email", t)}
         />
 
@@ -229,6 +231,7 @@ export default function RegisterScreen() {
           style={styles.input}
           maxLength={10}
           value={form.phone}
+           placeholderTextColor="#777" 
           onChangeText={(t) => handleChange("phone", t.replace(/[^0-9]/g, ""))}
         />
 
@@ -237,6 +240,7 @@ export default function RegisterScreen() {
           secureTextEntry
           style={styles.input}
           value={form.password}
+           placeholderTextColor="#777" 
           onChangeText={(t) => handleChange("password", t)}
         />
 
