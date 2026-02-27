@@ -15,7 +15,7 @@ import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
-import FindPartnerScreen from './../screens/FindPartnerScreen';
+
 
 export default function SideDrawer({ navigation }) {
   const { open, closeDrawer } = useDrawer();
@@ -140,7 +140,7 @@ export default function SideDrawer({ navigation }) {
         <Divider />
         <DrawerItem icon="help-circle-outline" title="Help & Support" />
         <Divider />
-        <DrawerItem icon="shield-checkmark-outline" title="Be Safe Online" />
+       <DrawerItem icon="filter-outline" title="RateServive" onPress={() => go("RateReview")} />
         <Divider />
 
         <TouchableOpacity style={styles.logout} onPress={handleLogout}>

@@ -37,6 +37,7 @@ import DetailSuccessStory from "./src/screens/DetailSuccessStory";
 import ForgotPassword from "./src/screens/ForgotPasswordScreen"
 import VerifyForgotOtp from './src/screens/VerifyForgotOtpScreen';
 import ResetPassword from './src/screens/ResetPasswordScreen';
+import RateReviewScreen from "./src/screens/RateReviewScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -100,6 +101,7 @@ export default function App() {
             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
             <Stack.Screen name="VerifyForgotOtp" component={VerifyForgotOtp} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
+          <Stack.Screen name="RateReview" component={RateReviewScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </ProfileProvider>

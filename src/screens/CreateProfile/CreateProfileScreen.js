@@ -153,7 +153,7 @@ export default function CreateProfileScreen() {
       await AsyncStorage.removeItem("ownProfile");
 
       // ✅ pehle modal show karo
-      showModal("Profile updated successfully! ❤️", "success");
+      showModal("Profile Updated Successfully! ✅ ❤️", "success");
 
       // ✅ profile refresh (safe)
       fetchProfile();
