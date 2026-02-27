@@ -44,6 +44,8 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const { hasActivePlan } = useProfile();
 
+  const [testimonials, setTestimonials] = useState([]);
+  const [loadingTestimonials, setLoadingTestimonials] = useState(true);
 
   const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [loadingMatches, setLoadingMatches] = useState(true);
@@ -76,6 +78,22 @@ export default function HomeScreen() {
       console.log("FEATURED API ERROR", e.message);
     } finally {
       setLoadingFeatured(false);
+    }
+  };
+
+  const fetchTestimonials = async () => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/review/testimonials?limit=8`
+      );
+
+      if (res.data?.data) {
+        setTestimonials(res.data.data);
+      }
+    } catch (error) {
+      console.log("TESTIMONIAL API ERROR", error.message);
+    } finally {
+      setLoadingTestimonials(false);
     }
   };
 
@@ -126,6 +144,7 @@ export default function HomeScreen() {
     fetchNewMatches();
     fetchProfiles();
     fetchSuccessStories();
+    fetchTestimonials();
   }, []);
 
 
@@ -354,7 +373,7 @@ export default function HomeScreen() {
 
 
           {/* 🔴 SUCCESS STORIES */}
-          
+
           {successStories.length > 0 && (
             <View style={styles.successOuterWrap}>
 
@@ -399,6 +418,61 @@ export default function HomeScreen() {
             </View>
           )}
 
+
+          {/* ================= TESTIMONIALS ================= */}
+
+          <View style={styles.testimonialWrapper}>
+            <Text style={styles.testimonialTitle}>
+              What <Text style={{ color: "#FF6F00" }}>Members Say</Text>
+            </Text>
+
+            {loadingTestimonials ? (
+              <Text style={{ textAlign: "center", marginTop: 10 }}>
+                Loading testimonials...
+              </Text>
+            ) : testimonials.length === 0 ? (
+              <Text style={{ textAlign: "center", marginTop: 10 }}>
+                No testimonials available yet.
+              </Text>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {testimonials.map((item) => (
+                  <View key={item._id} style={styles.testimonialCard}>
+
+                    {/* Stars */}
+                    <Text style={styles.testimonialStars}>
+                      {"★".repeat(item.rating)}
+                    </Text>
+
+                    {/* Comment */}
+                    <Text style={styles.testimonialComment} numberOfLines={4}>
+                      "{item.comment}"
+                    </Text>
+
+                    {/* User Info */}
+                    <View style={styles.testimonialUser}>
+                      {item.user?.profileImage && (
+                        <Image
+                          source={{ uri: item.user.profileImage }}
+                          style={styles.testimonialAvatar}
+                        />
+                      )}
+
+                      <View>
+                        <Text style={styles.testimonialName}>
+                          {item.user?.name}
+                        </Text>
+                        <Text style={styles.testimonialCity}>
+                          {item.user?.city}
+                        </Text>
+                      </View>
+                    </View>
+
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
 
           <View style={{ height: 80 }} />
         </ScrollView>
@@ -853,6 +927,67 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
+
+
+
+  /* ================= TESTIMONIALS ================= */
+
+testimonialWrapper: {
+  marginTop: 24,
+  marginHorizontal: 14,
+  marginBottom: 20,
+},
+
+testimonialTitle: {
+  fontSize: 18,
+  fontWeight: "700",
+  marginBottom: 14,
+},
+
+testimonialCard: {
+  width: 260,
+  backgroundColor: "#fff",
+  padding: 16,
+  borderRadius: 16,
+  marginRight: 14,
+  elevation: 3,
+},
+
+testimonialStars: {
+  color: "#F3B400",
+  fontSize: 16,
+  marginBottom: 6,
+},
+
+testimonialComment: {
+  fontSize: 13,
+  color: "#555",
+  fontStyle: "italic",
+  marginBottom: 14,
+},
+
+testimonialUser: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 10,
+},
+
+testimonialAvatar: {
+  width: 45,
+  height: 45,
+  borderRadius: 22,
+},
+
+testimonialName: {
+  fontWeight: "700",
+  fontSize: 14,
+},
+
+testimonialCity: {
+  fontSize: 12,
+  color: "#888",
+},
+
 });
 
 

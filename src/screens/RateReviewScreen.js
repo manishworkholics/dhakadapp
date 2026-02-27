@@ -1,383 +1,329 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
- 
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Modal,
-  Pressable,
   StatusBar,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-const CATEGORIES = ["App Experience", "Profile Match", "Chat / Calls", "UI Design", "Other"];
+const API_URL = "http://143.110.244.163:5000/api";
 
-export default function RateReviewScreen({ navigation }) {
-  const [rating, setRating] = useState(5);
-  const [review, setReview] = useState("");
-  const [foundPartner, setFoundPartner] = useState(false);
-  const [category, setCategory] = useState("Select Category");
-  const [categoryModal, setCategoryModal] = useState(false);
+export default function RateReviewScreen() {
+  const [activeTab, setActiveTab] = useState("write");
 
+  const [rating, setRating] = useState(0);
+  const [title, setTitle] = useState("");
+  const [comment, setComment] = useState("");
+  const [reviews, setReviews] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const stars = useMemo(() => [1, 2, 3, 4, 5], []);
 
-  const onSubmit = () => {
-    // ✅ yaha API call / AsyncStorage / backend integrate kar sakte ho
-    // Filhaal demo:
-    console.log({
-      rating,
-      review,
-      foundPartner,
-      category,
+  const getToken = async () => {
+    return await AsyncStorage.getItem("token");
+  };
+
+  /* LOAD USER */
+  useEffect(() => {
+    AsyncStorage.getItem("user").then((u) => {
+      if (u) setCurrentUser(JSON.parse(u));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "my") fetchMyReviews();
+  }, [activeTab]);
+
+  const handleSubmit = async () => {
+    try {
+      const token = await getToken();
+
+      if (!rating) {
+        Alert.alert("Please select rating");
+        return;
+      }
+
+      if (editingId) {
+        await axios.put(
+          `${API_URL}/review/${editingId}`,
+          { rating, title, comment },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        Alert.alert("Review updated ❤️");
+      } else {
+        await axios.post(
+          `${API_URL}/review`,
+          {
+            targetId: currentUser?._id, // dynamic later
+            rating,
+            title,
+            comment,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        Alert.alert("Review submitted ❤️");
+      }
+
+      setRating(0);
+      setTitle("");
+      setComment("");
+      setEditingId(null);
+      fetchMyReviews();
+      setActiveTab("my");
+    } catch (err) {
+      Alert.alert("Error", err.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  const fetchMyReviews = async () => {
+    try {
+      const token = await getToken();
+
+      const res = await axios.get(`${API_URL}/review/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setReviews(res.data.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const token = await getToken();
+
+    await axios.delete(`${API_URL}/review/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    // simple UI feedback
-    alert("Thanks! Review submitted ✅");
-    setReview("");
-    setFoundPartner(false);
-    setCategory("Select Category");
-    setRating(5);
+    fetchMyReviews();
+  };
+
+  const handleEdit = (review) => {
+    setRating(review.rating);
+    setTitle(review.title);
+    setComment(review.comment);
+    setEditingId(review._id);
+    setActiveTab("write");
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FDECF2" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F9DCE6" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+      {/* Tabs */}
+      <View style={styles.tabs}>
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
+          onPress={() => setActiveTab("write")}
+        >
+          <Text style={styles.tabText}>⭐ Write Review</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Rate & Review Us</Text>
-        <View style={{ width: 40 }} />
+
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
+          onPress={() => setActiveTab("my")}
+        >
+          <Text style={styles.tabText}>📋 My Reviews</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Pink card */}
-        <View style={styles.card}>
-          <Text style={styles.subText}>Your blessings help Dhakad families unite.</Text>
+      {/* ================= WRITE REVIEW ================= */}
+      {activeTab === "write" && (
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.heading}>Share Your Experience</Text>
 
-          {/* Stars */}
           <View style={styles.starsRow}>
             {stars.map((s) => (
-              <TouchableOpacity
-                key={s}
-                activeOpacity={0.8}
-                onPress={() => setRating(s)}
-                style={styles.starBtn}
-              >
-                <Text style={[styles.star, rating >= s ? styles.starActive : styles.starInactive]}>
+              <TouchableOpacity key={s} onPress={() => setRating(s)}>
+                <Text style={[styles.star, rating >= s && styles.starActive]}>
                   ★
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.thankText}>Thank you for your love 💍</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Review Title (Optional)"
+            value={title}
+            onChangeText={setTitle}
+          />
 
-          {/* Write Review */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Write Your Review</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Write your experience..."
+            value={comment}
+            onChangeText={setComment}
+            multiline
+          />
 
-            <View style={styles.inputBoxWrap}>
-              <TextInput
-                value={review}
-                onChangeText={setReview}
-                placeholder="Share your experience with Dhakad Matrimony..."
-                placeholderTextColor="#B9A6AE"
-                multiline
-                style={styles.textArea}
-              />
-            </View>
+          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+            <Text style={styles.submitText}>
+              {editingId ? "Update Review" : "Submit Review"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
 
-            {/* checkbox */}
-            <Pressable style={styles.checkRow} onPress={() => setFoundPartner((p) => !p)}>
-              <View style={[styles.checkbox, foundPartner && styles.checkboxActive]}>
-                <Text style={[styles.checkMark, foundPartner && { opacity: 1 }]}>✓</Text>
+      {/* ================= MY REVIEWS ================= */}
+      {activeTab === "my" && (
+        <ScrollView contentContainerStyle={styles.container}>
+          {reviews.length === 0 ? (
+            <Text style={{ textAlign: "center" }}>No reviews yet</Text>
+          ) : (
+            reviews.map((review) => (
+              <View key={review._id} style={styles.reviewCard}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text style={{ fontWeight: "bold" }}>
+                    {review.title || "No Title"}
+                  </Text>
+                  <Text
+                    style={{
+                      color: review.isApproved ? "green" : "orange",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {review.isApproved ? "Approved" : "Pending"}
+                  </Text>
+                </View>
+
+                <Text style={{ marginVertical: 4 }}>
+                  {"★".repeat(review.rating)}
+                </Text>
+
+                <Text>{review.comment}</Text>
+
+                <View style={{ flexDirection: "row", marginTop: 10 }}>
+                  <TouchableOpacity
+                    style={styles.editBtn}
+                    onPress={() => handleEdit(review)}
+                  >
+                    <Text>Edit</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => handleDelete(review._id)}
+                  >
+                    <Text style={{ color: "white" }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <Text style={styles.checkLabel}>I found my life partner here 💍</Text>
-            </Pressable>
-
-            {/* Category dropdown */}
-            <Pressable style={styles.dropdown} onPress={() => setCategoryModal(true)}>
-              <Text style={[styles.dropdownText, category !== "Select Category" && styles.dropdownTextSelected]}>
-                {category}
-              </Text>
-              <Text style={styles.dropdownArrow}>▾</Text>
-            </Pressable>
-
-            {/* Submit */}
-            <TouchableOpacity activeOpacity={0.9} onPress={onSubmit} style={styles.submitBtn}>
-              <Text style={styles.submitText}>Submit Review</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* bottom padding */}
-        <View style={{ height: 18 }} />
-      </ScrollView>
-
-      {/* Category Modal */}
-      <Modal visible={categoryModal} transparent animationType="fade" onRequestClose={() => setCategoryModal(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setCategoryModal(false)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Select Category</Text>
-
-            {CATEGORIES.map((c) => (
-              <TouchableOpacity
-                key={c}
-                onPress={() => {
-                  setCategory(c);
-                  setCategoryModal(false);
-                }}
-                style={styles.modalItem}
-              >
-                <Text style={styles.modalItemText}>{c}</Text>
-              </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity onPress={() => setCategoryModal(false)} style={styles.modalCloseBtn}>
-              <Text style={styles.modalCloseText}>Close</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+            ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#FDECF2",
-  },
-  header: {
-    height: 58,
-    paddingHorizontal: 14,
+  safe: { flex: 1, backgroundColor: "#F9DCE6" },
+
+  tabs: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FDECF2",
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.65)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 180, 205, 0.55)",
+    padding: 10,
   },
-  backIcon: {
-    fontSize: 28,
-    color: "#B24D6A",
-    marginTop: -2,
+
+  tabBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    marginHorizontal: 6,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#B24D6A",
+
+  activeTab: {
+    backgroundColor: "#E75480",
+  },
+
+  tabText: {
+    fontWeight: "bold",
+    color: "#333",
   },
 
   container: {
-    paddingHorizontal: 14,
-    paddingTop: 6,
-  },
-  card: {
-    borderRadius: 22,
     padding: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 180, 205, 0.45)",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 3,
   },
 
-  subText: {
+  heading: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
     textAlign: "center",
-    color: "#9C6B7A",
-    fontSize: 13,
-    marginBottom: 12,
-    fontWeight: "600",
   },
 
   starsRow: {
     flexDirection: "row",
-    alignSelf: "center",
-    marginBottom: 10,
+    justifyContent: "center",
+    marginBottom: 12,
   },
-  starBtn: {
-    paddingHorizontal: 4,
-  },
+
   star: {
-    fontSize: 34,
+    fontSize: 36,
+    color: "#ddd",
+    marginHorizontal: 4,
   },
+
   starActive: {
     color: "#F3B400",
-    textShadowColor: "rgba(0,0,0,0.08)",
-    textShadowRadius: 6,
-  },
-  starInactive: {
-    color: "#E9D6DC",
   },
 
-  thankText: {
-    textAlign: "center",
-    color: "#B24D6A",
-    fontSize: 14,
-    fontWeight: "800",
-    marginBottom: 14,
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
   },
 
-  section: {
-    marginTop: 6,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#7D3D52",
-    marginBottom: 8,
-  },
-  inputBoxWrap: {
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 170, 200, 0.55)",
-    padding: 10,
-  },
   textArea: {
-    minHeight: 110,
-    textAlignVertical: "top",
-    color: "#6E3B4A",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
-  checkRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: "#C98A9E",
-    backgroundColor: "#FFF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
-  checkboxActive: {
-    backgroundColor: "#FF7DA6",
-    borderColor: "#FF7DA6",
-  },
-  checkMark: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: "#FFF",
-    opacity: 0,
-    marginTop: -1,
-  },
-  checkLabel: {
-    color: "#7D3D52",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  dropdown: {
-    marginTop: 12,
-    height: 46,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255, 170, 200, 0.65)",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dropdownText: {
-    color: "#B9A6AE",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-  dropdownTextSelected: {
-    color: "#6E3B4A",
-  },
-  dropdownArrow: {
-    fontSize: 18,
-    color: "#B24D6A",
-    marginTop: -2,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
+    height: 100,
+    marginBottom: 10,
   },
 
   submitBtn: {
-    marginTop: 14,
-    height: 52,
-    borderRadius: 26,
+    backgroundColor: "#E75480",
+    padding: 14,
+    borderRadius: 25,
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FF6F9E",
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: "rgba(255, 120, 170, 0.6)",
-  },
-  submitText: {
-    color: "#FFF",
-    fontSize: 15,
-    fontWeight: "900",
-    letterSpacing: 0.4,
   },
 
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 18,
+  submitText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
-  modalCard: {
-    width: "100%",
-    borderRadius: 18,
-    backgroundColor: "#FFF",
+
+  reviewCard: {
+    backgroundColor: "#fff",
     padding: 14,
+    borderRadius: 14,
+    marginBottom: 12,
   },
-  modalTitle: {
-    fontSize: 15,
-    fontWeight: "900",
-    color: "#7D3D52",
-    marginBottom: 8,
+
+  editBtn: {
+    padding: 8,
+    backgroundColor: "#eee",
+    borderRadius: 8,
+    marginRight: 10,
   },
-  modalItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3E7EC",
-  },
-  modalItemText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#6E3B4A",
-  },
-  modalCloseBtn: {
-    marginTop: 10,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FDECF2",
-  },
-  modalCloseText: {
-    fontWeight: "900",
-    color: "#B24D6A",
+
+  deleteBtn: {
+    padding: 8,
+    backgroundColor: "red",
+    borderRadius: 8,
   },
 });
