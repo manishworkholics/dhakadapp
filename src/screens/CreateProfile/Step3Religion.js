@@ -34,6 +34,7 @@ export default function Step3Religion({ profile, setProfile }) {
             style={styles.input}
             placeholder="e.g. 5ft 6in"
             value={profile.height}
+            placeholderTextColor="#777"
             onChangeText={(t) => setProfile({ ...profile, height: t })}
           />
 
@@ -120,8 +121,9 @@ export default function Step3Religion({ profile, setProfile }) {
           <Text style={styles.label}>Caste</Text>
           <TextInput
             style={styles.input}
-            placeholder="Caste"
+            placeholder=" Enter Your Caste"
             value={profile.caste}
+            placeholderTextColor="#777"
             onChangeText={(t) => setProfile({ ...profile, caste: t })}
           />
 
@@ -129,8 +131,9 @@ export default function Step3Religion({ profile, setProfile }) {
           <Text style={styles.label}>Sub Caste</Text>
           <TextInput
             style={styles.input}
-            placeholder="Sub-Caste"
+            placeholder=" Enter Your Sub-Caste"
             value={profile.subCaste}
+            placeholderTextColor="#777"
             onChangeText={(t) => setProfile({ ...profile, subCaste: t })}
           />
 
@@ -138,8 +141,9 @@ export default function Step3Religion({ profile, setProfile }) {
           <Text style={styles.label}>Gotra</Text>
           <TextInput
             style={styles.input}
-            placeholder="Gotra"
+            placeholder=" Enter Your Gotra"
             value={profile.gotra}
+            placeholderTextColor="#777"
             onChangeText={(t) => setProfile({ ...profile, gotra: t })}
           />
 

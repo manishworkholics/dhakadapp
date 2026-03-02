@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Modal, Pressable } from "react-native";
 import AppModal from "../components/AppModal";
@@ -118,9 +119,10 @@ export default function RegisterScreen() {
       });
 
       if (res.data.success && res.data.requiresVerification) {
-        showModal("Registration successful! OTP sent to your email.", "success");
+        showModal("Registration successful! OTP sent to your Mobile Number.", "success");
+        await AsyncStorage.setItem("phone", res.data.phone);
         setTimeout(() => {
-          navigation.replace("EmailOtp", { email });
+          navigation.replace("MobileOtp", { phone });
         }, 800);
       } else if (res.data.success) {
         showModal("Registration successful!", "success");
@@ -160,7 +162,7 @@ export default function RegisterScreen() {
             <Text
               style={[
                 styles.dropdownText,
-                !form.createdfor && { color: "#999" },
+                !form.createdfor && { color: "#777" },
               ]}
             >
               {form.createdfor
@@ -211,7 +213,7 @@ export default function RegisterScreen() {
           placeholder="Full Name"
           style={styles.input}
           value={form.name}
-           placeholderTextColor="#777" 
+          placeholderTextColor="#777"
           onChangeText={(t) => handleChange("name", t)}
         />
 
@@ -221,7 +223,7 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           value={form.email}
-           placeholderTextColor="#777" 
+          placeholderTextColor="#777"
           onChangeText={(t) => handleChange("email", t)}
         />
 
@@ -231,7 +233,7 @@ export default function RegisterScreen() {
           style={styles.input}
           maxLength={10}
           value={form.phone}
-           placeholderTextColor="#777" 
+          placeholderTextColor="#777"
           onChangeText={(t) => handleChange("phone", t.replace(/[^0-9]/g, ""))}
         />
 
@@ -240,7 +242,7 @@ export default function RegisterScreen() {
           secureTextEntry
           style={styles.input}
           value={form.password}
-           placeholderTextColor="#777" 
+          placeholderTextColor="#777"
           onChangeText={(t) => handleChange("password", t)}
         />
 

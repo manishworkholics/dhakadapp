@@ -1,5 +1,4 @@
 
-
 import React from "react";
 import {
   View,
@@ -133,6 +132,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit, onBack }
             placeholder="A few words about yourself"
             multiline
             value={profile.aboutYourself}
+            placeholderTextColor="#777"
             onChangeText={(t) => setProfile({ ...profile, aboutYourself: t })}
           />
 
@@ -143,6 +143,7 @@ export default function Step5AboutPhotos({ profile, setProfile, submit, onBack }
             placeholder="Hobbies (e.g. music, travel, fitness)"
             multiline
             value={profile.hobbies}
+            placeholderTextColor="#777"
             onChangeText={(t) => setProfile({ ...profile, hobbies: t })}
           />
 

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -237,20 +238,42 @@ export default function HomeScreen() {
 
           {/* 🔴 COMPLETE PROFILE */}
           <View style={styles.completeBox}>
-            <Text style={styles.completeTitle}>Complete your profile</Text>
+            <Text style={styles.completeTitle}> 
+              {profile?.profileScore === 100
+                ? "Your Profile is Completed"
+                : "Complete Your Profile"}
+            </Text>
 
-            <View style={styles.progressCircle}>
-              <Text style={styles.progressText}>{profile?.profileScore}%</Text>
+            <View
+              style={[
+                styles.progressCircle,
+                {
+                  borderColor:
+                    profile?.profileScore === 100 ? "green" : "red",
+                },
+              ]}
+            >
+              <Text style={styles.progressText}>
+                {profile?.profileScore || 0}%
+              </Text>
             </View>
 
-            <View style={styles.actionRow} >
-              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("CreateProfile")}>
-                <Text style={styles.actionText}>Add Photo</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate("CreateProfile")}>
-                <Text style={styles.actionText}>Family Details</Text>
-              </TouchableOpacity>
+            <View style={styles.actionRow}>
+              {profile?.profileScore === 100 ? (
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => navigation.navigate("Profile")}
+                >
+                  <Text style={styles.actionText}>Update Profile</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => navigation.navigate("Profile")}
+                >
+                  <Text style={styles.actionText}>Complete Profile</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -703,8 +726,8 @@ const styles = StyleSheet.create({
   premiumWrapper: {
     backgroundColor: "#fff",
     marginHorizontal: 14,
-    marginTop: 24,
-    // borderRadius: 16,
+    marginTop: 10,
+    borderRadius: 16,
     padding: 14,
     elevation: 3,
   },
@@ -830,31 +853,31 @@ const styles = StyleSheet.create({
   completeBox: {
     backgroundColor: "#fff",
     margin: 14,
-    // borderRadius: 16,
+     borderRadius: 16,
     padding: 16,
     alignItems: "center",
   },
   completeTitle: { fontSize: 16, fontWeight: "700" },
   progressCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 6,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 8,
     borderColor: "#ff4e50",
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 14,
   },
-  progressText: { fontSize: 20, fontWeight: "700" },
+  progressText: { fontSize: 22, fontWeight: "800" },
   actionRow: { flexDirection: "row", gap: 12 },
   actionBtn: {
     borderWidth: 1,
-    borderColor: "#E9E9E9",
-    paddingHorizontal: 14,
+    borderColor: "#696969",
+    paddingHorizontal: 30,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  actionText: { color: "#000000", fontWeight: "600" },
+  actionText: { color: "#000000", fontWeight: "800" },
 
   /* SECTIONS */
   sectionHeader: {
@@ -1240,4 +1263,17 @@ const skeleton = StyleSheet.create({
     marginTop: 12,
     alignSelf: "center",
   },
+
+
+
+/* ================= Complate profile progressCircle ================= */
+  progressCircle: {
+  width: 90,
+  height: 90,
+  borderRadius: 45,
+  borderWidth: 6,
+  justifyContent: "center",
+  alignItems: "center",
+  marginVertical: 10,
+},
 });

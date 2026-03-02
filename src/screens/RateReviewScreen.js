@@ -388,5 +388,8 @@ topImage: {
   height: 200,
   alignSelf: "center",
   marginTop: 6,
-}
+},
+activeTabText: {
+  color: "white",
+},
 });

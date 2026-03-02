@@ -38,6 +38,7 @@ export default function WelcomeScreen() {
         {/* <TouchableOpacity
           style={styles.optionBtn}
           onPress={() => navigation.navigate("Home")}
+          
         >
           <View style={styles.row}>
             <Icon name="person-outline" size={22} color="#333" />
