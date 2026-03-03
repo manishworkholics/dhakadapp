@@ -138,11 +138,6 @@ export default function MatchesScreen() {
     }
   };
 
-
-
-
-
-
   const toggleShortlist = async () => {
     try {
       setCheckingShortlist(true);

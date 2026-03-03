@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,11 @@ import {
   Modal,
   StyleSheet,
   Image,
+  ScrollView,
+  Animated,
+  Dimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
@@ -15,12 +19,32 @@ import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
-import RateReviewScreen from './../screens/RateReviewScreen';
 
+const { width: SCREEN_W } = Dimensions.get("window");
+const DRAWER_W = Math.min(307, Math.floor(SCREEN_W * 0.82)); // ✅ small screen responsive
 
 export default function SideDrawer({ navigation }) {
   const { open, closeDrawer } = useDrawer();
   const { profile, resetProfileState } = useProfile();
+
+  // ✅ slide animation value
+  const translateX = useRef(new Animated.Value(-DRAWER_W)).current;
+
+  useEffect(() => {
+    if (open) {
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(translateX, {
+        toValue: -DRAWER_W,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [open, translateX]);
 
   const go = (screen) => {
     closeDrawer();
@@ -29,7 +53,6 @@ export default function SideDrawer({ navigation }) {
 
   const handleLogout = async () => {
     try {
-      // ✅ userId nikal lo to cached keys bhi remove ho sake
       const userStr = await AsyncStorage.getItem("user");
       const userId = userStr ? JSON.parse(userStr)?._id : null;
 
@@ -40,16 +63,11 @@ export default function SideDrawer({ navigation }) {
       }
 
       await AsyncStorage.multiRemove(keysToRemove);
-
-      // ✅ axios header clear
       delete axios.defaults.headers.common["Authorization"];
 
-      // ✅ context reset
       resetProfileState();
-
       closeDrawer();
 
-      // ✅ reset navigation stack
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -61,103 +79,116 @@ export default function SideDrawer({ navigation }) {
     }
   };
 
+  // ✅ close with animation then modal hide
+  const closeWithAnim = () => {
+    Animated.timing(translateX, {
+      toValue: -DRAWER_W,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      closeDrawer();
+    });
+  };
+
   return (
-    <Modal visible={open} transparent animationType="fade">
-      <TouchableOpacity style={styles.overlay} onPress={closeDrawer} />
+    <Modal visible={open} transparent animationType="none" onRequestClose={closeWithAnim}>
+      <View style={styles.root}>
+        {/* ✅ overlay right side click => close */}
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeWithAnim} />
 
-      <View style={styles.drawer}>
-        <TouchableOpacity style={styles.closeBtn} onPress={closeDrawer}>
-          <Icon name="close" size={22} color="#BFBFBF" />
-        </TouchableOpacity>
-
-        <View style={styles.profileBox}>
-          <View style={styles.avatar}>
-            {profile?.images?.length > 0 ? (
-              <Image source={{ uri: profile.images[0] }} style={styles.avatarImg} />
-            ) : profile?.photos?.length > 0 ? (
-              <Image source={{ uri: profile.photos[0] }} style={styles.avatarImg} />
-            ) : (
-              <Icon name="person" size={30} color="#FFA821" />
-            )}
-          </View>
-
-          <View>
-            <Text style={styles.username}>{profile?.name || "User"}</Text>
-
-            <View style={styles.useridbox}>
-              <Text style={styles.userid}>
-                DH{profile?._id?.slice(0, 5) || "XXXXX"}
-              </Text>
-
-              <TouchableOpacity
-                onPress={() => {
-                  Clipboard.setString(profile?._id || "");
-                  alert("User ID copied");
-                }}
-                style={{ marginLeft: 6 }}
-              >
-                <Feather name="copy" size={14} color="#666" />
+        {/* ✅ sliding drawer */}
+        <Animated.View style={[styles.drawer, { width: DRAWER_W, transform: [{ translateX }] }]}>
+          <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.drawerContent}
+            >
+              <TouchableOpacity style={styles.closeBtn} onPress={closeWithAnim}>
+                <Icon name="close" size={22} color="#BFBFBF" />
               </TouchableOpacity>
-            </View>
-          </View>
-        </View>
 
-        <DrawerItem icon="home" title="Home" onPress={() => go("Home")} />
-        <Divider />
+              <View style={styles.profileBox}>
+                <View style={styles.avatar}>
+                  {profile?.images?.length > 0 ? (
+                    <Image source={{ uri: profile.images[0] }} style={styles.avatarImg} />
+                  ) : profile?.photos?.length > 0 ? (
+                    <Image source={{ uri: profile.photos[0] }} style={styles.avatarImg} />
+                  ) : (
+                    <Icon name="person" size={30} color="#FFA821" />
+                  )}
+                </View>
 
-        <DrawerItem
-          icon="person-outline"
-          title="View and Edit your Profile"
-          onPress={() => go("Profile")}
-        />
-        <Divider />
-        <DrawerItem icon="download-outline" title="Download and Share Profile" />
-        <Divider />
-        <DrawerItem
-          icon="diamond-outline"
-          title="Upgrade to Premium"
-          onPress={() => go("Premium")}
-        />
+                <View>
+                  <Text style={styles.username}>{profile?.name || "User"}</Text>
 
-        <Text style={styles.section}>Discover Your Matches</Text>
-        <Divider />
-        <DrawerItem icon="people-outline" title="Matches" onPress={() => go("Matches")} />
-        <Divider />
-        <DrawerItem icon="mail-outline" title="Inbox" onPress={() => go("Interest")} />
-        <Divider />
-        <DrawerItem icon="chatbubbles-outline" title="Chat" onPress={() => go("Chat")} />
+                  <View style={styles.useridbox}>
+                    <Text style={styles.userid}>
+                      DH{profile?._id?.slice(0, 5) || "XXXXX"}
+                    </Text>
 
-        <Text style={styles.section}>Options & Settings</Text>
-        <Divider />
-        <DrawerItem
-          icon="person-add-outline"
-          title="Partner Preferences"
-          onPress={() => go("PartnerPreference")}
-        />
-        <Divider />
-        <DrawerItem icon="filter-outline" title="Contact Filters"   onPress={() => go("FindPartner")} />
-        <Divider />
-        <DrawerItem icon="settings-outline" title="Account Settings" />
-        <Divider />
-        <DrawerItem icon="help-circle-outline" title="Help & Support" />
-        <Divider />
-       <DrawerItem icon="star-outline" title="RateReview" onPress={() => go("RateReview")} />
-        <Divider />
+                    <TouchableOpacity
+                      onPress={() => {
+                        Clipboard.setString(profile?._id || "");
+                        alert("User ID copied");
+                      }}
+                      style={{ marginLeft: 6 }}
+                    >
+                      <Feather name="copy" size={14} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
 
-        <TouchableOpacity style={styles.logout} onPress={handleLogout}>
-          <Icon name="log-out-outline" size={18} color="red" />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+              <DrawerItem icon="home" title="Home" onPress={() => go("Home")} />
+              <Divider />
+
+              <DrawerItem
+                icon="person-outline"
+                title="View and Edit your Profile"
+                onPress={() => go("Profile")}
+              />
+              <Divider />
+              <DrawerItem icon="download-outline" title="Download and Share Profile" />
+              <Divider />
+              <DrawerItem icon="diamond-outline" title="Upgrade to Premium" onPress={() => go("Premium")} />
+
+              <Text style={styles.section}>Discover Your Matches</Text>
+              <Divider />
+              <DrawerItem icon="people-outline" title="Matches" onPress={() => go("Matches")} />
+              <Divider />
+              <DrawerItem icon="mail-outline" title="Inbox" onPress={() => go("Interest")} />
+              <Divider />
+              <DrawerItem icon="chatbubbles-outline" title="Chat" onPress={() => go("Chat")} />
+
+              <Text style={styles.section}>Options & Settings</Text>
+              <Divider />
+              <DrawerItem icon="person-add-outline" title="Partner Preferences" onPress={() => go("PartnerPreference")} />
+              <Divider />
+              <DrawerItem icon="filter-outline" title="Contact Filters" onPress={() => go("FindPartner")} />
+              <Divider />
+              <DrawerItem icon="settings-outline" title="Account Settings" />
+              <Divider />
+              <DrawerItem icon="help-circle-outline" title="Help & Support" />
+              <Divider />
+              <DrawerItem icon="star-outline" title="RateReview" onPress={() => go("RateReview")} />
+              <Divider />
+
+              <TouchableOpacity style={styles.logout} onPress={handleLogout}>
+                <Icon name="log-out-outline" size={18} color="red" />
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </SafeAreaView>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
-/* Drawer Item */
 const DrawerItem = ({ icon, title, onPress, highlight }) => (
-  <TouchableOpacity style={styles.item} onPress={onPress}>
+  <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.8}>
     <Icon name={icon} size={18} color={highlight ? "#f7941d" : "#444"} />
-    <Text style={[styles.itemText, highlight && { color: "#f7941d", fontWeight: "600" }]}>
+    <Text style={[styles.itemText, highlight && { color: "#f7941d", fontWeight: "600" }]} numberOfLines={1}>
       {title}
     </Text>
     <Icon name="chevron-forward" size={16} color="#bbb" />
@@ -167,24 +198,37 @@ const DrawerItem = ({ icon, title, onPress, highlight }) => (
 const Divider = () => <View style={styles.divider} />;
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    flexDirection: "row",
+  },
   overlay: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
+    flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
   },
+
   drawer: {
-    width: 307,
     height: "100%",
     backgroundColor: "#fff",
-    padding: 18,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
+    overflow: "hidden",
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
   },
+
+  drawerContent: {
+    padding: 18,
+    paddingBottom: 40,
+  },
+
   closeBtn: {
     alignSelf: "flex-start",
     marginBottom: 10,
   },
+
   profileBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -219,6 +263,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#888",
   },
+
   section: {
     marginTop: 18,
     marginBottom: 6,
@@ -226,6 +271,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#777",
   },
+
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -241,6 +287,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#eee",
   },
+
   logout: {
     flexDirection: "row",
     alignItems: "center",

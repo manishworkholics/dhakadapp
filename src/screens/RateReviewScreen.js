@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import AppModal from "../components/AppModal";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -27,6 +28,18 @@ export default function RateReviewScreen() {
   const [currentUser, setCurrentUser] = useState(null);
   const stars = useMemo(() => [1, 2, 3, 4, 5], []);
 
+
+
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
   const getToken = async () => {
     return await AsyncStorage.getItem("token");
   };
@@ -47,7 +60,8 @@ export default function RateReviewScreen() {
       const token = await getToken();
 
       if (!rating) {
-        Alert.alert("Please select rating");
+
+        showModal("Please select rating", "warning");
         return;
       }
 
@@ -58,7 +72,7 @@ export default function RateReviewScreen() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        Alert.alert("Review updated ❤️");
+        showModal("Review updated ❤️", "success");
       } else {
         await axios.post(
           `${API_URL}/review`,
@@ -71,7 +85,8 @@ export default function RateReviewScreen() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        Alert.alert("Review submitted ❤️");
+
+        showModal("Review submitted ❤️", "success");
       }
 
       setRating(0);
@@ -81,7 +96,9 @@ export default function RateReviewScreen() {
       fetchMyReviews();
       setActiveTab("my");
     } catch (err) {
-      Alert.alert("Error", err.response?.data?.message || "Something went wrong");
+
+
+      showModal(err.response?.data?.message || "Something went wrong", "warning");
     }
   };
 
@@ -123,41 +140,41 @@ export default function RateReviewScreen() {
 
       {/* Top Image */}
       <Image
-        source={require("../assets/images/couple 1.png")} 
+        source={require("../assets/images/couple 1.png")}
         style={styles.topImage}
         resizeMode="contain"
       />
 
       {/* Tabs */}
       <View style={styles.tabs}>
-  <TouchableOpacity
-    style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
-    onPress={() => setActiveTab("write")}
-  >
-    <Text
-      style={[
-        styles.tabText,
-        activeTab === "write" && styles.activeTabText
-      ]}
-    >
-      ⭐ Write Review
-    </Text>
-  </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
+          onPress={() => setActiveTab("write")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "write" && styles.activeTabText
+            ]}
+          >
+            ⭐ Write Review
+          </Text>
+        </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
-    onPress={() => setActiveTab("my")}
-  >
-    <Text
-      style={[
-        styles.tabText,
-        activeTab === "my" && styles.activeTabText
-      ]}
-    >
-      📋 My Reviews
-    </Text>
-  </TouchableOpacity>
-</View>
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
+          onPress={() => setActiveTab("my")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "my" && styles.activeTabText
+            ]}
+          >
+            📋 My Reviews
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* ================= WRITE REVIEW ================= */}
       {activeTab === "write" && (
@@ -177,7 +194,7 @@ export default function RateReviewScreen() {
           <TextInput
             style={styles.input}
             placeholder="Review Title (Optional)"
-            placeholderTextColor="#777"   
+            placeholderTextColor="#777"
             value={title}
             onChangeText={setTitle}
           />
@@ -185,7 +202,7 @@ export default function RateReviewScreen() {
           <TextInput
             style={styles.textArea}
             placeholder="Write your experience..."
-            placeholderTextColor="#777"  
+            placeholderTextColor="#777"
             value={comment}
             onChangeText={setComment}
             multiline
@@ -258,6 +275,14 @@ export default function RateReviewScreen() {
           )}
         </ScrollView>
       )}
+
+
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -380,16 +405,16 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   topImage: {
-  width: "100%",
-  height: 150,
-},
-topImage: {
-  width: "100%",
-  height: 200,
-  alignSelf: "center",
-  marginTop: 6,
-},
-activeTabText: {
-  color: "white",
-},
+    width: "100%",
+    height: 150,
+  },
+  topImage: {
+    width: "100%",
+    height: 200,
+    alignSelf: "center",
+    marginTop: 6,
+  },
+  activeTabText: {
+    color: "white",
+  },
 });

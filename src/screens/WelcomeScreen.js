@@ -8,9 +8,17 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <Image
 
+      {/* TOP WELCOME IMAGE */}
+      <Image
+        source={require("../assets/images/welcomlogoapp.png")} // 👈 yaha apna path dalna
+        style={styles.welcomeImg}
+        resizeMode="contain"
+      />
+
+      <View style={styles.card}>
+
+        <Image
           source={require("../assets/images/logo-dark.png")}
           style={styles.logo}
         />
@@ -20,7 +28,7 @@ export default function WelcomeScreen() {
           onPress={() => navigation.navigate("Login")}
         >
           <View style={styles.row}>
-            <Icon name="log-in-outline" size={22} color="#333" />
+            <Icon name="log-in-outline" size={25} color="black" />
             <Text style={styles.optionText}> Login</Text>
           </View>
         </TouchableOpacity>
@@ -30,21 +38,10 @@ export default function WelcomeScreen() {
           onPress={() => navigation.navigate("Register")}
         >
           <View style={styles.row}>
-            <Icon name="person-add-outline" size={22} color="#333" />
+            <Icon name="person-add-outline" size={23} color="black" />
             <Text style={styles.optionText}> Register</Text>
           </View>
         </TouchableOpacity>
-
-        {/* <TouchableOpacity
-          style={styles.optionBtn}
-          onPress={() => navigation.navigate("Home")}
-          
-        >
-          <View style={styles.row}>
-            <Icon name="person-outline" size={22} color="#333" />
-            <Text style={styles.optionText}> Continue as Guest</Text>
-          </View>
-        </TouchableOpacity> */}
 
         <TouchableOpacity
           style={styles.redBtn}
@@ -55,6 +52,7 @@ export default function WelcomeScreen() {
             <Icon name="arrow-forward-outline" size={20} color="#fff" />
           </View>
         </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -64,34 +62,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FF4B4B",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "flex-start",   // ⭐ center ki jagah top
+    paddingTop: 40,
   },
+
+  welcomeImg: {
+    width: "80%",
+    height: 300,      // ⭐ image choti hogi
+    resizeMode: "contain",
+    marginBottom: -100, // ⭐ card ke paas aa jayegi
+  },
+
   card: {
-    width: "85%",
-    padding: 25,
+    width: "90%",
+    padding: 30,
     borderRadius: 18,
     backgroundColor: "#fff",
-    elevation: 5,
+    elevation: 15,
     alignItems: "center",
   },
+
   logo: {
     width: 180,
     height: 120,
     marginBottom: 25,
   },
+
   optionBtn: {
     backgroundColor: "#f8f8f8",
     width: "100%",
-    padding: 12,
+    padding: 13,
     borderRadius: 10,
     marginVertical: 6,
+    borderWidth: 0.5,
+    borderColor: "gray",
   },
+
   optionText: {
-    fontSize: 15,
-    color: "#444",
-    textAlign: "center",
+    fontSize: 17,
+    color: "black",
+    marginLeft: 15,
+    fontWeight: "600",
   },
+
   redBtn: {
     backgroundColor: "#ff4e50",
     width: "100%",
@@ -99,15 +113,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 15,
   },
+
   redBtnText: {
     fontSize: 16,
     color: "#fff",
     fontWeight: "600",
     textAlign: "center",
   },
+
   row: {
     flexDirection: "row",
     alignItems: "center",
   },
-
 });

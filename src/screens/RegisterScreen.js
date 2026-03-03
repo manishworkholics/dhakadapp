@@ -146,7 +146,7 @@ export default function RegisterScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Image
-          source={require("../assets/images/dhakadlogoapp.png")}
+          source={require("../assets/images/logo-dark.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -213,7 +213,7 @@ export default function RegisterScreen() {
           placeholder="Full Name"
           style={styles.input}
           value={form.name}
-          placeholderTextColor="#777"
+          placeholderTextColor="black"
           onChangeText={(t) => handleChange("name", t)}
         />
 
@@ -223,7 +223,7 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           value={form.email}
-          placeholderTextColor="#777"
+          placeholderTextColor="black"
           onChangeText={(t) => handleChange("email", t)}
         />
 
@@ -233,7 +233,7 @@ export default function RegisterScreen() {
           style={styles.input}
           maxLength={10}
           value={form.phone}
-          placeholderTextColor="#777"
+          placeholderTextColor="black"
           onChangeText={(t) => handleChange("phone", t.replace(/[^0-9]/g, ""))}
         />
 
@@ -242,7 +242,7 @@ export default function RegisterScreen() {
           secureTextEntry
           style={styles.input}
           value={form.password}
-          placeholderTextColor="#777"
+          placeholderTextColor="black"
           onChangeText={(t) => handleChange("password", t)}
         />
 
@@ -291,11 +291,11 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
   },
   card: {
-    width: "85%",
+    width: "90%",
     backgroundColor: "#fff",
     borderRadius: 18,
-    padding: 25,
-    elevation: 5,
+    padding: 20,
+    elevation: 3,
     alignItems: "center",
   },
   logo: {
@@ -306,10 +306,13 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     backgroundColor: "#f8f8f8",
-    padding: 14,
+    padding: 16,
     borderRadius: 10,
     marginVertical: 8,
     fontSize: 15,
+    borderWidth: 0.5,
+    borderColor: "gray",
+    marginBottom:5
   },
   dropdownWrap: {
     width: "100%",
@@ -318,6 +321,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 10,
     marginVertical: 8,
+    borderWidth: 0.5,
+    borderColor: "gray",
+
   },
   registerBtn: {
     backgroundColor: "#ff4e50",
@@ -350,8 +356,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
 
-    borderWidth: 1,
-    borderColor: "#ececec",
+    borderWidth: 0.5,
+    borderColor: "gray",
   },
   dropdownText: {
     fontSize: 15,
@@ -392,6 +398,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
+
   },
   optionRow: {
     paddingHorizontal: 16,

@@ -1,27 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Icon from "react-native-vector-icons/Ionicons";
 import { useProfile } from "../context/ProfileContext";
 
 const VERIFY_OTP_API = "http://143.110.244.163:5000/api/auth/verify-otp";
 const RESEND_OTP_API = "http://143.110.244.163:5000/api/auth/send-otp";
 
 export default function MobileOtpScreen() {
-
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState("success"); // success | warning | error
-
 
   const showModal = (msg, type = "success") => {
     setModalMessage(msg);
@@ -29,11 +28,11 @@ export default function MobileOtpScreen() {
     setModalVisible(true);
   };
 
-
   const navigation = useNavigation();
   const { bootstrap } = useProfile();
 
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(""); // we will keep string
+  const inputRefs = useRef([]); // refs array
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
@@ -54,32 +53,23 @@ export default function MobileOtpScreen() {
         return;
       }
 
-      const res = await axios.post(VERIFY_OTP_API, {
-        phone,
-        otp,
-      });
-
-      console.log("VERIFY OTP RESPONSE 👉", res.data);
+      const res = await axios.post(VERIFY_OTP_API, { phone, otp });
 
       if (!res.data?.success) {
         showModal(res.data?.message || "OTP verification failed", "error");
-
         setOtp("");
+        // focus first box again
+        inputRefs.current?.[0]?.focus?.();
         return;
       }
 
-      // ✅ CLEAR OLD SESSION (IMPORTANT)
       await AsyncStorage.multiRemove(["token", "user"]);
       delete axios.defaults.headers.common["Authorization"];
 
-      // ✅ SAVE NEW AUTH DATA
       await AsyncStorage.setItem("token", res.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
-
-      // ✅ SET AXIOS HEADER FOR ALL NEXT API CALLS
       axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
 
-      // ✅ MOST IMPORTANT: refresh ProfileContext for NEW USER
       await bootstrap();
       showModal("OTP verified successfully", "success");
 
@@ -90,10 +80,10 @@ export default function MobileOtpScreen() {
           routes: [{ name: "Home" }],
         });
       }, 1200);
-
     } catch (error) {
       showModal("Invalid or expired OTP", "error");
       setOtp("");
+      inputRefs.current?.[0]?.focus?.();
     } finally {
       setLoading(false);
     }
@@ -114,10 +104,10 @@ export default function MobileOtpScreen() {
 
       if (res.data?.success) {
         showModal("New OTP sent to your mobile", "success");
+        setTimeout(() => setModalVisible(false), 1200);
 
-        setTimeout(() => {
-          setModalVisible(false);
-        }, 1200);
+        setOtp("");
+        inputRefs.current?.[0]?.focus?.();
       } else {
         showModal(res.data?.message || "Failed to resend OTP", "error");
       }
@@ -128,46 +118,124 @@ export default function MobileOtpScreen() {
     }
   };
 
+  // ✅ OTP change with auto-focus (safe)
+  const handleOtpChange = (text, index) => {
+    const digit = (text || "").replace(/[^0-9]/g, "");
+    if (!digit) return;
+
+    // ensure length 4
+    const arr = otp.split("");
+    while (arr.length < 4) arr.push("");
+
+    arr[index] = digit[digit.length - 1]; // last typed digit
+    const nextOtp = arr.join("").slice(0, 4);
+    setOtp(nextOtp);
+
+    // move to next
+    if (index < 3) {
+      inputRefs.current?.[index + 1]?.focus?.();
+    }
+  };
+
+  // ✅ Backspace support: empty current -> go previous
+  const handleKeyPress = (e, index) => {
+    if (e?.nativeEvent?.key !== "Backspace") return;
+
+    const arr = otp.split("");
+    while (arr.length < 4) arr.push("");
+
+    // if current already empty, go prev
+    if (!arr[index] && index > 0) {
+      inputRefs.current?.[index - 1]?.focus?.();
+      return;
+    }
+
+    // clear current digit
+    arr[index] = "";
+    setOtp(arr.join("").slice(0, 4));
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Verify OTP</Text>
-        <Text style={styles.subtitle}>Enter the OTP sent to your SMS</Text>
+      {/* Back */}
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => navigation.goBack("Login")}
+        activeOpacity={0.8}
+      >
+         <Icon name="arrow-back-sharp" size={26} color="black" />
+      </TouchableOpacity>
 
-        <TextInput
-          placeholder="Enter 4 digit OTP"
-          keyboardType="number-pad"
-          maxLength={4}
-          style={styles.input}
-          value={otp}
-          placeholderTextColor="#777" 
-          onChangeText={(t) => setOtp(t.replace(/[^0-9]/g, ""))}
-        />
+      {/* Top Illustration */}
+      <Image
+        source={require("../assets/images/logo-dark.png")}
+        style={styles.illus}
+        resizeMode="contain"
+      />
 
+      <Text style={styles.title}>OTP Verification</Text>
+      <Text style={styles.subtitle}>Enter the OTP sent to your SMS</Text>
+
+      {/* OTP Boxes */}
+      <View style={styles.otpRow}>
+        {[0, 1, 2, 3].map((i) => (
+          <TextInput
+            key={i}
+            ref={(ref) => {
+              if (ref) inputRefs.current[i] = ref; // ✅ null guard
+            }}
+            value={otp[i] ? otp[i] : ""}
+            onChangeText={(t) => handleOtpChange(t, i)}
+            onKeyPress={(e) => handleKeyPress(e, i)}
+            keyboardType="number-pad"
+            maxLength={1}
+            style={styles.otpBox}
+            textAlign="center"
+            autoFocus={i === 0}
+          />
+        ))}
+      </View>
+
+      {/* Resend */}
+      <View style={styles.resendRow}>
+        <Text style={styles.resendText}>Didn't receive OTP?</Text>
         <TouchableOpacity
-          style={styles.verifyBtn}
-          onPress={verifyOtp}
-          disabled={loading}
+          onPress={resendOtp}
+          disabled={resending}
+          activeOpacity={0.8}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.verifyBtnText}>Verify & Continue</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={resendOtp} disabled={resending}>
-          <Text style={styles.resend}>
-            {resending ? "Resending..." : "Resend OTP?"}
+          <Text style={styles.resendBtnText}>
+            {resending ? " RESENDING..." : " RESEND OTP"}
           </Text>
         </TouchableOpacity>
       </View>
 
+      {/* Verify Button */}
+      <TouchableOpacity
+        style={[styles.verifyBtn, loading && { opacity: 0.8 }]}
+        onPress={verifyOtp}
+        disabled={loading}
+        activeOpacity={0.9}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.verifyBtnText}>VERIFY OTP</Text>
+        )}
+      </TouchableOpacity>
 
+      {/* ✅ YOUR EXISTING CUSTOM MODAL (UNCHANGED) */}
       {modalVisible && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
+            <View
+              style={[
+                styles.modalTopLine,
+                modalType === "success" && { backgroundColor: "#22c55e" },
+                modalType === "warning" && { backgroundColor: "#f59e0b" },
+                modalType === "error" && { backgroundColor: "#ef4444" },
+              ]}
+            />
 
             <Text
               style={[
@@ -180,8 +248,8 @@ export default function MobileOtpScreen() {
               {modalType === "success"
                 ? "Success"
                 : modalType === "warning"
-                  ? "Warning"
-                  : "Error"}
+                ? "Warning"
+                : "Error"}
             </Text>
 
             <Text style={styles.modalText}>{modalMessage}</Text>
@@ -196,86 +264,115 @@ export default function MobileOtpScreen() {
               onPress={() => {
                 if (modalType !== "success") setModalVisible(false);
               }}
-
+              activeOpacity={0.85}
             >
               <Text style={{ color: "#fff", fontWeight: "700" }}>OK</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
-
-
-
-
     </View>
   );
 }
-
-/* ================= STYLES (UNCHANGED DESIGN) ================= */
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+
+  backBtn: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+    marginTop:25
   },
-  card: {
-    width: "85%",
-    backgroundColor: "#fff",
-    padding: 25,
-    borderRadius: 18,
-    elevation: 4,
-    alignItems: "center",
+  backIcon: {
+    fontSize: 34,
+    color: "#111",
+    marginTop: -6,
   },
+
+  illus: {
+    width: "90%",
+    height: 100,
+    marginTop: 10,
+  },
+
   title: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 6,
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop: 88,
+    color: "#111",
+  
+   
   },
   subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 18,
+    fontSize: 12.5,
+    color: "#777",
+    marginTop: 6,
+    marginBottom: 22,
   },
-  input: {
-    width: "100%",
-    backgroundColor: "#f8f8f8",
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 18,
+
+  otpRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 14,
+    marginBottom: 10,
+  },
+
+  otpBox: {
+    width: 54,
+    height: 54,
+    borderRadius: 1,
+    borderWidth: 1,
+    borderColor: "#DC143C",
+    backgroundColor: "#fff",
     textAlign: "center",
-    fontSize: 18,
-    letterSpacing: 4,
+    fontSize: 25,
+    fontWeight: "800",
+    color: "#111",
+    elevation: 3,
   },
+
+  resendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    marginBottom: 28,
+  },
+  resendText: {
+    fontSize: 12.5,
+    color: "#666",
+  },
+  resendBtnText: {
+    fontSize: 12.5,
+    fontWeight: "800",
+    color: "#e11d48",
+  },
+
   verifyBtn: {
-    backgroundColor: "#ff4e50",
-    width: "100%",
-    padding: 14,
+    width: "85%",
+    backgroundColor: "#DC143C",
+    paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
+    elevation: 3,
+    marginTop:-15
+   
   },
   verifyBtnText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  resend: {
-    color: "#ff4e50",
-    fontWeight: "600",
-    marginTop: 20,
-  },
-
-
-  // custom model styles
-
-  modalTitle: {
-    fontSize: 18,
     fontWeight: "800",
-    marginBottom: 8,
+    letterSpacing: 1,
   },
-
 
   modalOverlay: {
     position: "absolute",
@@ -290,11 +387,24 @@ const styles = StyleSheet.create({
   },
 
   modalBox: {
-    width: "80%",
+    width: "82%",
     backgroundColor: "#fff",
     padding: 22,
     borderRadius: 14,
     alignItems: "center",
+  },
+
+  modalTopLine: {
+    width: "65%",
+    height: 4,
+    borderRadius: 99,
+    marginBottom: 14,
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 8,
   },
 
   modalText: {
@@ -311,6 +421,4 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
   },
-
-
 });
