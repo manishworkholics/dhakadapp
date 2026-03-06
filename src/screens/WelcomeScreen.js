@@ -9,9 +9,9 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
 
-      {/* TOP WELCOME IMAGE */}
+
       <Image
-        source={require("../assets/images/welcomlogoapp.png")} // 👈 yaha apna path dalna
+        source={require("../assets/images/welcomlogoapp.png")}
         style={styles.welcomeImg}
         resizeMode="contain"
       />
@@ -84,14 +84,14 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 180,
-    height: 120,
+    width: 200,
+    height: 130,
     marginBottom: 25,
   },
 
   optionBtn: {
     backgroundColor: "#f8f8f8",
-    width: "100%",
+    width: "105%",
     padding: 13,
     borderRadius: 10,
     marginVertical: 6,
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
 
   optionText: {
-    fontSize: 17,
+    fontSize: 15,
     color: "black",
     marginLeft: 15,
     fontWeight: "600",
@@ -108,21 +108,27 @@ const styles = StyleSheet.create({
 
   redBtn: {
     backgroundColor: "#ff4e50",
-    width: "100%",
-    padding: 14,
+    width: "105%",
+    padding: 13,
     borderRadius: 12,
     marginTop: 15,
   },
 
   redBtnText: {
     fontSize: 16,
-    color: "#fff",
-    fontWeight: "600",
+    color: "white",
     textAlign: "center",
+    marginLeft: 105,
+    fontWeight: "800",
+
+
   },
 
   row: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 5,
+    width: 190,
+    height: 21,
   },
 });

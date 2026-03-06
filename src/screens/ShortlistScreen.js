@@ -134,7 +134,7 @@ export default function ShortlistScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header title="Shortlist" />
+    <Header title="Shortlisted" />
 
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} size="large" />

@@ -64,8 +64,8 @@ export default function CreateProfileScreen() {
     physicalStatus: existingProfile?.physicalStatus || "Normal",
     maritalStatus: existingProfile?.maritalStatus || "Never married",
 
-    religion: existingProfile?.religion || "",
-    caste: existingProfile?.caste || "",
+    religion: existingProfile?.religion || "Hinduism",
+    caste: existingProfile?.caste || "Dhakad",
     subCaste: existingProfile?.subCaste || "",
     gotra: existingProfile?.gotra || "",
 

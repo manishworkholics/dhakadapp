@@ -218,7 +218,8 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 70 }}>
-      <Header title="My Profile" />
+      <Header title="My Profile"  />
+      
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -369,7 +370,7 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => navigation.navigate("Interest")}
           />
           <ProfileNavCard
-            title="Shortlist"
+            title="Shortlisted"
             subtitle="Profiles you liked"
             onPress={() => navigation.navigate("Shortlist")}
           />

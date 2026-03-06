@@ -238,7 +238,7 @@ export default function HomeScreen() {
 
           {/* 🔴 COMPLETE PROFILE */}
           <View style={styles.completeBox}>
-            <Text style={styles.completeTitle}> 
+            <Text style={styles.completeTitle}>
               {profile?.profileScore === 100
                 ? "Your Profile is Completed"
                 : "Complete Your Profile"}
@@ -360,7 +360,7 @@ export default function HomeScreen() {
                       style={styles.chatBtn}
                       onPress={() => handleProfilePress(item._id, item.photos?.[0])}
                     >
-                      <Text style={styles.chatBtnText}>Chat</Text>
+                      <Text style={styles.chatBtnText}>View-Profile</Text>
                     </TouchableOpacity>
 
                   </View>
@@ -853,7 +853,7 @@ const styles = StyleSheet.create({
   completeBox: {
     backgroundColor: "#fff",
     margin: 14,
-     borderRadius: 16,
+    borderRadius: 16,
     padding: 16,
     alignItems: "center",
   },
@@ -1266,14 +1266,14 @@ const skeleton = StyleSheet.create({
 
 
 
-/* ================= Complate profile progressCircle ================= */
+  /* ================= Complate profile progressCircle ================= */
   progressCircle: {
-  width: 90,
-  height: 90,
-  borderRadius: 45,
-  borderWidth: 6,
-  justifyContent: "center",
-  alignItems: "center",
-  marginVertical: 10,
-},
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 10,
+  },
 });

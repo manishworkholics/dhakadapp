@@ -284,7 +284,8 @@ export default function FindPartnerScreen({ navigation }) {
             {/* 🔹 SEARCH + FILTER */}
             <View style={styles.topBar}>
                 <TextInput
-                    placeholder="Search"
+                    placeholder="Search Here...."
+                     placeholderTextColor="black"
                     value={filters.search}
                     onChangeText={(text) =>
                         setFilters((prev) => ({ ...prev, search: text }))
@@ -478,7 +479,7 @@ const SelectField = ({ label, value, options, onSelect }) => {
 const styles = StyleSheet.create({
     topBar: {
         flexDirection: "row",
-        padding: 10,
+        padding: 12,
         backgroundColor: "#fff",
         gap: 10,
     },
@@ -488,11 +489,12 @@ const styles = StyleSheet.create({
         backgroundColor: "#f1f1f1",
         borderRadius: 10,
         paddingHorizontal: 12,
+        
     },
 
     filterBtn: {
-        backgroundColor: "#ff4e50",
-        paddingHorizontal: 14,
+        backgroundColor: "#FF4B4B",
+        paddingHorizontal: 15,
         justifyContent: "center",
         borderRadius: 10,
     },

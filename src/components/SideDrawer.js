@@ -19,6 +19,8 @@ import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
+import BlogScreen from './../screens/BlogScreen';
+
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const DRAWER_W = Math.min(307, Math.floor(SCREEN_W * 0.82)); // ✅ small screen responsive
@@ -148,15 +150,15 @@ export default function SideDrawer({ navigation }) {
                 onPress={() => go("Profile")}
               />
               <Divider />
-              <DrawerItem icon="download-outline" title="Download and Share Profile" />
-              <Divider />
+              {/* <DrawerItem icon="download-outline" title="Download and Share Profile" />
+              <Divider /> */}
               <DrawerItem icon="diamond-outline" title="Upgrade to Premium" onPress={() => go("Premium")} />
 
               <Text style={styles.section}>Discover Your Matches</Text>
               <Divider />
               <DrawerItem icon="people-outline" title="Matches" onPress={() => go("Matches")} />
               <Divider />
-              <DrawerItem icon="mail-outline" title="Inbox" onPress={() => go("Interest")} />
+              <DrawerItem icon="mail-outline" title="Interest" onPress={() => go("Interest")} />
               <Divider />
               <DrawerItem icon="chatbubbles-outline" title="Chat" onPress={() => go("Chat")} />
 
@@ -166,11 +168,13 @@ export default function SideDrawer({ navigation }) {
               <Divider />
               <DrawerItem icon="filter-outline" title="Contact Filters" onPress={() => go("FindPartner")} />
               <Divider />
-              <DrawerItem icon="settings-outline" title="Account Settings" />
+              <DrawerItem icon="fitness-outline" title="Shorlisted"   onPress={() => go("Shortlist")} />
               <Divider />
-              <DrawerItem icon="help-circle-outline" title="Help & Support" />
+              <DrawerItem icon="notifications-outline" title="Notification"  onPress={() => go("Notification")} />
               <Divider />
               <DrawerItem icon="star-outline" title="RateReview" onPress={() => go("RateReview")} />
+              <Divider />
+              <DrawerItem icon="logo-buffer" title="Blog" onPress={() => go("Blog")} />
               <Divider />
 
               <TouchableOpacity style={styles.logout} onPress={handleLogout}>
@@ -291,11 +295,12 @@ const styles = StyleSheet.create({
   logout: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 12,
   },
   logoutText: {
     marginLeft: 10,
     color: "red",
-    fontWeight: "600",
+    fontWeight: "800",
+    fontSize:15
   },
 });

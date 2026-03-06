@@ -37,7 +37,8 @@ const Header = () => {
       <View style={styles.container}>
         {/* LEFT ICON */}
         <TouchableOpacity onPress={openDrawer}>
-          <Icon name="menu-outline" size={26} color="red" />
+          <Icon name="menu-outline" size={28} color="#DC143C" />
+
         </TouchableOpacity>
 
         {/* CENTER */}
@@ -79,8 +80,8 @@ const Header = () => {
             >
               <Icon
                 name="notifications-outline"
-                size={24}
-                color="red"
+                size={25}
+                color="#DC143C"
                 style={{ marginLeft: 14 }}
               />
             </TouchableOpacity>
@@ -99,21 +100,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   container: {
-    height: 45,
-    paddingHorizontal: 16,
+    height: 50,
+    paddingHorizontal: 19,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomColor: "#000000",
+    borderBottomWidth: 0.2,
   },
   center: {
     flex: 1,
-    marginHorizontal: 16,
+    marginHorizontal: 19,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000",
+    fontSize: 19,
+    fontWeight: "800",
+    color: "#000000",
     alignItems: "flex-start",
+    marginLeft: 15
 
   },
   searchInput: {

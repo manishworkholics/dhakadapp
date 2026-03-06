@@ -1,8 +1,4 @@
-// PartnerPreference.js (React Native) — FULL UPDATED CODE (Web fields included)
-// ✅ Added: occupation[], annualIncome[]
-// ✅ Same API + same logic
-// ✅ Dropdown icons included
-// ✅ Safe toggleMulti (no crash if field undefined)
+
 
 import React, { useEffect, useState } from "react";
 import {

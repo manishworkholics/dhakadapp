@@ -187,8 +187,9 @@ export default function ChatDetailScreen({ route, navigation }) {
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Type here ..."
+          placeholder="Type Here ..."
           style={styles.input}
+           placeholderTextColor="black"
           multiline
         />
 
