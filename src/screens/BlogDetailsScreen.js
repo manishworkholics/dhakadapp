@@ -6,19 +6,35 @@ import {
   ScrollView,
   Image,
   StatusBar,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import RenderHtml from "react-native-render-html";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 export default function BlogDetailsScreen({ route }) {
   const { blog } = route.params;
+  const { width } = useWindowDimensions();
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const source = {
+    html: blog?.content || "<p>No content available</p>",
+  };
 
   return (
     <SafeAreaView edges={[""]} style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
       <Header title="Blog Details" />
 
       <ScrollView
@@ -29,37 +45,85 @@ export default function BlogDetailsScreen({ route }) {
           <Image source={{ uri: blog.image }} style={styles.coverImage} />
 
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{blog.category}</Text>
+            <Text style={styles.categoryText}>Blog</Text>
           </View>
         </View>
 
         <View style={styles.contentCard}>
           <View style={styles.metaTopRow}>
-            <View style={styles.metaItem}>
+            {/* <View style={styles.metaItem}>
               <Ionicons name="calendar-outline" size={15} color="#ff4e50" />
-              <Text style={styles.metaText}>{blog.date}</Text>
-            </View>
+              <Text style={styles.metaText}>
+                {formatDate(blog.publishedAt || blog.createdAt)}
+              </Text>
+            </View> */}
 
-            <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={15} color="#ff4e50" />
-              <Text style={styles.metaText}>{blog.readTime}</Text>
-            </View>
-          </View>
-
-          <View style={styles.authorRow}>
-            <Ionicons name="person-circle-outline" size={18} color="#ff4e50" />
-            <Text style={styles.authorText}>{blog.author}</Text>
+            {/* <View style={styles.metaItem}>
+              <Ionicons name="person-outline" size={15} color="#ff4e50" />
+              <Text style={styles.metaText}>{blog.author || "Admin"}</Text>
+            </View> */}
           </View>
 
           <Text style={styles.title}>{blog.title}</Text>
-
-          <Text style={styles.description}>{blog.description}</Text>
+          <Text style={styles.description}>{blog.excerpt}</Text>
 
           <View style={styles.divider} />
 
-          <Text style={styles.sectionTitle}>Overview</Text>
-
-          <Text style={styles.content}>{blog.content}</Text>
+          <RenderHtml
+            contentWidth={width - 28}
+            source={source}
+            tagsStyles={{
+              body: {
+                color: "#444",
+                fontSize: 15,
+                lineHeight: 26,
+              },
+              p: {
+                color: "#444",
+                fontSize: 15,
+                lineHeight: 26,
+                marginBottom: 14,
+              },
+              h1: {
+                fontSize: 28,
+                fontWeight: "800",
+                color: "#111",
+                marginBottom: 12,
+              },
+              h2: {
+                fontSize: 24,
+                fontWeight: "800",
+                color: "#111",
+                marginTop: 14,
+                marginBottom: 10,
+              },
+              h3: {
+                fontSize: 20,
+                fontWeight: "700",
+                color: "#111",
+                marginTop: 12,
+                marginBottom: 8,
+              },
+              ul: {
+                marginBottom: 14,
+                paddingLeft: 18,
+              },
+              ol: {
+                marginBottom: 14,
+                paddingLeft: 18,
+              },
+              li: {
+                color: "#444",
+                fontSize: 15,
+                lineHeight: 24,
+                marginBottom: 8,
+              },
+              strong: {
+                fontWeight: "700",
+                color: "#111",
+              },
+            }}
+          />
         </View>
       </ScrollView>
 
@@ -71,7 +135,7 @@ export default function BlogDetailsScreen({ route }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#f7f7f7",
+    backgroundColor: "#f6f7fb",
   },
 
   scrollContent: {
@@ -82,7 +146,7 @@ const styles = StyleSheet.create({
 
   imageCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: "hidden",
     marginBottom: 14,
     elevation: 3,
@@ -96,6 +160,7 @@ const styles = StyleSheet.create({
   coverImage: {
     width: "100%",
     height: 280,
+    resizeMode: "cover",
   },
 
   categoryBadge: {
@@ -103,7 +168,7 @@ const styles = StyleSheet.create({
     top: 14,
     left: 14,
     backgroundColor: "rgba(255,78,80,0.95)",
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 20,
   },
@@ -116,9 +181,9 @@ const styles = StyleSheet.create({
 
   contentCard: {
     backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 18,
-    elevation: 3,
+    borderRadius: 18,
+    padding: 16,
+    elevation: 2,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -129,37 +194,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
-    marginBottom: 10,
-    gap: 12,
+    marginBottom: 12,
   },
 
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff3f4",
+    backgroundColor: "#fff2f3",
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 18,
+    marginRight: 8,
+    marginBottom: 6,
   },
 
   metaText: {
+    marginLeft: 5,
     fontSize: 12,
     color: "#666",
     fontWeight: "600",
-    marginLeft: 6,
-  },
-
-  authorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-
-  authorText: {
-    fontSize: 13,
-    color: "#444",
-    marginLeft: 6,
-    fontWeight: "700",
   },
 
   title: {
@@ -167,32 +220,19 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#111",
     lineHeight: 32,
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
   description: {
     fontSize: 15,
     color: "#666",
     lineHeight: 24,
-    marginBottom: 16,
+    marginBottom: 14,
   },
 
   divider: {
-    height: 1,
-    backgroundColor: "#eee",
-    marginBottom: 16,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#111",
-    marginBottom: 10,
-  },
-
-  content: {
-    fontSize: 15,
-    color: "#444",
-    lineHeight: 26,
+    height: 2,
+    backgroundColor: "#D3D3D3",
+    marginBottom: 14,
   },
 });

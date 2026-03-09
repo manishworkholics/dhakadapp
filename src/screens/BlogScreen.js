@@ -72,17 +72,17 @@ export default function BlogScreen({ navigation }) {
 
         <View style={styles.blogContent}>
           <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
+            {/* <View style={styles.metaItem}>
               <Ionicons name="calendar-outline" size={14} color="#ff4e50" />
               <Text style={styles.metaText}>
                 {formatDate(item.publishedAt || item.createdAt)}
               </Text>
-            </View>
+            </View> */}
 
-            <View style={styles.metaItem}>
+            {/* <View style={styles.metaItem}>
               <Ionicons name="person-outline" size={14} color="#ff4e50" />
               <Text style={styles.metaText}>{item.author}</Text>
-            </View>
+            </View> */}
           </View>
 
           <Text numberOfLines={2} style={styles.blogTitle}>
@@ -94,10 +94,11 @@ export default function BlogScreen({ navigation }) {
           </Text>
 
           <View style={styles.bottomRow}>
-            <Text style={styles.readMoreText}>Read Full Blog</Text>
+            <Text style={styles.readMoreText}>Read More......</Text>
+            
 
             <View style={styles.arrowBtn}>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
             </View>
           </View>
         </View>
@@ -129,10 +130,10 @@ export default function BlogScreen({ navigation }) {
           }
           ListHeaderComponent={
             <View style={styles.topSection}>
-              <Text style={styles.smallHeading}>Latest Updates</Text>
+              <Text style={styles.smallHeading}>Latest Blogs</Text>
               <Text style={styles.mainHeading}>Dhakad Matrimony Blogs</Text>
               <Text style={styles.subHeading}>
-                Read helpful blogs, relationship tips and matrimony guidance.
+           Discover relationship advice, marriage tips and Dhakad Matrimony guides.
               </Text>
             </View>
           }
@@ -210,11 +211,11 @@ const styles = StyleSheet.create({
 
   categoryBadge: {
     position: "absolute",
-    top: 14,
+    top: 12,
     left: 14,
     backgroundColor: "rgba(255,78,80,0.95)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 19,
+    paddingVertical: 5,
     borderRadius: 20,
   },
 
