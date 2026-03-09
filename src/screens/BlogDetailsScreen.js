@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,25 @@ import {
   Image,
   StatusBar,
   useWindowDimensions,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import RenderHtml from "react-native-render-html";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LinearGradient from "react-native-linear-gradient";
+import axios from "axios";
+
+const API_URL = "http://143.110.244.163:5000/api";
 
 export default function BlogDetailsScreen({ route }) {
-  const { blog } = route.params;
+  const initialBlog = route?.params?.blog || {};
   const { width } = useWindowDimensions();
+
+  const [blogData, setBlogData] = useState(initialBlog);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -28,8 +37,59 @@ export default function BlogDetailsScreen({ route }) {
     });
   };
 
+  const fetchBlogDetails = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+
+      const slugOrId = initialBlog?.slug || initialBlog?._id;
+
+      if (!slugOrId) {
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      let res = null;
+
+      try {
+        // most likely endpoint
+        res = await axios.get(`${API_URL}/blogs/${slugOrId}`);
+      } catch (err1) {
+        try {
+          // fallback if backend uses singular route
+          res = await axios.get(`${API_URL}/blog/${slugOrId}`);
+        } catch (err2) {
+          try {
+            // fallback by id route
+            res = await axios.get(`${API_URL}/blogs/details/${slugOrId}`);
+          } catch (err3) {
+            console.log("Blog Details API Error", err3?.response?.data || err3.message);
+          }
+        }
+      }
+
+      if (res?.data?.success && res?.data?.blog) {
+        setBlogData(res.data.blog);
+      }
+    } catch (error) {
+      console.log("Blog Details Fetch Error", error?.response?.data || error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [initialBlog]);
+
+  useEffect(() => {
+    fetchBlogDetails(true);
+  }, [fetchBlogDetails]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchBlogDetails(false);
+  };
+
   const source = {
-    html: blog?.content || "<p>No content available</p>",
+    html: blogData?.content || "<p>No content available</p>",
   };
 
   return (
@@ -37,95 +97,119 @@ export default function BlogDetailsScreen({ route }) {
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Header title="Blog Details" />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+      <LinearGradient
+        colors={["#ff512f", "#dd2476"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.blogBanner}
       >
-        <View style={styles.imageCard}>
-          <Image source={{ uri: blog.image }} style={styles.coverImage} />
+        <Text style={styles.blogBannerText}>Dhakad Matrimony Blog</Text>
+      </LinearGradient>
 
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>Blog</Text>
-          </View>
+      {loading ? (
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator size="large" color="#ff4e50" />
         </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ff4e50"]}
+              tintColor="#ff4e50"
+            />
+          }
+        >
+          <View style={styles.imageCard}>
+            <Image
+              source={{ uri: blogData?.image }}
+              style={styles.coverImage}
+            />
 
-        <View style={styles.contentCard}>
-          <View style={styles.metaTopRow}>
-            {/* <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={15} color="#ff4e50" />
-              <Text style={styles.metaText}>
-                {formatDate(blog.publishedAt || blog.createdAt)}
-              </Text>
-            </View> */}
-
-            {/* <View style={styles.metaItem}>
-              <Ionicons name="person-outline" size={15} color="#ff4e50" />
-              <Text style={styles.metaText}>{blog.author || "Admin"}</Text>
-            </View> */}
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>Blog</Text>
+            </View>
           </View>
 
-          <Text style={styles.title}>{blog.title}</Text>
-          <Text style={styles.description}>{blog.excerpt}</Text>
+          <View style={styles.contentCard}>
+            <View style={styles.metaTopRow}>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaText}>
+                  {formatDate(blogData?.publishedAt || blogData?.createdAt)}
+                </Text>
+              </View>
 
-          <View style={styles.divider} />
+              <View style={styles.metaItem}>
+                <Text style={styles.metaText}>{blogData?.author || "Admin"}</Text>
+              </View>
+            </View>
 
-          <RenderHtml
-            contentWidth={width - 28}
-            source={source}
-            tagsStyles={{
-              body: {
-                color: "#444",
-                fontSize: 15,
-                lineHeight: 26,
-              },
-              p: {
-                color: "#444",
-                fontSize: 15,
-                lineHeight: 26,
-                marginBottom: 14,
-              },
-              h1: {
-                fontSize: 28,
-                fontWeight: "800",
-                color: "#111",
-                marginBottom: 12,
-              },
-              h2: {
-                fontSize: 24,
-                fontWeight: "800",
-                color: "#111",
-                marginTop: 14,
-                marginBottom: 10,
-              },
-              h3: {
-                fontSize: 20,
-                fontWeight: "700",
-                color: "#111",
-                marginTop: 12,
-                marginBottom: 8,
-              },
-              ul: {
-                marginBottom: 14,
-                paddingLeft: 18,
-              },
-              ol: {
-                marginBottom: 14,
-                paddingLeft: 18,
-              },
-              li: {
-                color: "#444",
-                fontSize: 15,
-                lineHeight: 24,
-                marginBottom: 8,
-              },
-              strong: {
-                fontWeight: "700",
-                color: "#111",
-              },
-            }}
-          />
-        </View>
-      </ScrollView>
+            <Text style={styles.title}>{blogData?.title}</Text>
+            <Text style={styles.description}>{blogData?.excerpt}</Text>
+
+            <View style={styles.divider} />
+
+            <RenderHtml
+              contentWidth={width - 28}
+              source={source}
+              tagsStyles={{
+                body: {
+                  color: "#444",
+                  fontSize: 15,
+                  lineHeight: 26,
+                },
+                p: {
+                  color: "#444",
+                  fontSize: 15,
+                  lineHeight: 26,
+                  marginBottom: 14,
+                },
+                h1: {
+                  fontSize: 28,
+                  fontWeight: "800",
+                  color: "#111",
+                  marginBottom: 12,
+                },
+                h2: {
+                  fontSize: 24,
+                  fontWeight: "800",
+                  color: "#111",
+                  marginTop: 14,
+                  marginBottom: 10,
+                },
+                h3: {
+                  fontSize: 20,
+                  fontWeight: "700",
+                  color: "#111",
+                  marginTop: 12,
+                  marginBottom: 8,
+                },
+                ul: {
+                  marginBottom: 14,
+                  paddingLeft: 18,
+                },
+                ol: {
+                  marginBottom: 14,
+                  paddingLeft: 18,
+                },
+                li: {
+                  color: "#444",
+                  fontSize: 15,
+                  lineHeight: 24,
+                  marginBottom: 8,
+                },
+                strong: {
+                  fontWeight: "700",
+                  color: "#111",
+                },
+              }}
+            />
+          </View>
+        </ScrollView>
+      )}
 
       <Footer />
     </SafeAreaView>
@@ -136,6 +220,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#f6f7fb",
+  },
+
+  loaderWrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   scrollContent: {
@@ -198,8 +288,6 @@ const styles = StyleSheet.create({
   },
 
   metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#fff2f3",
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -209,7 +297,6 @@ const styles = StyleSheet.create({
   },
 
   metaText: {
-    marginLeft: 5,
     fontSize: 12,
     color: "#666",
     fontWeight: "600",
@@ -231,8 +318,23 @@ const styles = StyleSheet.create({
   },
 
   divider: {
-    height: 2,
+    height: 1,
     backgroundColor: "#D3D3D3",
     marginBottom: 14,
+  },
+
+  blogBanner: {
+    height: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    marginTop: 15,
+    marginHorizontal: -14,
+  },
+
+  blogBannerText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
   },
 });

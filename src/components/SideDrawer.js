@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import Clipboard from "@react-native-clipboard/clipboard";
@@ -19,7 +20,7 @@ import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
-import BlogScreen from './../screens/BlogScreen';
+
 
 
 const { width: SCREEN_W } = Dimensions.get("window");

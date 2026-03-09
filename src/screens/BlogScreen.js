@@ -15,6 +15,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
+import LinearGradient from "react-native-linear-gradient";
 
 export default function BlogScreen({ navigation }) {
   const [blogs, setBlogs] = useState([]);
@@ -95,7 +96,7 @@ export default function BlogScreen({ navigation }) {
 
           <View style={styles.bottomRow}>
             <Text style={styles.readMoreText}>Read More......</Text>
-            
+
 
             <View style={styles.arrowBtn}>
               <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -130,10 +131,18 @@ export default function BlogScreen({ navigation }) {
           }
           ListHeaderComponent={
             <View style={styles.topSection}>
-              <Text style={styles.smallHeading}>Latest Blogs</Text>
-              <Text style={styles.mainHeading}>Dhakad Matrimony Blogs</Text>
+             
+              <LinearGradient
+             colors={["#ff512f", "#dd2476"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.blogBanner}
+              >
+                <Text style={styles.blogBannerText}>Dhakad Matrimony Blog</Text>
+              </LinearGradient>
+               <Text style={styles.smallHeading}>Latest Blogs</Text>
               <Text style={styles.subHeading}>
-           Discover relationship advice, marriage tips and Dhakad Matrimony guides.
+                Discover relationship advice, marriage tips and Dhakad Matrimony guides.
               </Text>
             </View>
           }
@@ -165,6 +174,8 @@ const styles = StyleSheet.create({
   topSection: {
     marginBottom: 16,
     paddingHorizontal: 2,
+   
+
   },
 
   smallHeading: {
@@ -301,4 +312,20 @@ const styles = StyleSheet.create({
     color: "#777",
     fontWeight: "600",
   },
+blogBanner: {
+  height: 55,
+  justifyContent: "center",
+  alignItems: "center",
+  marginHorizontal: -16,   // 👈 ye important hai
+  marginBottom: 15,
+  backgroundColor: "#a33a00",
+  
+ 
+},
+
+blogBannerText: {
+  color: "#FFFFFF",
+  fontSize: 20,
+  fontWeight: "600",
+},
 });

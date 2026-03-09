@@ -9,11 +9,14 @@ import {
   StatusBar,
   Alert,
   Image,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import AppModal from "../components/AppModal";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -26,10 +29,9 @@ export default function RateReviewScreen() {
   const [reviews, setReviews] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
   const stars = useMemo(() => [1, 2, 3, 4, 5], []);
-
-
-
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -40,6 +42,7 @@ export default function RateReviewScreen() {
     setModalType(type);
     setModalVisible(true);
   };
+
   const getToken = async () => {
     return await AsyncStorage.getItem("token");
   };
@@ -60,7 +63,6 @@ export default function RateReviewScreen() {
       const token = await getToken();
 
       if (!rating) {
-
         showModal("Please select rating", "warning");
         return;
       }
@@ -77,14 +79,13 @@ export default function RateReviewScreen() {
         await axios.post(
           `${API_URL}/review`,
           {
-            targetId: currentUser?._id, // dynamic later
+            targetId: currentUser?._id,
             rating,
             title,
             comment,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
 
         showModal("Review submitted ❤️", "success");
       }
@@ -96,9 +97,10 @@ export default function RateReviewScreen() {
       fetchMyReviews();
       setActiveTab("my");
     } catch (err) {
-
-
-      showModal(err.response?.data?.message || "Something went wrong", "warning");
+      showModal(
+        err.response?.data?.message || "Something went wrong",
+        "warning"
+      );
     }
   };
 
@@ -113,6 +115,18 @@ export default function RateReviewScreen() {
       setReviews(res.data.data);
     } catch (err) {
       console.log(err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+
+    if (activeTab === "my") {
+      fetchMyReviews();
+    } else {
+      setRefreshing(false);
     }
   };
 
@@ -135,147 +149,171 @@ export default function RateReviewScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView edges={[""]} style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9DCE6" />
 
-      {/* Top Image */}
-      <Image
-        source={require("../assets/images/couple 1.png")}
-        style={styles.topImage}
-        resizeMode="contain"
-      />
+      <Header title="Rate & Review" />
 
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
-          onPress={() => setActiveTab("write")}
+      <View style={styles.contentWrapper}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#E75480"]}
+              tintColor="#E75480"
+            />
+          }
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "write" && styles.activeTabText
-            ]}
-          >
-            ⭐ Write Review
-          </Text>
-        </TouchableOpacity>
+          {/* Top Image */}
+          <Image
+            source={require("../assets/images/couple 1.png")}
+            style={styles.topImage}
+            resizeMode="contain"
+          />
 
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
-          onPress={() => setActiveTab("my")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "my" && styles.activeTabText
-            ]}
-          >
-            📋 My Reviews
-          </Text>
-        </TouchableOpacity>
-      </View>
+          {/* Tabs */}
+          <View style={styles.tabs}>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === "write" && styles.activeTab]}
+              onPress={() => setActiveTab("write")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "write" && styles.activeTabText,
+                ]}
+              >
+                ⭐ Write Review
+              </Text>
+            </TouchableOpacity>
 
-      {/* ================= WRITE REVIEW ================= */}
-      {activeTab === "write" && (
-        <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.heading}>Share Your Experience</Text>
-
-          <View style={styles.starsRow}>
-            {stars.map((s) => (
-              <TouchableOpacity key={s} onPress={() => setRating(s)}>
-                <Text style={[styles.star, rating >= s && styles.starActive]}>
-                  ★
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === "my" && styles.activeTab]}
+              onPress={() => setActiveTab("my")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "my" && styles.activeTabText,
+                ]}
+              >
+                📋 My Reviews
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Review Title (Optional)"
-            placeholderTextColor="#777"
-            value={title}
-            onChangeText={setTitle}
-          />
+          {/* WRITE REVIEW */}
+          {activeTab === "write" && (
+            <View style={styles.container}>
+              <Text style={styles.heading}>Share Your Experience</Text>
 
-          <TextInput
-            style={styles.textArea}
-            placeholder="Write your experience..."
-            placeholderTextColor="#777"
-            value={comment}
-            onChangeText={setComment}
-            multiline
-          />
-
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={styles.submitText}>
-              {editingId ? "Update Review" : "Submit Review"}
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      )}
-
-      {/* ================= MY REVIEWS ================= */}
-      {activeTab === "my" && (
-        <ScrollView contentContainerStyle={styles.container}>
-          {reviews.length === 0 ? (
-            <Text style={{ textAlign: "center" }}>No reviews yet</Text>
-          ) : (
-            reviews.map((review) => (
-              <View key={review._id} style={styles.reviewCard}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <Text style={{ fontWeight: "bold" }}>
-                    {review.title || "No Title"}
-                  </Text>
-                  <Text
-                    style={{
-                      color: review.isApproved ? "green" : "orange",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {review.isApproved ? "Approved" : "Pending"}
-                  </Text>
-                </View>
-
-                <Text style={{ marginVertical: 4 }}>
-                  {"⭐".repeat(review.rating)}
-                </Text>
-
-                <Text>{review.comment}</Text>
-
-                <View style={{ flexDirection: "row", marginTop: 8 }}>
-                  <TouchableOpacity
-                    style={styles.editBtn}
-                    onPress={() => handleEdit(review)}     // ✅ add
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.editText}>Edit</Text>
+              <View style={styles.starsRow}>
+                {stars.map((s) => (
+                  <TouchableOpacity key={s} onPress={() => setRating(s)}>
+                    <Text style={[styles.star, rating >= s && styles.starActive]}>
+                      ★
+                    </Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.deleteBtn}
-                    onPress={() =>
-                      Alert.alert(
-                        "Delete Review",
-                        "Are you sure you want to delete this review?",
-                        [
-                          { text: "Cancel", style: "cancel" },
-                          { text: "Delete", style: "destructive", onPress: () => handleDelete(review._id) },
-                        ]
-                      )
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.btnText}>Delete</Text>
-                  </TouchableOpacity>
-                </View>
+                ))}
               </View>
-            ))
+
+              <TextInput
+                style={styles.input}
+                placeholder="Review Title (Optional)"
+                placeholderTextColor="#777"
+                value={title}
+                onChangeText={setTitle}
+              />
+
+              <TextInput
+                style={styles.textArea}
+                placeholder="Write your experience..."
+                placeholderTextColor="#777"
+                value={comment}
+                onChangeText={setComment}
+                multiline
+              />
+
+              <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+                <Text style={styles.submitText}>
+                  {editingId ? "Update Review" : "Submit Review"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* MY REVIEWS */}
+          {activeTab === "my" && (
+            <View style={styles.container}>
+              {reviews.length === 0 ? (
+                <Text style={styles.noReviewText}>No reviews yet</Text>
+              ) : (
+                reviews.map((review) => (
+                  <View key={review._id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <Text style={styles.reviewTitle}>
+                        {review.title || "No Title"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color: review.isApproved ? "green" : "orange",
+                          },
+                        ]}
+                      >
+                        {review.isApproved ? "Approved" : "Pending"}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.ratingText}>
+                      {"⭐".repeat(review.rating)}
+                    </Text>
+
+                    <Text style={styles.reviewComment}>{review.comment}</Text>
+
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={styles.editBtn}
+                        onPress={() => handleEdit(review)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.editText}>Edit</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.deleteBtn}
+                        onPress={() =>
+                          Alert.alert(
+                            "Delete Review",
+                            "Are you sure you want to delete this review?",
+                            [
+                              { text: "Cancel", style: "cancel" },
+                              {
+                                text: "Delete",
+                                style: "destructive",
+                                onPress: () => handleDelete(review._id),
+                              },
+                            ]
+                          )
+                        }
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.btnText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
           )}
         </ScrollView>
-      )}
+      </View>
 
+      <Footer />
 
       <AppModal
         visible={modalVisible}
@@ -288,21 +326,33 @@ export default function RateReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9DCE6" },
+  safe: {
+    flex: 1,
+    backgroundColor: "#F9DCE6",
+  },
+
+  contentWrapper: {
+    flex: 1,
+  },
+
+  scrollContainer: {
+    paddingBottom: 110,
+  },
 
   tabs: {
     flexDirection: "row",
     justifyContent: "center",
-    padding: 10,
-    marginTop: 30
+    paddingHorizontal: 10,
+    marginTop: 12,
+    marginBottom: 4,
   },
 
   tabBtn: {
     paddingVertical: 12,
-    paddingHorizontal: 25,
+    paddingHorizontal: 20,
     borderRadius: 10,
     backgroundColor: "#fff",
-    marginHorizontal: 10,
+    marginHorizontal: 8,
   },
 
   activeTab: {
@@ -315,6 +365,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
+  activeTabText: {
+    color: "white",
+  },
+
   container: {
     padding: 18,
   },
@@ -324,6 +378,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
+    color: "#222",
   },
 
   starsRow: {
@@ -334,12 +389,12 @@ const styles = StyleSheet.create({
 
   star: {
     fontSize: 40,
-    color: "#ddd",
-    marginHorizontal: 4,
+    color: "#C0C0C0",
+    marginHorizontal: 5,
   },
 
   starActive: {
-    color: "#FFD700",
+    color: "#FF8C00",
   },
 
   input: {
@@ -355,6 +410,7 @@ const styles = StyleSheet.create({
     padding: 12,
     height: 100,
     marginBottom: 10,
+    textAlignVertical: "top",
   },
 
   submitBtn: {
@@ -362,7 +418,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 10
+    marginTop: 10,
   },
 
   submitText: {
@@ -375,6 +431,35 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     marginBottom: 15,
+  },
+
+  reviewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  reviewTitle: {
+    fontWeight: "bold",
+    color: "#222",
+    flex: 1,
+    marginRight: 10,
+  },
+
+  statusText: {
+    fontWeight: "bold",
+  },
+
+  ratingText: {
+    marginVertical: 4,
+  },
+
+  reviewComment: {
+    color: "#333",
+  },
+
+  actionRow: {
+    flexDirection: "row",
+    marginTop: 8,
   },
 
   editBtn: {
@@ -395,26 +480,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   btnText: {
     fontSize: 13,
     fontWeight: "700",
     color: "#fff",
   },
+
   editText: {
     color: "#333",
     fontWeight: "700",
   },
-  topImage: {
-    width: "100%",
-    height: 150,
-  },
+
   topImage: {
     width: "100%",
     height: 200,
     alignSelf: "center",
     marginTop: 6,
   },
-  activeTabText: {
-    color: "white",
+
+  noReviewText: {
+    textAlign: "center",
+    color: "#333",
+    fontSize: 15,
   },
 });

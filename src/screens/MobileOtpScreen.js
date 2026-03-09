@@ -81,7 +81,7 @@ export default function MobileOtpScreen() {
         });
       }, 1200);
     } catch (error) {
-      showModal("User Registered SuccessFully . Panding For Admin approval .After approval you will be able to Login", "error");
+      showModal("User Registered SuccessFully . Pending For Admin approval .After approval you will be able to Login", "success");
       setOtp("");
       inputRefs.current?.[0]?.focus?.();
     } finally {
