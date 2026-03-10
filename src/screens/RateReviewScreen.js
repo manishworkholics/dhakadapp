@@ -329,6 +329,7 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#F9DCE6",
+    
   },
 
   contentWrapper: {
