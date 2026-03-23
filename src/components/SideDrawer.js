@@ -21,16 +21,13 @@ import { CommonActions } from "@react-navigation/native";
 import { useDrawer } from "../context/DrawerContext";
 import { useProfile } from "../context/ProfileContext";
 
-
-
 const { width: SCREEN_W } = Dimensions.get("window");
-const DRAWER_W = Math.min(307, Math.floor(SCREEN_W * 0.82)); // ✅ small screen responsive
+const DRAWER_W = Math.min(307, Math.floor(SCREEN_W * 0.82));
 
 export default function SideDrawer({ navigation }) {
   const { open, closeDrawer } = useDrawer();
   const { profile, resetProfileState } = useProfile();
 
-  // ✅ slide animation value
   const translateX = useRef(new Animated.Value(-DRAWER_W)).current;
 
   useEffect(() => {
@@ -82,7 +79,6 @@ export default function SideDrawer({ navigation }) {
     }
   };
 
-  // ✅ close with animation then modal hide
   const closeWithAnim = () => {
     Animated.timing(translateX, {
       toValue: -DRAWER_W,
@@ -93,14 +89,28 @@ export default function SideDrawer({ navigation }) {
     });
   };
 
+  const handleProfileAction = () => {
+    closeDrawer();
+    navigation.navigate("Profile");
+  };
+
+  const profileScore = profile?.profileScore || 0;
+  const isProfileComplete = profileScore === 100;
+
   return (
     <Modal visible={open} transparent animationType="none" onRequestClose={closeWithAnim}>
       <View style={styles.root}>
-        {/* ✅ overlay right side click => close */}
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeWithAnim} />
 
-        {/* ✅ sliding drawer */}
-        <Animated.View style={[styles.drawer, { width: DRAWER_W, transform: [{ translateX }] }]}>
+        <Animated.View
+          style={[
+            styles.drawer,
+            {
+              width: DRAWER_W,
+              transform: [{ translateX }],
+            },
+          ]}
+        >
           <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -121,7 +131,7 @@ export default function SideDrawer({ navigation }) {
                   )}
                 </View>
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.username}>{profile?.name || "User"}</Text>
 
                   <View style={styles.useridbox}>
@@ -142,6 +152,36 @@ export default function SideDrawer({ navigation }) {
                 </View>
               </View>
 
+              {/* ✅ COMPLETE PROFILE CARD */}
+              <View style={styles.completeBox}>
+                <Text style={styles.completeTitle}>
+                  {isProfileComplete
+                    ? "Your Profile is Completed"
+                    : "Complete Your Profile"}
+                </Text>
+
+                <View
+                  style={[
+                    styles.progressCircle,
+                    {
+                      borderColor: isProfileComplete ? "green" : "red",
+                    },
+                  ]}
+                >
+                  <Text style={styles.progressText}>{profileScore}%</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={handleProfileAction}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.actionText}>
+                    {isProfileComplete ? "Update Profile" : "Complete Profile"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <DrawerItem icon="home" title="Home" onPress={() => go("Home")} />
               <Divider />
 
@@ -151,9 +191,12 @@ export default function SideDrawer({ navigation }) {
                 onPress={() => go("Profile")}
               />
               <Divider />
-              {/* <DrawerItem icon="download-outline" title="Download and Share Profile" />
-              <Divider /> */}
-              <DrawerItem icon="diamond-outline" title="Upgrade to Premium" onPress={() => go("Premium")} />
+
+              <DrawerItem
+                icon="diamond-outline"
+                title="Upgrade to Premium"
+                onPress={() => go("Premium")}
+              />
 
               <Text style={styles.section}>Discover Your Matches</Text>
               <Divider />
@@ -165,18 +208,57 @@ export default function SideDrawer({ navigation }) {
 
               <Text style={styles.section}>Options & Settings</Text>
               <Divider />
-              <DrawerItem icon="person-add-outline" title="Partner Preferences" onPress={() => go("PartnerPreference")} />
+              <DrawerItem
+                icon="person-add-outline"
+                title="Partner Preferences"
+                onPress={() => go("PartnerPreference")}
+              />
               <Divider />
-              <DrawerItem icon="filter-outline" title="Contact Filters" onPress={() => go("FindPartner")} />
+              <DrawerItem
+                icon="filter-outline"
+                title="Contact Filters"
+                onPress={() => go("FindPartner")}
+              />
               <Divider />
-              <DrawerItem icon="fitness-outline" title="Shorlisted"   onPress={() => go("Shortlist")} />
+              <DrawerItem
+                icon="fitness-outline"
+                title="Shorlisted"
+                onPress={() => go("Shortlist")}
+              />
               <Divider />
-              <DrawerItem icon="notifications-outline" title="Notification"  onPress={() => go("Notification")} />
+              <DrawerItem
+                icon="notifications-outline"
+                title="Notification"
+                onPress={() => go("Notification")}
+              />
               <Divider />
-              <DrawerItem icon="star-outline" title="RateReview" onPress={() => go("RateReview")} />
+              <DrawerItem
+                icon="star-outline"
+                title="RateReview"
+                onPress={() => go("RateReview")}
+              />
               <Divider />
               <DrawerItem icon="logo-buffer" title="Blog" onPress={() => go("Blog")} />
               <Divider />
+<DrawerItem
+  icon="document-text-outline"
+  title="Terms & Conditions"
+  onPress={() => go("TermsAndCondition")}
+/>
+<Divider />
+<DrawerItem
+  icon="information-circle-outline"
+  title="About Us"
+  onPress={() => go("AboutUs")}
+/>
+<Divider />
+<DrawerItem
+  icon="call-outline"
+  title="Contact Us"
+  onPress={() => go("ContactUs")}
+/>
+<Divider />
+              
 
               <TouchableOpacity style={styles.logout} onPress={handleLogout}>
                 <Icon name="log-out-outline" size={18} color="red" />
@@ -193,7 +275,10 @@ export default function SideDrawer({ navigation }) {
 const DrawerItem = ({ icon, title, onPress, highlight }) => (
   <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.8}>
     <Icon name={icon} size={18} color={highlight ? "#f7941d" : "#444"} />
-    <Text style={[styles.itemText, highlight && { color: "#f7941d", fontWeight: "600" }]} numberOfLines={1}>
+    <Text
+      style={[styles.itemText, highlight && { color: "#f7941d", fontWeight: "600" }]}
+      numberOfLines={1}
+    >
       {title}
     </Text>
     <Icon name="chevron-forward" size={16} color="#bbb" />
@@ -207,6 +292,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
   },
+
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
@@ -237,8 +323,9 @@ const styles = StyleSheet.create({
   profileBox: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 14,
   },
+
   avatar: {
     width: 72,
     height: 72,
@@ -249,24 +336,84 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
     overflow: "hidden",
+    backgroundColor: "#fff",
   },
+
   avatarImg: {
     width: 72,
     height: 72,
     borderRadius: 36,
   },
+
   username: {
     fontSize: 16,
     fontWeight: "700",
+    color: "#222",
   },
+
   useridbox: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 2,
+    marginTop: 4,
   },
+
   userid: {
     fontSize: 12,
     color: "#888",
+  },
+
+  /* ✅ COMPLETE PROFILE CARD */
+  completeBox: {
+    backgroundColor: "#F8F8F8",
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+  },
+
+  completeTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#222",
+    textAlign: "center",
+  },
+
+  progressCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 14,
+    backgroundColor: "#fff",
+  },
+
+  progressText: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111",
+  },
+
+  actionBtn: {
+    minWidth: 150,
+    borderWidth: 1,
+    borderColor: "#696969",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  actionText: {
+    color: "#000",
+    fontWeight: "700",
+    fontSize: 13,
   },
 
   section: {
@@ -282,12 +429,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
   },
+
   itemText: {
     flex: 1,
     marginLeft: 12,
     fontSize: 14,
     color: "#333",
   },
+
   divider: {
     height: 1,
     backgroundColor: "#eee",
@@ -298,10 +447,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
   },
+
   logoutText: {
     marginLeft: 10,
     color: "red",
     fontWeight: "800",
-    fontSize:15
+    fontSize: 15,
   },
 });

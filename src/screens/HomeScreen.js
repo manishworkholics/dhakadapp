@@ -237,7 +237,7 @@ export default function HomeScreen() {
           </View>
 
           {/* 🔴 COMPLETE PROFILE */}
-          <View style={styles.completeBox}>
+          {/* <View style={styles.completeBox}>
             <Text style={styles.completeTitle}>
               {profile?.profileScore === 100
                 ? "Your Profile is Completed"
@@ -275,7 +275,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               )}
             </View>
-          </View>
+          </View> */}
 
 
           {/* ================= Premium Matches ================= */}
@@ -604,6 +604,7 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: "center",
     alignItems: "center",
+    
   },
 
   darkOverlay: {

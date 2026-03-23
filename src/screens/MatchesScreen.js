@@ -404,9 +404,9 @@ export default function MatchesScreen() {
   );
 }
 
-const HEADER_HEIGHT = 56;
+const HEADER_HEIGHT = 90;
 const FOOTER_HEIGHT = 65;
-const CARD_MARGIN = 70;
+const CARD_MARGIN = 90;
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
@@ -414,14 +414,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
     paddingBottom: 80, // footer height + safe gap
+    
   },
 
   imageWrap: {
     width: "100%",
-    height: 420,
+    height: 320,
     backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
+    
   },
 
   blurBg: {
@@ -429,6 +431,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+    
   },
 
   mainImage: {
@@ -559,7 +562,8 @@ const styles = StyleSheet.create({
   bottomActions: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 2,
+    
   },
 
   skipBtn: {
@@ -567,7 +571,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     paddingVertical: 12,
-    borderRadius: 24,
+    borderRadius: 15,
     alignItems: "center",
     marginHorizontal: 4,
   },
@@ -581,8 +585,9 @@ const styles = StyleSheet.create({
     margin: 16,
     backgroundColor: "#e86a00",
     paddingVertical: 14,
-    borderRadius: 28,
+    borderRadius: 15,
     alignItems: "center",
+    marginTop:10
   },
 
   interestText: {

@@ -1,55 +1,56 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 /* 🔹 CONTEXT */
-import { DrawerProvider } from "./src/context/DrawerContext";
-import { ProfileProvider } from "./src/context/ProfileContext";
+import { DrawerProvider } from './src/context/DrawerContext';
+import { ProfileProvider } from './src/context/ProfileContext';
 
-import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { socket } from "./src/socket";
-
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { socket } from './src/socket';
 
 
 /* 🔹 SCREENS */
-import SplashScreen from "./src/screens/SplashScreen";
-import WelcomeScreen from "./src/screens/WelcomeScreen";
-import LoginScreen from "./src/screens/LoginScreen";
-import RegisterScreen from "./src/screens/RegisterScreen";
-import OtpScreen from "./src/screens/OtpScreen";
-import MobileOtpScreen from "./src/screens/MobileOtpScreen";
-import EmailOtpScreen from "./src/screens/EmailOtpScreen";
-import HomeScreen from "./src/screens/HomeScreen";
-import ProfileScreen from "./src/screens/ProfileScreen";
-import MatchesScreen from "./src/screens/MatchesScreen";
-import InterestScreen from "./src/screens/InterestScreen";
-import ChatScreen from "./src/screens/ChatScreen";
-import ShortlistScreen from "./src/screens/ShortlistScreen";
-import NotificationScreen from "./src/screens/NotificationScreen";
-import PartnerPreferenceScreen from "./src/screens/PartnerPreferenceScreen";
-import PlanScreen from "./src/screens/PlanScreen";
-import ProfileDetailScreen from "./src/screens/ProfileDetailScreen";
-import FindPartnerScreen from "./src/screens/FindPartnerScreen";
-import ChatDetailScreen from "./src/screens/ChatDetailScreen";
-import CreateProfileScreen from "./src/screens/CreateProfile/CreateProfileScreen";
-import PremiumScreen from "./src/screens/PremiumScreen";
-import DetailSuccessStory from "./src/screens/DetailSuccessStory";
-import ForgotPassword from "./src/screens/ForgotPasswordScreen"
+import SplashScreen from './src/screens/SplashScreen';
+import WelcomeScreen from './src/screens/WelcomeScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
+import OtpScreen from './src/screens/OtpScreen';
+import MobileOtpScreen from './src/screens/MobileOtpScreen';
+import EmailOtpScreen from './src/screens/EmailOtpScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import MatchesScreen from './src/screens/MatchesScreen';
+import InterestScreen from './src/screens/InterestScreen';
+import ChatScreen from './src/screens/ChatScreen';
+import ShortlistScreen from './src/screens/ShortlistScreen';
+import NotificationScreen from './src/screens/NotificationScreen';
+import PartnerPreferenceScreen from './src/screens/PartnerPreferenceScreen';
+import PlanScreen from './src/screens/PlanScreen';
+import ProfileDetailScreen from './src/screens/ProfileDetailScreen';
+import FindPartnerScreen from './src/screens/FindPartnerScreen';
+import ChatDetailScreen from './src/screens/ChatDetailScreen';
+import CreateProfileScreen from './src/screens/CreateProfile/CreateProfileScreen';
+import PremiumScreen from './src/screens/PremiumScreen';
+import DetailSuccessStory from './src/screens/DetailSuccessStory';
+import ForgotPassword from './src/screens/ForgotPasswordScreen';
 import VerifyForgotOtp from './src/screens/VerifyForgotOtpScreen';
 import ResetPassword from './src/screens/ResetPasswordScreen';
-import RateReviewScreen from "./src/screens/RateReviewScreen";
-import BlogScreen from "./src/screens/BlogScreen";
-import BlogDetailsScreen from "./src/screens/BlogDetailsScreen";
+import RateReviewScreen from './src/screens/RateReviewScreen';
+import BlogScreen from './src/screens/BlogScreen';
+import BlogDetailsScreen from './src/screens/BlogDetailsScreen';
+import TermsAndConditionScreen from './src/screens/TermsAndConditionScreen';
+import AboutUsScreen from './src/screens/AboutUsScreen';
+import ContactUsScreen from './src/screens/ContactUsScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const loadUser = async () => {
-      const userStr = await AsyncStorage.getItem("user");
+      const userStr = await AsyncStorage.getItem('user');
       if (!userStr) return;
 
       const user = JSON.parse(userStr);
@@ -64,13 +65,13 @@ export default function App() {
 
     socket.connect();
 
-    socket.on("connect", () => {
-      console.log("SOCKET CONNECTED");
-      socket.emit("join", userId);
-      console.log("JOINED USER ROOM:", userId);
+    socket.on('connect', () => {
+      console.log('SOCKET CONNECTED');
+      socket.emit('join', userId);
+      console.log('JOINED USER ROOM:', userId);
     });
 
-    return () => socket.off("connect");
+    return () => socket.off('connect');
   }, [userId]);
 
   return (
@@ -93,9 +94,18 @@ export default function App() {
             <Stack.Screen name="Shortlist" component={ShortlistScreen} />
             <Stack.Screen name="Notification" component={NotificationScreen} />
             <Stack.Screen name="Plan" component={PlanScreen} />
-            <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
-            <Stack.Screen name="PartnerPreference" component={PartnerPreferenceScreen} />
-            <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+            <Stack.Screen
+              name="ProfileDetail"
+              component={ProfileDetailScreen}
+            />
+            <Stack.Screen
+              name="PartnerPreference"
+              component={PartnerPreferenceScreen}
+            />
+            <Stack.Screen
+              name="CreateProfile"
+              component={CreateProfileScreen}
+            />
             <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
             <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
             <Stack.Screen name="Premium" component={PremiumScreen} />
@@ -106,10 +116,12 @@ export default function App() {
             <Stack.Screen name="RateReview" component={RateReviewScreen} />
             <Stack.Screen name="Blog" component={BlogScreen} />
             <Stack.Screen name="BlogDetails" component={BlogDetailsScreen} />
+            <Stack.Screen name="TermsAndCondition" component={TermsAndConditionScreen} />
+            <Stack.Screen name="AboutUs" component={AboutUsScreen} />
+            <Stack.Screen name="ContactUs" component={ContactUsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </ProfileProvider>
     </DrawerProvider>
   );
 }
-
