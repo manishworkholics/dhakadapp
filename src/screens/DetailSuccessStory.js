@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-    marginTop:55
+    
   },
 
   center: {
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
 
   topBar: {
-    height: 58,
+    height: 110,
     backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: "center",
     alignItems: "center",
+    marginTop:50
   },
 
   topTitle: {
@@ -158,6 +159,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111",
     marginLeft: 8,
+    marginTop:50
   },
 
   scrollContent: {
