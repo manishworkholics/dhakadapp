@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import Footer from "../components/Footer";
+// import Footer from "../components/Footer";
 
 export default function TermsAndConditionScreen() {
   const navigation = useNavigation();
@@ -46,6 +46,7 @@ export default function TermsAndConditionScreen() {
     },
   ];
 
+  
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#F6F2FA" />
@@ -95,7 +96,7 @@ export default function TermsAndConditionScreen() {
           <View style={{ height: 20 }} />
         </ScrollView>
       </View>
-      <Footer/>
+      {/* <Footer/> */}
     </SafeAreaView>
   );
 }
@@ -144,12 +145,13 @@ const styles = StyleSheet.create({
   },
 
   topBanner: {
-    height: 76,
+    height: 60,
     backgroundColor: "#6D2606",
-    borderRadius: 14,
+    borderRadius: 1,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
+    
   },
 
   topBannerText: {
@@ -186,7 +188,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1F2937",
+    color: "#FF8C00",
     marginBottom: 8,
   },
 

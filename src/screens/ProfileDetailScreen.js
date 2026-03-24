@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import AppModal from "../components/AppModal";
-import Header from "../components/Header";
+// import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useProfile } from "../context/ProfileContext";
 
@@ -283,8 +283,21 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
 
   return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header title={profile.name} onMenuPress={() => navigation.goBack()} />
+    <SafeAreaView edges={["left", "right", "bottom", "top"]} style={{ flex: 1, backgroundColor: "#fff" }}>
+      {/* <Header title={profile.name} onMenuPress={() => navigation.goBack()} /> */}
+            <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
+        >
+          <Icon name="arrow-back" size={24} color="#111" />
+        </TouchableOpacity>
+
+        <Text style={styles.topTitle}>ProfileDetail</Text>
+
+        <View style={{ width: 32 }} />
+      </View>
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 220 }}
@@ -805,5 +818,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+  },
+    topBar: {
+    height: 58,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+
+  backBtn: {
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  topTitle: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111",
+    marginLeft: 8,
   },
 });

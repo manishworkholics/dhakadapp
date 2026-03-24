@@ -101,15 +101,25 @@ export default function AboutUsScreen() {
               <View style={styles.infoCard}>
                 <Text style={styles.infoTitle}>Our Mission</Text>
                 <Text style={styles.infoText}>
-                  To provide a trusted and meaningful matrimonial platform for
-                  the Dhakad community.
+            Our vision is to become the most trusted and respected matrimony platform for the Dhakad
+            community. We aim to create meaningful, lifelong relationships by preserving cultural values while
+            embracing modern technology. Dhakad Matrimony envisions a future where every individual finds a 
+            compatible life partner with dignity, transparency, and trust. We strive to strengthen family bonds,
+            promote genuine connections, and make the journey of marriage simple, safe, and joyful for everyone.
                 </Text>
               </View>
 
               <View style={styles.infoCard}>
                 <Text style={styles.infoTitle}>Our Vision</Text>
                 <Text style={styles.infoText}>
-                  To become the most reliable and respected matrimony platform
+                Our mission is to provide a safe, reliable, 
+                and community-focused matrimony platform for the Dhakad community.
+                We are committed to helping individuals and families find suitable life partners 
+                through genuine profiles, transparent processes, and respectful matchmaking. 
+                Matrimony strives to blend traditional values with modern technology, making
+                the search for a life partner easy, trustworthy, and meaningful. We aim to 
+                support our members at every step, ensuring a positive and fulfilling matchmaking 
+                experience. To become the most reliable and respected matrimony platform
                   for genuine and successful matches.
                 </Text>
               </View>
@@ -163,7 +173,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 0,
     paddingBottom: 24,
   },
 
@@ -174,7 +184,7 @@ const styles = StyleSheet.create({
   },
 
   topBanner: {
-    height: 78,
+    height: 60,
     backgroundColor: "#6D2606",
     justifyContent: "center",
     alignItems: "center",
@@ -183,13 +193,13 @@ const styles = StyleSheet.create({
   topBannerText: {
     color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: "500",
+    fontWeight: "700",
     textAlign: "center",
   },
 
   imageSection: {
     backgroundColor: "#F8F6F3",
-    paddingTop: 42,
+    
     paddingBottom: 18,
     alignItems: "center",
     justifyContent: "center",
@@ -208,8 +218,8 @@ const styles = StyleSheet.create({
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,
-    borderWidth: 6,
-    borderColor: "#D4AF37",
+    borderWidth: 5,
+    borderColor: "#A52A2A",
     position: "absolute",
     backgroundColor: "#ddd",
   },
@@ -234,6 +244,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#1B2A3A",
     marginBottom: 2,
+    marginTop:-19
   },
 
   brandText: {
@@ -251,7 +262,7 @@ const styles = StyleSheet.create({
   },
 
   infoCard: {
-    marginTop: 14,
+    marginTop: 10,
     backgroundColor: "#FFF",
     borderRadius: 14,
     padding: 14,

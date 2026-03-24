@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import Footer from "../components/Footer";
+// import Footer from "../components/Footer";
 
 const { width } = Dimensions.get("window");
 const isSmallDevice = width < 768;
@@ -164,7 +164,7 @@ export default function ContactUsScreen() {
           <View style={{ height: 20 }} />
         </ScrollView>
       </View>
-       <Footer />
+       {/* <Footer /> */}
     </SafeAreaView>
   );
 }
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
 
   topBanner: {
-    height: 76,
+    height: 60,
     backgroundColor: "#6D2606",
     justifyContent: "center",
     alignItems: "center",
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   topBannerText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "500",
+    fontWeight: "700",
   },
 
   pageTitle: {
@@ -293,14 +293,14 @@ const styles = StyleSheet.create({
     flexDirection: isSmallDevice ? "column" : "row",
     justifyContent: "space-between",
     marginBottom: 14,
-    gap: 14,
+    gap: 12,
   },
 
   input: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#D9DDE3",
-    borderRadius: 6,
+    borderRadius: 12,
     paddingHorizontal: 14,
     fontSize: 15,
     color: "#111827",
@@ -312,13 +312,13 @@ const styles = StyleSheet.create({
   },
 
   messageBox: {
-    height: 160,
+    height: 140,
     paddingTop: 14,
     marginBottom: 16,
   },
 
   sendBtn: {
-    height: 56,
+    height: 50,
     backgroundColor: "#D4AF37",
     borderRadius: 6,
     justifyContent: "center",
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
 
   sendBtnText: {
     color: "#fff",
-    fontSize: 20,
-    fontWeight: "800",
+    fontSize: 18,
+    fontWeight: "700",
   },
 });

@@ -8,8 +8,9 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ImageBackground,
+  StatusBar,
 } from "react-native";
-import Header from "../components/Header";
+import Icon from "react-native-vector-icons/Ionicons";
 import Footer from "../components/Footer";
 import axios from "axios";
 
@@ -53,10 +54,28 @@ export default function DetailSuccessStory({ route, navigation }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <Header title="Success Story" onBack={() => navigation.goBack()} />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      {/* Custom Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
+        >
+          <Icon name="arrow-back" size={24} color="#111" />
+        </TouchableOpacity>
+
+        <Text style={styles.topTitle}>DetailSuccess Story</Text>
+
+        <View style={{ width: 32 }} />
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* ===== HERO IMAGE WITH BLUR BACKGROUND ===== */}
         <ImageBackground
           source={{ uri: story.image }}
@@ -89,14 +108,11 @@ export default function DetailSuccessStory({ route, navigation }) {
           <TouchableOpacity
             style={styles.ctaBtn}
             onPress={() => navigation.navigate("Register")}
+            activeOpacity={0.85}
           >
-            <Text style={styles.ctaText}>
-              Start Your Success Story ❤️
-            </Text>
+            <Text style={styles.ctaText}>Start Your Success Story ❤️</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
 
       <Footer />
@@ -105,13 +121,50 @@ export default function DetailSuccessStory({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    marginTop:55
+  },
+
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
 
-  /* IMAGE SECTION */
+  topBar: {
+    height: 58,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+
+  backBtn: {
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  topTitle: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111",
+    marginLeft: 8,
+  },
+
+  scrollContent: {
+    paddingBottom: 110,
+  },
+
+  /* IMAGE SECTION - SAME DESIGN */
   imageWrapper: {
     width: "100%",
     height: 340,
@@ -120,14 +173,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
 
-heroImage: {
-  width: "98%",   
-  height: "95%",
-  borderRadius: 14,
-},
+  heroImage: {
+    width: "98%",
+    height: "95%",
+    borderRadius: 14,
+  },
 
-
-  
   card: {
     backgroundColor: "#fff",
     marginHorizontal: 14,
@@ -141,6 +192,7 @@ heroImage: {
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 6,
+    color: "#111827",
   },
 
   couple: {
