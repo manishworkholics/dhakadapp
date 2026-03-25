@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
 
   topBar: {
-    height: 110,
+    height: 80,
     backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: "center",
     alignItems: "center",
-    marginTop:50
+    marginTop:30
   },
 
   topTitle: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111",
     marginLeft: 8,
-    marginTop:50
+    marginTop:30
   },
 
   scrollContent: {

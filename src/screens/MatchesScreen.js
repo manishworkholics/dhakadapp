@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,32 +9,28 @@ import {
   TouchableOpacity,
   Animated,
   PanResponder,
-} from "react-native";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import AppModal from "../components/AppModal";
+} from 'react-native';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import AppModal from '../components/AppModal';
 
-
-const { width } = Dimensions.get("window");
-const API_URL = "http://143.110.244.163:5000/api";
+const { width } = Dimensions.get('window');
+const API_URL = 'http://143.110.244.163:5000/api';
 const SWIPE_THRESHOLD = 120;
 
 export default function MatchesScreen() {
-
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
-  const [modalType, setModalType] = useState("success");
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState('success');
 
-  const showModal = (msg, type = "success") => {
+  const showModal = (msg, type = 'success') => {
     setModalMessage(msg);
     setModalType(type);
     setModalVisible(true);
   };
-
-
 
   const navigation = useNavigation();
   const [isShortlisted, setIsShortlisted] = useState(false);
@@ -43,7 +39,6 @@ export default function MatchesScreen() {
   const [interestSent, setInterestSent] = useState(false);
   const [interestStatus, setInterestStatus] = useState(null);
   const [checkingInterest, setCheckingInterest] = useState(false);
-
 
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +54,7 @@ export default function MatchesScreen() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
+        const token = await AsyncStorage.getItem('token');
         const res = await axios.get(`${API_URL}/matches/new-matches`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -74,8 +69,8 @@ export default function MatchesScreen() {
   }, []);
 
   /* ================= AGE ================= */
-  const calculateAge = (dob) => {
-    if (!dob) return "-";
+  const calculateAge = dob => {
+    if (!dob) return '-';
     const birth = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
@@ -90,38 +85,34 @@ export default function MatchesScreen() {
   };
 
   /* ================= SEND INTEREST ================= */
-  const sendInterest = async (userId) => {
+  const sendInterest = async userId => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
 
       const res = await axios.post(
         `${API_URL}/interest/request/send`,
         { receiverId: userId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (res.data.success) {
         setInterestSent(true);
-        setInterestStatus("pending");
-        showModal("Interest sent successfully ❤️", "success");
-
+        setInterestStatus('pending');
+        showModal('Interest sent successfully ❤️', 'success');
       }
     } catch (error) {
       const apiMsg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
-        "Failed to send interest";
+        'Failed to send interest';
 
-      showModal(apiMsg, "error");
-
+      showModal(apiMsg, 'error');
     }
   };
 
-
-
-  const checkShortlistStatus = async (profileId) => {
+  const checkShortlistStatus = async profileId => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
 
       const res = await axios.get(`${API_URL}/shortlist`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -129,53 +120,48 @@ export default function MatchesScreen() {
 
       if (res.data.success) {
         const exists = res.data.shortlist.some(
-          (item) => item.profile?._id === profileId
+          item => item.profile?._id === profileId,
         );
         setIsShortlisted(exists);
       }
     } catch (error) {
-      console.log("Shortlist status error:", error.message);
+      console.log('Shortlist status error:', error.message);
     }
   };
 
   const toggleShortlist = async () => {
     try {
       setCheckingShortlist(true);
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
 
       const res = await axios({
         url: `${API_URL}/shortlist/${profile._id}`,
-        method: isShortlisted ? "DELETE" : "POST",
+        method: isShortlisted ? 'DELETE' : 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.data.success) {
         setIsShortlisted(!isShortlisted);
         showModal(
-          isShortlisted
-            ? "Removed from shortlist"
-            : "Added to shortlist",
-          "success"
+          isShortlisted ? 'Removed from shortlist' : 'Added to shortlist',
+          'success',
         );
-
       }
     } catch (error) {
       const apiMsg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
-        "Something went wrong";
+        'Something went wrong';
 
-      showModal(apiMsg, "error");
-
+      showModal(apiMsg, 'error');
     } finally {
       setCheckingShortlist(false);
     }
   };
 
-
-  const checkInterestStatus = async (targetUserId) => {
+  const checkInterestStatus = async targetUserId => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
 
       const res = await axios.get(`${API_URL}/interest/request/sent`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -183,7 +169,7 @@ export default function MatchesScreen() {
 
       if (res.data.success) {
         const found = res.data.requests.find(
-          (req) => req.receiver?._id === targetUserId
+          req => req.receiver?._id === targetUserId,
         );
 
         if (found) {
@@ -195,10 +181,9 @@ export default function MatchesScreen() {
         }
       }
     } catch (error) {
-      console.log("Interest status error:", error.message);
+      console.log('Interest status error:', error.message);
     }
   };
-
 
   useEffect(() => {
     const currentProfile = profiles[currentIndex];
@@ -210,10 +195,8 @@ export default function MatchesScreen() {
     }
   }, [currentIndex, profiles]);
 
-
-
   /* ================= SWIPE HANDLER ================= */
-  const forceSwipe = (direction) => {
+  const forceSwipe = direction => {
     Animated.timing(position.current, {
       toValue: { x: direction * width, y: 0 },
       duration: 250,
@@ -221,10 +204,10 @@ export default function MatchesScreen() {
     }).start(() => onSwipeComplete(direction));
   };
 
-  const onSwipeComplete = (direction) => {
+  const onSwipeComplete = direction => {
     const profile = profiles[currentIndex];
     position.current.setValue({ x: 0, y: 0 });
-    setCurrentIndex((prev) => prev + 1);
+    setCurrentIndex(prev => prev + 1);
 
     if (direction === 1 && profile?.userId) {
       sendInterest(profile.userId);
@@ -252,7 +235,7 @@ export default function MatchesScreen() {
 
   const rotate = position.current.x.interpolate({
     inputRange: [-width, 0, width],
-    outputRange: ["-10deg", "0deg", "10deg"],
+    outputRange: ['-10deg', '0deg', '10deg'],
   });
 
   const animatedStyle = {
@@ -286,7 +269,7 @@ export default function MatchesScreen() {
         style={[styles.card, animatedStyle]}
       >
         {/* IMAGE */}
-        <View style={styles.imageWrap}  >
+        <View style={styles.imageWrap}>
           {/* BLUR BACKGROUND */}
           <Image
             source={{ uri: profile.photos?.[0] }}
@@ -302,7 +285,6 @@ export default function MatchesScreen() {
           />
         </View>
 
-
         {/* TOP BAR */}
         <View style={styles.topBar}>
           <Text style={styles.viewedText}></Text>
@@ -311,13 +293,17 @@ export default function MatchesScreen() {
             <TouchableOpacity
               style={[
                 styles.shortlistPill,
-                { backgroundColor: isShortlisted ? "#4caf50" : "rgba(0,0,0,0.6)" },
+                {
+                  backgroundColor: isShortlisted
+                    ? '#4caf50'
+                    : 'rgba(0,0,0,0.6)',
+                },
               ]}
               onPress={toggleShortlist}
               disabled={checkingShortlist}
             >
               <Text style={styles.shortlistText}>
-                {isShortlisted ? "Shortlisted" : "Shortlist"}
+                {isShortlisted ? 'Shortlisted' : 'Shortlist'}
               </Text>
             </TouchableOpacity>
 
@@ -334,61 +320,50 @@ export default function MatchesScreen() {
         <View style={styles.detailsCard}>
           <View style={styles.verifiedRow}>
             <Text style={styles.verified}>✔ Verified</Text>
-            <Text style={styles.viewedDate}>
-              She viewed you on 29 Nov 25
-            </Text>
+            <Text style={styles.viewedDate}>She viewed you on 29 Nov 25</Text>
           </View>
 
-          <Text style={styles.name}>
-            {profile.name}
-          </Text>
+          <Text style={styles.name}>{profile.name}</Text>
+
+          <Text style={styles.meta}>{calculateAge(profile.dob)} yrs</Text>
 
           <Text style={styles.meta}>
-
-            {calculateAge(profile.dob)} yrs
-          </Text>
-
-          <Text style={styles.meta}>
-            {profile.height} • {profile.caste} •{" "}
-            {profile.educationDetails} • {profile.occupation} •{" "}
-            {profile.annualIncome} • {profile.location}
+            {profile.height} • {profile.caste} • {profile.educationDetails} •{' '}
+            {profile.occupation} • {profile.annualIncome} • {profile.location}
           </Text>
         </View>
 
         {/* ACTION BUTTONS */}
         <View style={styles.bottomActions}>
-          <TouchableOpacity style={styles.skipBtn} onPress={() =>
-            navigation.navigate("ProfileDetail", { id: profile._id })
-          }>
+          <TouchableOpacity
+            style={styles.skipBtn}
+            onPress={() =>
+              navigation.navigate('ProfileDetail', { id: profile._id })
+            }
+          >
             <Text style={styles.skipText}> Show Detail </Text>
           </TouchableOpacity>
-
-
         </View>
 
         <TouchableOpacity
           style={[
             styles.interestBtn,
-            interestSent && { backgroundColor: "#aaa" },
+            interestSent && { backgroundColor: '#aaa' },
           ]}
           disabled={interestSent}
           onPress={() => sendInterest(profile.userId)}
         >
           <Text style={styles.interestText}>
             {interestSent
-              ? interestStatus === "accepted"
-                ? "✅ Accepted"
-                : interestStatus === "rejected"
-                  ? "❌ Rejected"
-                  : "⏳ Pending"
-              : "❤️ Send Interest"}
+              ? interestStatus === 'accepted'
+                ? '✅ Accepted'
+                : interestStatus === 'rejected'
+                ? '❌ Rejected'
+                : '⏳ Pending'
+              : '❤️ Send Interest'}
           </Text>
         </TouchableOpacity>
-
-
-
       </Animated.View>
-
 
       <Footer />
 
@@ -398,106 +373,95 @@ export default function MatchesScreen() {
         type={modalType}
         onClose={() => setModalVisible(false)}
       />
-
-
     </View>
   );
 }
 
-const HEADER_HEIGHT = 90;
+const HEADER_HEIGHT = 80;
 const FOOTER_HEIGHT = 65;
-const CARD_MARGIN = 90;
+const CARD_MARGIN = 50;
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingBottom: 80, // footer height + safe gap
-    
+    backgroundColor: '#f5f5f5',
+    paddingBottom: 80, // footer height + safe
   },
 
   imageWrap: {
-    width: "100%",
-    height: 320,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-    
+    width: '100%',
+    height: 220,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   blurBg: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-    
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 
   mainImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "contain",
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
-
-
 
   loader: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-
 
   card: {
     width: width - 30,
     height:
-      Dimensions.get("window").height -
+      Dimensions.get('window').height -
       HEADER_HEIGHT -
       FOOTER_HEIGHT -
       CARD_MARGIN,
-    alignSelf: "center",
-    backgroundColor: "#fff",
+    alignSelf: 'center',
+    backgroundColor: '#fff',
     borderRadius: 24,
     marginTop: 20,
-    elevation: 6,
-    overflow: "hidden",
+    elevation: 4,
+    overflow: 'hidden',
   },
 
-
-
   image: {
-    width: "100%",
+    width: '100%',
     height: 420,
   },
 
   /* TOP BAR */
   topBar: {
-    position: "absolute",
+    position: 'absolute',
     top: 12,
     left: 12,
     right: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     zIndex: 10,
     elevation: 10,
   },
 
   viewedText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 
   topRight: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   shortlistPill: {
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: 'rgba(0,0,0,0.6)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -505,94 +469,93 @@ const styles = StyleSheet.create({
   },
 
   shortlistText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 13,
   },
 
   menu: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 20,
   },
 
   slideCount: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 280,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
 
   slideText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 14,
   },
 
   detailsCard: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     padding: 16,
   },
 
   verifiedRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 6,
   },
 
   verified: {
-    color: "#2e7d32",
-    fontWeight: "700",
+    color: '#2e7d32',
+    fontWeight: '700',
     marginRight: 10,
   },
 
   viewedDate: {
-    color: "#777",
+    color: '#777',
     fontSize: 13,
   },
 
   detailsName: {
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: '700',
     marginBottom: 4,
   },
 
   meta: {
-    color: "#555",
+    color: '#555',
     fontSize: 14,
     marginBottom: 2,
   },
 
   bottomActions: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingTop: 2,
-    
   },
 
   skipBtn: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ccc",
-    paddingVertical: 12,
+    borderColor: '#ccc',
+    paddingVertical: 10,
     borderRadius: 15,
-    alignItems: "center",
+    alignItems: 'center',
     marginHorizontal: 4,
   },
 
   skipText: {
-    color: "#555",
-    fontWeight: "600",
+    color: '#555',
+    fontWeight: '600',
   },
 
   interestBtn: {
     margin: 16,
-    backgroundColor: "#e86a00",
-    paddingVertical: 14,
+    backgroundColor: '#e86a00',
+    paddingVertical: 12,
     borderRadius: 15,
-    alignItems: "center",
-    marginTop:10
+    alignItems: 'center',
+    marginTop: 10,
   },
 
   interestText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

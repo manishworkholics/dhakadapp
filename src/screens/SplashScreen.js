@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SplashScreen() {
   const navigation = useNavigation();
@@ -37,22 +38,42 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    const timer = setTimeout(() => {
-      navigation.replace("Welcome");
-    }, 2500);
+    const checkLoginStatus = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
 
-    return () => clearTimeout(timer);
-  }, []);
+        setTimeout(() => {
+          if (token) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Home" }],
+            });
+          } else {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Welcome" }],
+            });
+          }
+        }, 3000);
+      } catch (error) {
+        console.log("Splash error:", error);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Welcome" }],
+        });
+      }
+    };
+
+    checkLoginStatus();
+  }, [navigation, scaleAnim, fadeAnim, textAnim]);
 
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#ff4e50" barStyle="light-content" />
 
-      {/* Top Highlight */}
       <View style={styles.topGlow} />
       <View style={styles.bottomGlow} />
 
-      {/* Logo Section */}
       <Animated.View
         style={[
           styles.logoWrapper,
@@ -68,7 +89,6 @@ export default function SplashScreen() {
         />
       </Animated.View>
 
-      {/* Text Section */}
       <Animated.View
         style={{
           marginTop: 26,
@@ -83,7 +103,6 @@ export default function SplashScreen() {
         </Text>
       </Animated.View>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
           Trusted • Verified • Premium Matches
