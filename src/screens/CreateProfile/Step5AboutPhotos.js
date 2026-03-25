@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   View,
@@ -22,6 +21,23 @@ import Icon from "react-native-vector-icons/Ionicons";
 export default function Step5AboutPhotos({ profile, setProfile, submit, onBack }) {
   const [uploading, setUploading] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState(null);
+
+  // ✅ only dropdown states added
+  const [showFamilyStatusDropdown, setShowFamilyStatusDropdown] = React.useState(false);
+  const [showDietDropdown, setShowDietDropdown] = React.useState(false);
+
+  const familyStatusOptions = [
+    "Middle class",
+    "Upper middle class",
+    "Rich / Affluent (Elite)",
+  ];
+
+  const dietOptions = [
+    "Veg",
+    "Nonveg",
+    "Vegan",
+    "Occasionally Non-Veg",
+  ];
 
   /* ================= UPLOAD IMAGE (SAME) ================= */
   const uploadImage = async (imageUri) => {
@@ -81,108 +97,206 @@ export default function Step5AboutPhotos({ profile, setProfile, submit, onBack }
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Additional Details</Text>
-        </View>
-
-        {/* CONTENT */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+        <TouchableOpacity
+          activeOpacity={1}
+          style={{ flex: 1 }}
+          onPress={() => {
+            setShowFamilyStatusDropdown(false);
+            setShowDietDropdown(false);
+          }}
         >
-          {/* FAMILY STATUS */}
-          <Text style={styles.label}>Family Status</Text>
-          <View style={styles.row}>
-            {["Middle class", "Upper middle class", "Rich / Affluent (Elite)"].map((v) => (
-              <TouchableOpacity
-                key={v}
-                style={[styles.chip, profile.familyStatus === v && styles.chipActive]}
-                onPress={() => setProfile({ ...profile, familyStatus: v })}
-                activeOpacity={0.9}
-              >
-                <Text style={[styles.chipText, profile.familyStatus === v && styles.chipTextActive]}>
-                  {v}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          {/* HEADER */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Additional Details</Text>
           </View>
 
-          {/* DIET */}
-          <Text style={styles.label}>Diet</Text>
-          <View style={styles.row}>
-            {["Veg", "Nonveg", "Vegan", "Occasionally Non-Veg"].map((v) => (
-              <TouchableOpacity
-                key={v}
-                style={[styles.chip, profile.diet === v && styles.chipActive]}
-                onPress={() => setProfile({ ...profile, diet: v })}
-                activeOpacity={0.9}
-              >
-                <Text style={[styles.chipText, profile.diet === v && styles.chipTextActive]}>
-                  {v}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* ABOUT */}
-          <Text style={styles.label}>About</Text>
-          <TextInput
-            style={[styles.input, styles.textAreaLg]}
-            placeholder="A few words about yourself"
-            multiline
-            value={profile.aboutYourself}
-            placeholderTextColor="#777"
-            onChangeText={(t) => setProfile({ ...profile, aboutYourself: t })}
-          />
-
-          {/* HOBBIES */}
-          <Text style={styles.label}>Hobbies</Text>
-          <TextInput
-            style={[styles.input, styles.textAreaSm]}
-            placeholder="Hobbies (e.g. music, travel, fitness)"
-            multiline
-            value={profile.hobbies}
-            placeholderTextColor="#777"
-            onChangeText={(t) => setProfile({ ...profile, hobbies: t })}
-          />
-
-          {/* PHOTO PREVIEW */}
-          <Text style={styles.label}>Profile Photo</Text>
-          <View style={styles.photoRow}>
-            {profile.photos.length > 0 ? (
-              <TouchableOpacity onPress={() => setPreviewImage(profile.photos[0])} activeOpacity={0.9}>
-                <Image source={{ uri: profile.photos[0] }} style={styles.photo} />
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.emptyPhoto}>
-                <Icon name="image-outline" size={28} color="#888" />
-                <Text style={styles.emptyPhotoText}>No photo selected</Text>
-              </View>
-            )}
-          </View>
-
-          {/* PHOTO BUTTON */}
-          <TouchableOpacity
-            style={[styles.photoBtn, uploading && { opacity: 0.7 }]}
-            onPress={pickImage}
-            disabled={uploading}
-            activeOpacity={0.9}
+          {/* CONTENT */}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
           >
-            {uploading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.photoBtnText}>
-                {profile.photos.length ? "Change Profile Photo" : "Select Profile Photo"}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
+            {/* FAMILY STATUS */}
+            <Text style={styles.label}>Family Status</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  setShowDietDropdown(false);
+                  setShowFamilyStatusDropdown(!showFamilyStatusDropdown);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownHeaderText,
+                    !profile.familyStatus && styles.dropdownPlaceholder,
+                  ]}
+                >
+                  {profile.familyStatus || "Select"}
+                </Text>
+                <Icon
+                  name={showFamilyStatusDropdown ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#555"
+                />
+              </TouchableOpacity>
+
+              {showFamilyStatusDropdown && (
+                <View style={styles.dropdownList}>
+                  {familyStatusOptions.map((v, index) => {
+                    const isSelected = profile.familyStatus === v;
+                    return (
+                      <TouchableOpacity
+                        key={v}
+                        activeOpacity={0.9}
+                        style={[
+                          styles.dropdownItem,
+                          isSelected && styles.dropdownItemSelected,
+                          index === familyStatusOptions.length - 1 && styles.dropdownItemLast,
+                        ]}
+                        onPress={() => {
+                          setProfile({ ...profile, familyStatus: v });
+                          setShowFamilyStatusDropdown(false);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            isSelected && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {v}
+                        </Text>
+                        {isSelected && (
+                          <Icon name="checkmark" size={18} color="#ff4e50" />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* DIET */}
+            <Text style={styles.label}>Diet</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  setShowFamilyStatusDropdown(false);
+                  setShowDietDropdown(!showDietDropdown);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownHeaderText,
+                    !profile.diet && styles.dropdownPlaceholder,
+                  ]}
+                >
+                  {profile.diet || "Select"}
+                </Text>
+                <Icon
+                  name={showDietDropdown ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#555"
+                />
+              </TouchableOpacity>
+
+              {showDietDropdown && (
+                <View style={styles.dropdownList}>
+                  {dietOptions.map((v, index) => {
+                    const isSelected = profile.diet === v;
+                    return (
+                      <TouchableOpacity
+                        key={v}
+                        activeOpacity={0.9}
+                        style={[
+                          styles.dropdownItem,
+                          isSelected && styles.dropdownItemSelected,
+                          index === dietOptions.length - 1 && styles.dropdownItemLast,
+                        ]}
+                        onPress={() => {
+                          setProfile({ ...profile, diet: v });
+                          setShowDietDropdown(false);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            isSelected && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {v}
+                        </Text>
+                        {isSelected && (
+                          <Icon name="checkmark" size={18} color="#ff4e50" />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* ABOUT */}
+            <Text style={styles.label}>About</Text>
+            <TextInput
+              style={[styles.input, styles.textAreaLg]}
+              placeholder="A few words about yourself"
+              multiline
+              value={profile.aboutYourself}
+              placeholderTextColor="#777"
+              onChangeText={(t) => setProfile({ ...profile, aboutYourself: t })}
+            />
+
+            {/* HOBBIES */}
+            <Text style={styles.label}>Hobbies</Text>
+            <TextInput
+              style={[styles.input, styles.textAreaSm]}
+              placeholder="Hobbies (e.g. music, travel, fitness)"
+              multiline
+              value={profile.hobbies}
+              placeholderTextColor="#777"
+              onChangeText={(t) => setProfile({ ...profile, hobbies: t })}
+            />
+
+            {/* PHOTO PREVIEW */}
+            <Text style={styles.label}>Profile Photo</Text>
+            <View style={styles.photoRow}>
+              {profile.photos.length > 0 ? (
+                <TouchableOpacity onPress={() => setPreviewImage(profile.photos[0])} activeOpacity={0.9}>
+                  <Image source={{ uri: profile.photos[0] }} style={styles.photo} />
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.emptyPhoto}>
+                  <Icon name="image-outline" size={28} color="#888" />
+                  <Text style={styles.emptyPhotoText}>No photo selected</Text>
+                </View>
+              )}
+            </View>
+
+            {/* PHOTO BUTTON */}
+            <TouchableOpacity
+              style={[styles.photoBtn, uploading && { opacity: 0.7 }]}
+              onPress={pickImage}
+              disabled={uploading}
+              activeOpacity={0.9}
+            >
+              {uploading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.photoBtnText}>
+                  {profile.photos.length ? "Change Profile Photo" : "Select Profile Photo"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </ScrollView>
+        </TouchableOpacity>
 
         {/* BOTTOM ACTIONS (ALWAYS VISIBLE) */}
         <View style={styles.bottomBar}>
-      
-
           <TouchableOpacity style={styles.submitBtn} onPress={submit} activeOpacity={0.9}>
             <Text style={styles.submitText}>Submit Profile</Text>
           </TouchableOpacity>
@@ -220,7 +334,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 22,
     paddingTop: 10,
-    paddingBottom: 140, // ✅ space for bottomBar
+    paddingBottom: 140,
   },
 
   label: { fontWeight: "700", marginBottom: 6, color: "#111" },
@@ -258,6 +372,76 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: "#ff4e50", borderColor: "#ff4e50" },
   chipText: { fontWeight: "700", color: "#222" },
   chipTextActive: { color: "#fff" },
+
+  // ✅ only dropdown styles added
+  dropdownContainer: {
+    marginBottom: 12,
+  },
+
+  dropdownHeader: {
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  dropdownHeaderText: {
+    flex: 1,
+    color: "#111",
+    fontSize: 15,
+    fontWeight: "500",
+    paddingRight: 10,
+  },
+
+  dropdownPlaceholder: {
+    color: "#777",
+    fontWeight: "400",
+  },
+
+  dropdownList: {
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+  },
+
+  dropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f1f1",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  dropdownItemLast: {
+    borderBottomWidth: 0,
+  },
+
+  dropdownItemSelected: {
+    backgroundColor: "#fff5f5",
+  },
+
+  dropdownItemText: {
+    fontSize: 15,
+    color: "#222",
+    fontWeight: "500",
+    flex: 1,
+    paddingRight: 10,
+  },
+
+  dropdownItemTextSelected: {
+    color: "#ff4e50",
+    fontWeight: "700",
+  },
 
   photoRow: { flexDirection: "row", marginBottom: 10 },
 
@@ -303,26 +487,26 @@ const styles = StyleSheet.create({
 
   backAction: {
     flex: 1,
-    flexBasis: 0, // ✅ important
+    flexBasis: 0,
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#ff4e50",
     paddingVertical: 12,
     borderRadius: 26,
     alignItems: "center",
-    marginRight: 12, // ✅ instead of gap
+    marginRight: 12,
   },
 
   backActionText: { color: "#ff4e50", fontWeight: "800" },
 
   submitBtn: {
     flex: 1.3,
-    flexBasis: 0, // ✅ important
+    flexBasis: 0,
     backgroundColor: "#FF4D4D",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom:65
+    marginBottom: 65
   },
 
   submitText: { color: "#fff", fontSize: 15, fontWeight: "800" },
