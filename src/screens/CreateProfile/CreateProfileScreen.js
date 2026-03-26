@@ -1,7 +1,6 @@
 // src/screens/CreateProfile/CreateProfileScreen.js
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
@@ -13,14 +12,10 @@ import Step5AboutPhotos from "./Step5AboutPhotos";
 import { useProfile } from "../../context/ProfileContext";
 import AppModal from "../../components/AppModal";
 
-
-
-
 const API_URL = "http://143.110.244.163:5000/api";
 
-export default function CreateProfileScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
+export default function CreateProfileScreen({ navigation, route }) {
+  const initialStep = route?.params?.initialStep || 1;
   const [authUser, setAuthUser] = useState(null);
 
   const { fetchProfile } = useProfile();
@@ -34,7 +29,6 @@ export default function CreateProfileScreen() {
     setModalVisible(true);
   };
 
-
   useEffect(() => {
     const loadUser = async () => {
       const storedUser = await AsyncStorage.getItem("user");
@@ -45,10 +39,8 @@ export default function CreateProfileScreen() {
     loadUser();
   }, []);
 
-
-
-  const existingProfile = route.params?.profile || null;
-  const [step, setStep] = useState(1);
+  const existingProfile = route?.params?.profile || null;
+  const [step, setStep] = useState(initialStep);
 
   const [profileData, setProfileData] = useState({
     name: existingProfile?.name || authUser?.name || "",
@@ -82,7 +74,6 @@ export default function CreateProfileScreen() {
     photos: existingProfile?.photos || [],
   });
 
-
   useEffect(() => {
     if (!existingProfile && authUser?.name) {
       setProfileData((prev) => ({
@@ -90,30 +81,39 @@ export default function CreateProfileScreen() {
         name: authUser.name,
       }));
     }
-  }, [authUser]);
+  }, [authUser, existingProfile]);
 
+  // ✅ initialStep ko route params ke through update karne ke liye
+  useEffect(() => {
+    if (route?.params?.initialStep) {
+      setStep(route.params.initialStep);
+    }
+  }, [route?.params?.initialStep]);
 
   const next = () => setStep((s) => Math.min(5, s + 1));
   const prev = () => setStep((s) => Math.max(1, s - 1));
 
   /* 🔹 AUTO JUMP TO INCOMPLETE STEP (EDIT MODE) */
   useEffect(() => {
+    // agar explicit initialStep aaya hai to usko priority do
+    if (route?.params?.initialStep) return;
+
     if (!existingProfile) return;
 
-    if (!profileData.name || !profileData.gender || !profileData.dob)
+    if (!profileData.name || !profileData.gender || !profileData.dob) {
       setStep(1);
-    else if (!profileData.location)
+    } else if (!profileData.location) {
       setStep(2);
-    else if (!profileData.religion || !profileData.caste)
+    } else if (!profileData.religion || !profileData.caste) {
       setStep(3);
-    else if (!profileData.occupation || !profileData.annualIncome)
+    } else if (!profileData.occupation || !profileData.annualIncome) {
       setStep(4);
-    else
+    } else {
       setStep(5);
+    }
   }, []);
 
   /* 🔹 FINAL SUBMIT */
-
   const submitForm = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -152,13 +152,9 @@ export default function CreateProfileScreen() {
 
       await AsyncStorage.removeItem("ownProfile");
 
-      // ✅ pehle modal show karo
       showModal("Profile Updated Successfully! ✅ ❤️", "success");
 
-      // ✅ profile refresh (safe)
       fetchProfile();
-
-
     } catch (err) {
       console.log(err.response?.data || err.message);
       showModal("Failed to update profile", "error");
@@ -167,10 +163,18 @@ export default function CreateProfileScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {step === 1 && <Step1Basic profile={profileData} setProfile={setProfileData} />}
-      {step === 2 && <Step2Location profile={profileData} setProfile={setProfileData} />}
-      {step === 3 && <Step3Religion profile={profileData} setProfile={setProfileData} />}
-      {step === 4 && <Step4EduJob profile={profileData} setProfile={setProfileData} />}
+      {step === 1 && (
+        <Step1Basic profile={profileData} setProfile={setProfileData} />
+      )}
+      {step === 2 && (
+        <Step2Location profile={profileData} setProfile={setProfileData} />
+      )}
+      {step === 3 && (
+        <Step3Religion profile={profileData} setProfile={setProfileData} />
+      )}
+      {step === 4 && (
+        <Step4EduJob profile={profileData} setProfile={setProfileData} />
+      )}
       {step === 5 && (
         <Step5AboutPhotos
           profile={profileData}
@@ -178,8 +182,6 @@ export default function CreateProfileScreen() {
           submit={submitForm}
         />
       )}
-
-      {/* FOOTER */}
 
       <View style={styles.bottomBar}>
         {step > 1 ? (
@@ -206,7 +208,6 @@ export default function CreateProfileScreen() {
         onClose={() => {
           setModalVisible(false);
 
-
           if (modalType === "success") {
             navigation.reset({
               index: 0,
@@ -215,8 +216,6 @@ export default function CreateProfileScreen() {
           }
         }}
       />
-
-
     </View>
   );
 }

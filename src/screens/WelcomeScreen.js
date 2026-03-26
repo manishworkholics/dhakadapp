@@ -1,59 +1,75 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+  StatusBar,
+  Dimensions,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import LinearGradient from "react-native-linear-gradient";
+
+const { height, width } = Dimensions.get("window");
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-
-
-      <Image
-        source={require("../assets/images/welcomlogoapp.png")}
-        style={styles.welcomeImg}
-        resizeMode="contain"
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
       />
 
-      <View style={styles.card}>
-
-        <Image
-          source={require("../assets/images/logo-dark.png")}
-          style={styles.logo}
-        />
-
-        <TouchableOpacity
-          style={styles.optionBtn}
-          onPress={() => navigation.navigate("Login")}
-        >
-          <View style={styles.row}>
-            <Icon name="log-in-outline" size={25} color="black" />
-            <Text style={styles.optionText}> Login</Text>
+      <ImageBackground
+        source={require("../assets/images/welcome-img.png")}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay}>
+          <View style={styles.topSection}>
+            <Image
+              source={require("../assets/images/dhakadlogo.png")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.optionBtn}
-          onPress={() => navigation.navigate("Register")}
-        >
-          <View style={styles.row}>
-            <Icon name="person-add-outline" size={23} color="black" />
-            <Text style={styles.optionText}> Register</Text>
-          </View>
-        </TouchableOpacity>
+          <LinearGradient
+            colors={[
+              "rgba(0,0,0,0)",
+              "rgba(0,0,0,0.15)",
+              "rgba(0,0,0,0.45)",
+              "rgba(0,0,0,0.75)",
+              "rgba(0,0,0,0.95)",
+            ]}
+            locations={[0, 0.2, 0.45, 0.75, 1]}
+            style={styles.bottomGradient}
+          >
+            <TouchableOpacity
+              style={styles.loginBtn}
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate("Login")}
+            >
+              <Text style={styles.loginText}>Login</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.redBtn}
-          onPress={() => navigation.navigate("Register")}
-        >
-          <View style={styles.row}>
-            <Text style={styles.redBtnText}>Continue </Text>
-            <Icon name="arrow-forward-outline" size={20} color="#fff" />
-          </View>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.registerBtn}
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate("Register")}
+            >
+              <Text style={styles.registerText}>Register</Text>
+            </TouchableOpacity>
 
-      </View>
+            <Text style={styles.footerText}>Your journey begins here...</Text>
+          </LinearGradient>
+        </View>
+      </ImageBackground>
     </View>
   );
 }
@@ -61,74 +77,76 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FF4B4B",
-    alignItems: "center",
-    justifyContent: "flex-start",   // ⭐ center ki jagah top
-    paddingTop: 40,
+    backgroundColor: "#000",
   },
 
-  welcomeImg: {
-    width: "80%",
-    height: 300,      // ⭐ image choti hogi
-    resizeMode: "contain",
-    marginBottom: -100, // ⭐ card ke paas aa jayegi
+  background: {
+    flex: 1,
   },
 
-  card: {
-    width: "90%",
-    padding: 30,
-    borderRadius: 18,
-    backgroundColor: "#fff",
-    elevation: 15,
+  overlay: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+
+  topSection: {
     alignItems: "center",
+    paddingTop: 34,
   },
 
   logo: {
-    width: 200,
-    height: 130,
-    marginBottom: 25,
-  },
-
-  optionBtn: {
-    backgroundColor: "#f8f8f8",
-    width: "105%",
-    padding: 13,
-    borderRadius: 10,
-    marginVertical: 6,
-    borderWidth: 0.5,
-    borderColor: "gray",
-  },
-
-  optionText: {
-    fontSize: 15,
-    color: "black",
-    marginLeft: 15,
-    fontWeight: "600",
-  },
-
-  redBtn: {
-    backgroundColor: "#ff4e50",
-    width: "105%",
-    padding: 13,
-    borderRadius: 12,
-    marginTop: 15,
-  },
-
-  redBtnText: {
-    fontSize: 16,
-    color: "white",
-    textAlign: "center",
-    marginLeft: 105,
-    fontWeight: "800",
-
-
-  },
-
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 5,
     width: 190,
-    height: 21,
+    height: 110,
+    alignSelf: "center",
+    marginTop: 8,
+  },
+
+  bottomGradient: {
+  paddingHorizontal: 28,
+  paddingBottom: height * 0.05,   // ⭐ responsive
+  paddingTop: height * 0.12,      // ⭐ responsive
+  justifyContent: "flex-end",
+},
+
+  loginBtn: {
+    width: "100%",
+    backgroundColor: "#FF4D5A",
+    paddingVertical: 15,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+  },
+
+  loginText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+
+  registerBtn: {
+    width: "100%",
+    backgroundColor: "#F1DB2F",
+    paddingVertical: 15,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    
+  },
+
+  registerText: {
+    color: "#111",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+
+  footerText: {
+    marginTop: 18,
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 14,
+    fontStyle: "italic",
+    fontWeight: "500",
+    opacity: 0.95,
   },
 });
