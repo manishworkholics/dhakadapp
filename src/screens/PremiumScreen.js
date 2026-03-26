@@ -16,6 +16,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useFocusEffect } from "@react-navigation/native";
+const stripHtml = (html) => {
+  return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ");
+};
 
 const API_URL = "http://143.110.244.163:5000/api";
 
@@ -198,26 +201,50 @@ export default function PlanScreen() {
           const total = plan.price + gst;
 
           return (
-            <View key={plan._id} style={styles.planCard}>
+            <View key={plan._id} style={[
+              styles.planCard,
+              plan.name.toLowerCase().includes("gold") && styles.goldCard,
+              plan.name.toLowerCase().includes("silver") && styles.silverCard,
+            ]}>
+
+              {/* 🔥 BADGE */}
+              {plan.name.toLowerCase().includes("gold") && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>MOST POPULAR</Text>
+                </View>
+              )}
+
+              {/* 🔥 HEADER */}
               <Text style={styles.planName}>{plan.name}</Text>
-              <Text style={styles.planMeta}>{plan.durationMonths} Months</Text>
-              <Text style={styles.planPrice}>₹{total}</Text>
+              <Text style={styles.duration}>{plan.durationMonths} Months</Text>
 
-              {plan.features?.map((f, i) => (
-                <Text key={i} style={styles.featureText}>
-                  ✔ {f}
-                </Text>
-              ))}
+              {/* 🔥 PRICE */}
+              <View style={styles.priceBox}>
+                <Text style={styles.actualPrice}>₹{plan.actualPrice}</Text>
+                <Text style={styles.planPrice}>₹{plan.price}</Text>
+                <Text style={styles.gstText}>+ GST</Text>
+              </View>
 
+              {/* 🔥 FEATURES */}
+              <View style={{ marginTop: 10 }}>
+                {plan.features?.slice(0, 5).map((f, i) => (
+                  <View key={i} style={styles.featureRow}>
+                    <Icon name="checkmark-circle" size={18} color="#4CAF50" />
+                    <Text style={styles.featureText}>
+                      {stripHtml(f)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* 🔥 BUTTON */}
               <TouchableOpacity
                 style={styles.buyBtn}
-                disabled={paying}
                 onPress={() => handleBuy(plan)}
               >
-                <Text style={styles.buyText}>
-                  {paying ? "Processing..." : "Choose Plan"}
-                </Text>
+                <Text style={styles.buyText}>Upgrade Now 🚀</Text>
               </TouchableOpacity>
+
             </View>
           );
         })}
@@ -350,13 +377,119 @@ const styles = StyleSheet.create({
 
   historyDate: { color: "#999", fontSize: 11 },
 
-  sectionTitle1:{
-     fontSize: 16,
+  sectionTitle1: {
+    fontSize: 16,
     fontWeight: "700",
     marginBottom: 10,
     color: "#333",
-    marginLeft:18
-    
+    marginLeft: 18
 
-  }
+
+  },
+  actualPrice: {
+    textDecorationLine: "line-through",
+    color: "#999",
+    fontSize: 14,
+  },
+
+  duration: {
+    backgroundColor: "#ffe5e5",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    fontSize: 12,
+    color: "#ff4e50",
+  },
+
+  gstText: {
+    fontSize: 12,
+    color: "#777",
+  },
+
+  desc: {
+    fontSize: 13,
+    color: "#444",
+    marginBottom: 8,
+  },
+  planCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 14,
+    marginTop: 14,
+    padding: 20,
+    borderRadius: 18,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+  },
+
+  goldCard: {
+    borderWidth: 2,
+    borderColor: "#FFD700",
+    backgroundColor: "#fffaf0",
+  },
+
+  silverCard: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+
+  badge: {
+    position: "absolute",
+    top: -10,
+    right: 10,
+    backgroundColor: "#ff4e50",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  priceBox: {
+    alignItems: "center",
+    marginVertical: 10,
+  },
+
+  planPrice: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#ff4e50",
+  },
+
+  actualPrice: {
+    textDecorationLine: "line-through",
+    color: "#aaa",
+  },
+
+  featureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+
+  featureText: {
+    marginLeft: 8,
+    fontSize: 13,
+    color: "#444",
+  },
+
+  buyBtn: {
+    marginTop: 16,
+    backgroundColor: "#ff4e50",
+    paddingVertical: 12,
+    borderRadius: 30,
+    alignItems: "center",
+    elevation: 2,
+  },
+
+  buyText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
 });

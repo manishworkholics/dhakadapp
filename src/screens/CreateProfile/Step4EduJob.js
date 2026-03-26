@@ -11,165 +11,133 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 
+/* ---------------- OPTIONS (MATCH WEB EXACTLY) ---------------- */
+
 const educationOptions = [
-  "10th / Secondary School",
-  "12th / Higher Secondary",
-  "Diploma",
-  "Bachelor's Degree (BA, BSc, BCom, BTech, etc.)",
-  "Master's Degree (MA, MSc, MCom, MTech, MBA, etc.)",
-  "PhD / Doctorate",
-  "CA (Chartered Accountant)",
-  "CS (Company Secretary)",
-  "ICWA / CMA",
-  "MBBS",
-  "MD / MS",
-  "LLB / LLM",
-  "Others",
+  { label: "10th", value: "10th" },
+  { label: "12th", value: "12th" },
+  { label: "Diploma", value: "diploma" },
+  { label: "Bachelor's Degree", value: "bachelors" },
+  { label: "Master's Degree", value: "masters" },
+  { label: "PhD / Doctorate", value: "phd" },
+  { label: "CA", value: "ca" },
+  { label: "CS", value: "cs" },
+  { label: "MBBS", value: "mbbs" },
+  { label: "LLB / LLM", value: "law" },
+  { label: "Others", value: "others" },
 ];
 
 const employmentTypeOptions = [
-  "Government Job",
-  "Private Job",
-  "Business / Entrepreneur",
-  "Self Employed",
-  "Freelancer / Consultant",
-  "Defence / Armed Forces",
-  "PSU / Public Sector",
-  "Startup",
-  "NGO / Social Work",
-  "Student",
-  "Not Working",
-  "Homemaker",
-  "Retired",
+  { label: "Government Job", value: "government" },
+  { label: "Private Job", value: "private" },
+  { label: "Business / Entrepreneur", value: "business" },
+  { label: "Self Employed", value: "self_employed" },
+  { label: "Freelancer / Consultant", value: "freelancer" },
+  { label: "Defence / Armed Forces", value: "defense" },
+  { label: "PSU / Public Sector", value: "psu" },
+  { label: "Startup", value: "startup" },
+  { label: "NGO / Social Work", value: "ngo" },
+  { label: "Student", value: "student" },
+  { label: "Not Working", value: "not_working" },
+  { label: "Homemaker", value: "homemaker" },
+  { label: "Retired", value: "retired" },
 ];
 
 const occupationOptions = [
-  "Software Engineer",
-  "Web Developer",
-  "Mobile App Developer",
-  "Data Analyst",
-  "IT Support",
-  "Manager",
-  "HR Professional",
-  "Accountant",
-  "Marketing Professional",
-  "Sales Executive",
-  "Doctor",
-  "Nurse",
-  "Pharmacist",
-  "Teacher",
-  "Professor / Lecturer",
-  "Government Officer",
-  "Police Officer",
-  "Lawyer",
-  "Judge",
-  "Architect",
-  "Civil Engineer",
-  "Mechanical Engineer",
-  "Electrical Engineer",
-  "Business Owner",
-  "Entrepreneur",
-  "Consultant",
-  "Chartered Accountant",
-  "Company Secretary",
-  "Bank Employee",
-  "Clerk",
-  "Farmer",
-  "Designer",
-  "Fashion Designer",
-  "Journalist",
-  "Content Writer",
-  "Photographer",
-  "Social Worker",
-  "Student",
-  "Homemaker",
-  "Not Working",
-  "Other",
+  { label: "Software Engineer", value: "software_engineer" },
+  { label: "Manager", value: "manager" },
+  { label: "Doctor", value: "doctor" },
+  { label: "Teacher", value: "teacher" },
+  { label: "Business Owner", value: "business_owner" },
+  { label: "Government Officer", value: "govt_officer" },
+  { label: "Farmer", value: "farmer" },
+  { label: "Student", value: "student" },
+  { label: "Not Working", value: "not_working" },
+  { label: "Others", value: "others" },
 ];
 
 const annualIncomeOptions = [
-  "Below ₹1 Lakh",
-  "₹1–3 Lakh",
-  "₹3–5 Lakh",
-  "₹5–8 Lakh",
-  "₹8–12 Lakh",
-  "₹12–20 Lakh",
-  "₹20–35 Lakh",
-  "₹35–50 Lakh",
-  "₹50 Lakh–1 Crore",
-  "Above ₹1 Crore",
-  "Prefer not to say",
+  { label: "Below ₹1 Lakh", value: "below_1_lakh" },
+  { label: "₹1 – 3 Lakh", value: "1_3_lakh" },
+  { label: "₹3 – 5 Lakh", value: "3_5_lakh" },
+  { label: "₹5 – 8 Lakh", value: "5_8_lakh" },
+  { label: "₹8 – 12 Lakh", value: "8_12_lakh" },
+  { label: "₹12 – 20 Lakh", value: "12_20_lakh" },
+  { label: "₹20 – 35 Lakh", value: "20_35_lakh" },
+  { label: "₹35 – 50 Lakh", value: "35_50_lakh" },
+  { label: "₹50 Lakh – 1 Crore", value: "50_lakh_1_cr" },
+  { label: "Above ₹1 Crore", value: "above_1_cr" },
+  { label: "Prefer not to say", value: "not_disclosed" },
 ];
 
 export default function Step4EduJob({ profile, setProfile }) {
-  const [showEducationDropdown, setShowEducationDropdown] = useState(false);
-  const [showEmploymentDropdown, setShowEmploymentDropdown] = useState(false);
-  const [showOccupationDropdown, setShowOccupationDropdown] = useState(false);
-  const [showIncomeDropdown, setShowIncomeDropdown] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
+  const [showEmployment, setShowEmployment] = useState(false);
+  const [showOccupation, setShowOccupation] = useState(false);
+  const [showIncome, setShowIncome] = useState(false);
 
-  const closeOtherDropdowns = (type) => {
-    if (type !== "education") setShowEducationDropdown(false);
-    if (type !== "employment") setShowEmploymentDropdown(false);
-    if (type !== "occupation") setShowOccupationDropdown(false);
-    if (type !== "income") setShowIncomeDropdown(false);
+  /* ---------------- COMMON FUNCTIONS ---------------- */
+
+  const handleSelect = (key, item, setDropdown) => {
+    setProfile((prev) => ({
+      ...prev,
+      [key]: item.value,
+    }));
+    setDropdown(false);
   };
 
-  const renderDropdown = ({
+  const getLabel = (options, value, placeholder) => {
+    return options.find((i) => i.value === value)?.label || placeholder;
+  };
+
+  const closeAll = () => {
+    setShowEducation(false);
+    setShowEmployment(false);
+    setShowOccupation(false);
+    setShowIncome(false);
+  };
+
+  const renderDropdown = (
     label,
-    value,
-    placeholder,
+    keyName,
     options,
-    visible,
-    setVisible,
-    field,
-  }) => (
+    show,
+    setShow,
+    placeholder
+  ) => (
     <View style={styles.dropdownWrapper}>
       <Text style={styles.label}>{label}</Text>
 
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
-          activeOpacity={0.85}
           style={styles.dropdownHeader}
           onPress={() => {
-            closeOtherDropdowns(field);
-            setVisible(!visible);
+            closeAll();
+            setShow(!show);
           }}
         >
-          <Text
-            style={[
-              styles.dropdownHeaderText,
-              !value && styles.placeholderText,
-            ]}
-            numberOfLines={1}
-          >
-            {value || placeholder}
+          <Text style={styles.dropdownHeaderText}>
+            {getLabel(options, profile[keyName], placeholder)}
           </Text>
-
-          <Icon
-            name={visible ? "chevron-up" : "chevron-down"}
-            size={20}
-            color="#555"
-          />
+          <Icon name={show ? "chevron-up" : "chevron-down"} size={20} />
         </TouchableOpacity>
 
-        {visible && (
+        {show && (
           <View style={styles.dropdownList}>
-            <ScrollView nestedScrollEnabled style={{ maxHeight: 260 }}>
-              {options.map((item, index) => {
-                const isSelected = value === item;
+            <ScrollView style={{ maxHeight: 250 }}>
+              {options.map((item) => {
+                const isSelected = profile[keyName] === item.value;
+
                 return (
                   <TouchableOpacity
-                    key={item}
-                    activeOpacity={0.85}
+                    key={item.value}
                     style={[
                       styles.dropdownItem,
                       isSelected && styles.dropdownItemSelected,
-                      index === options.length - 1 && styles.lastDropdownItem,
                     ]}
-                    onPress={() => {
-                      setProfile({ ...profile, [field]: item });
-                      setVisible(false);
-                    }}
+                    onPress={() =>
+                      handleSelect(keyName, item, setShow)
+                    }
                   >
                     <Text
                       style={[
@@ -177,7 +145,7 @@ export default function Step4EduJob({ profile, setProfile }) {
                         isSelected && styles.dropdownItemTextSelected,
                       ]}
                     >
-                      {item}
+                      {item.label}
                     </Text>
 
                     {isSelected && (
@@ -194,21 +162,12 @@ export default function Step4EduJob({ profile, setProfile }) {
   );
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <TouchableOpacity
-          activeOpacity={1}
-          style={{ flex: 1 }}
-          onPress={() => {
-            setShowEducationDropdown(false);
-            setShowEmploymentDropdown(false);
-            setShowOccupationDropdown(false);
-            setShowIncomeDropdown(false);
-          }}
-        >
+        <TouchableOpacity style={{ flex: 1 }} onPress={closeAll}>
           <View style={styles.header}>
             <Text style={styles.title}>Professional Details</Text>
             <Text style={styles.subTitle}>
@@ -216,50 +175,43 @@ export default function Step4EduJob({ profile, setProfile }) {
             </Text>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.container}
-            keyboardShouldPersistTaps="handled"
-          >
-            {renderDropdown({
-              label: "Education",
-              value: profile.education,
-              placeholder: "Select education",
-              options: educationOptions,
-              visible: showEducationDropdown,
-              setVisible: setShowEducationDropdown,
-              field: "education",
-            })}
+          <ScrollView contentContainerStyle={styles.container}>
 
-            {renderDropdown({
-              label: "Employment Type",
-              value: profile.employmentType,
-              placeholder: "Select employment type",
-              options: employmentTypeOptions,
-              visible: showEmploymentDropdown,
-              setVisible: setShowEmploymentDropdown,
-              field: "employmentType",
-            })}
+            {renderDropdown(
+              "Education",
+              "educationDetails",
+              educationOptions,
+              showEducation,
+              setShowEducation,
+              "Select education"
+            )}
 
-            {renderDropdown({
-              label: "Occupation / Job Role",
-              value: profile.occupation,
-              placeholder: "Select occupation",
-              options: occupationOptions,
-              visible: showOccupationDropdown,
-              setVisible: setShowOccupationDropdown,
-              field: "occupation",
-            })}
+            {renderDropdown(
+              "Employment Type",
+              "employmentType",
+              employmentTypeOptions,
+              showEmployment,
+              setShowEmployment,
+              "Select employment type"
+            )}
 
-            {renderDropdown({
-              label: "Annual Income",
-              value: profile.annualIncome,
-              placeholder: "Select annual income",
-              options: annualIncomeOptions,
-              visible: showIncomeDropdown,
-              setVisible: setShowIncomeDropdown,
-              field: "annualIncome",
-            })}
+            {renderDropdown(
+              "Occupation",
+              "occupation",
+              occupationOptions,
+              showOccupation,
+              setShowOccupation,
+              "Select occupation"
+            )}
+
+            {renderDropdown(
+              "Annual Income",
+              "annualIncome",
+              annualIncomeOptions,
+              showIncome,
+              setShowIncome,
+              "Select income"
+            )}
 
             <View style={{ height: 120 }} />
           </ScrollView>
@@ -268,7 +220,6 @@ export default function Step4EduJob({ profile, setProfile }) {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,

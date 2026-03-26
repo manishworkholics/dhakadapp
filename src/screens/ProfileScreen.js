@@ -248,7 +248,7 @@ export default function ProfileScreen({ navigation }) {
             }
           >
             <Text style={styles.editText}>
-              {profile.isCompleted ? 'Edit Profile' : 'Complete Profile '}
+              {profile.profileScore < 100 ? 'Complete Profile' : 'Edit Profile '}
             </Text>
           </TouchableOpacity>
         </View>

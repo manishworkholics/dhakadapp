@@ -12,13 +12,25 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-// import Footer from "../components/Footer";
+import AppModal from "../components/AppModal";
 
 const { width } = Dimensions.get("window");
 const isSmallDevice = width < 768;
 
 export default function ContactUsScreen() {
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+
+  const showModal = (msg, type = "success") => {
+    setModalMessage(msg);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
 
   const [form, setForm] = useState({
     name: "",
@@ -32,8 +44,55 @@ export default function ContactUsScreen() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSend = () => {
-    console.log("Form Data =>", form);
+  const handleSend = async () => {
+    if (!form.name || !form.email || !form.mobile || !form.subject || !form.message) {
+
+      showModal("Please fill all fields", "error");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://143.110.244.163:5000/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.mobile,
+          subject: form.subject,
+          message: form.message,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // ✅ Dynamic success message
+
+        showModal(`✅ ${data.message}`, "success");
+
+        setForm({
+          name: "",
+          email: "",
+          mobile: "",
+          subject: "",
+          message: "",
+        });
+      } else {
+        // ❌ Dynamic error message (if API sends)
+
+        showModal(`❌ ${data.message || "Something went wrong"}`, "error");
+      }
+    } catch (error) {
+      console.log("API Error:", error);
+      alert("❌ Server error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -206,10 +265,14 @@ export default function ContactUsScreen() {
                 style={styles.sendBtn}
                 onPress={handleSend}
                 activeOpacity={0.85}
+                disabled={loading}
               >
-                <Text style={styles.sendBtnText}>Send Message</Text>
-                <Icon name="arrow-forward" size={18} color="#fff" />
+                <Text style={styles.sendBtnText}>
+                  {loading ? "Sending..." : "Send Message"}
+                </Text>
+                {!loading && <Icon name="arrow-forward" size={18} color="#fff" />}
               </TouchableOpacity>
+
             </View>
           </View>
 
@@ -218,6 +281,13 @@ export default function ContactUsScreen() {
       </View>
 
       {/* <Footer /> */}
+
+      <AppModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -433,7 +503,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#111827",
     height: 56,
-    fontWeight:600
+    fontWeight: 600
   },
 
   messageWrap: {

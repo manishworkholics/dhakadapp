@@ -12,77 +12,151 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 
+/* ---------------- OPTIONS ---------------- */
+
+// SubCaste (same as web)
 const subCasteOptions = [
-  "Dhakad",
-  "Dhakar",
-  "Dhaker",
-  "Nagar",
-  "Malav",
-  "Kirar",
-  "Kirat",
+  { label: "Dhakad", value: "Dhakad" },
+  { label: "Dhakar", value: "Dhakar" },
+  { label: "Dhaker", value: "Dhaker" },
+  { label: "Nagar", value: "Nagar" },
+  { label: "Malav", value: "Malav" },
+  { label: "Kirar", value: "Kirar" },
+  { label: "Kirat", value: "Kirat" },
 ];
 
-const physicalStatusOptions = ["Normal", "Physically Challenged"];
+// Height
+const heightOptions = [];
+for (let ft = 4; ft <= 7; ft++) {
+  for (let inch = 0; inch < 12; inch++) {
+    heightOptions.push({
+      label: `${ft}ft ${inch}in`,
+      value: `${ft}ft ${inch}in`,
+    });
+  }
+}
 
+// Physical Status (match web)
+const physicalStatusOptions = [
+  { label: "Normal", value: "Normal" },
+  { label: "Physically Challenged", value: "Physically Challenged" },
+];
+
+// Marital Status (match web exactly)
 const maritalStatusOptions = [
-  "Never married",
-  "Previously Married (Divorced)",
-  "Previously Married (Widowed)",
-  "Currently Separated",
-  "Legally Separated / Awaiting Divorce",
-  "Single Parent (Divorced/Widowed)",
+  { label: "Never Married", value: "Never married" },
+  { label: "Previously Married (Divorced)", value: "Divorced" },
+  { label: "Previously Married (Widowed)", value: "Widower" },
+  { label: "Legally Separated / Awaiting Divorce", value: "Awaiting divorce" },
 ];
 
 export default function Step3Religion({ profile, setProfile }) {
+  const [showHeightDropdown, setShowHeightDropdown] = useState(false);
+  const [showPhysicalStatusDropdown, setShowPhysicalStatusDropdown] = useState(false);
+  const [showMaritalStatusDropdown, setShowMaritalStatusDropdown] = useState(false);
   const [showSubCasteDropdown, setShowSubCasteDropdown] = useState(false);
-  const [showPhysicalStatusDropdown, setShowPhysicalStatusDropdown] =
-    useState(false);
-  const [showMaritalStatusDropdown, setShowMaritalStatusDropdown] =
-    useState(false);
 
+  /* ---------------- DEFAULT VALUES ---------------- */
   useEffect(() => {
     const updates = {};
 
-    if (!profile?.religion) {
-      updates.religion = "Hinduism";
-    }
-
-    if (!profile?.caste) {
-      updates.caste = "Dhakad";
-    }
-
-    if (!profile?.subCaste) {
-      updates.subCaste = "Dhakad";
-    }
+    if (!profile?.religion) updates.religion = "Hinduism";
+    if (!profile?.caste) updates.caste = "Dhakad";
+    if (!profile?.subCaste) updates.subCaste = "Dhakad";
 
     if (Object.keys(updates).length > 0) {
       setProfile({ ...profile, ...updates });
     }
   }, []);
 
-  const handleSelectSubCaste = (value) => {
-    setProfile({ ...profile, subCaste: value });
-    setShowSubCasteDropdown(false);
+  /* ---------------- COMMON FUNCTIONS ---------------- */
+
+  const handleSelect = (key, item, setDropdown) => {
+    setProfile((prev) => ({
+      ...prev,
+      [key]: item.value,
+    }));
+    setDropdown(false);
   };
 
-  const handleSelectPhysicalStatus = (value) => {
-    setProfile({ ...profile, physicalStatus: value });
-    setShowPhysicalStatusDropdown(false);
-  };
-
-  const handleSelectMaritalStatus = (value) => {
-    setProfile({ ...profile, maritalStatus: value });
-    setShowMaritalStatusDropdown(false);
+  const getLabel = (options, value, placeholder = "Select") => {
+    return options.find((i) => i.value === value)?.label || placeholder;
   };
 
   const closeOtherDropdowns = (type) => {
+    if (type !== "height") setShowHeightDropdown(false);
     if (type !== "physical") setShowPhysicalStatusDropdown(false);
     if (type !== "marital") setShowMaritalStatusDropdown(false);
     if (type !== "subCaste") setShowSubCasteDropdown(false);
   };
 
+  const renderDropdown = (
+    label,
+    keyName,
+    options,
+    show,
+    setShow,
+    placeholder = "Select"
+  ) => (
+    <>
+      <Text style={styles.label}>{label}</Text>
+
+      <View style={styles.dropdownContainer}>
+        <TouchableOpacity
+          style={styles.dropdownHeader}
+          onPress={() => {
+            closeOtherDropdowns(keyName);
+            setShow(!show);
+          }}
+        >
+          <Text style={styles.dropdownHeaderText}>
+            {getLabel(options, profile[keyName], placeholder)}
+          </Text>
+
+          <Icon name={show ? "chevron-up" : "chevron-down"} size={20} />
+        </TouchableOpacity>
+
+        {show && (
+          <View style={styles.dropdownList}>
+            <ScrollView style={{ maxHeight: 200 }}>
+              {options.map((item) => {
+                const isSelected = profile[keyName] === item.value;
+
+                return (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={[
+                      styles.dropdownItem,
+                      isSelected && styles.dropdownItemSelected,
+                    ]}
+                    onPress={() =>
+                      handleSelect(keyName, item, setShow)
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        isSelected && styles.dropdownItemTextSelected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+
+                    {isSelected && (
+                      <Icon name="checkmark" size={18} color="#d4af37" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+    </>
+  );
+
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -90,239 +164,66 @@ export default function Step3Religion({ profile, setProfile }) {
         <TouchableOpacity
           activeOpacity={1}
           style={{ flex: 1 }}
-          onPress={() => {
-            setShowPhysicalStatusDropdown(false);
-            setShowMaritalStatusDropdown(false);
-            setShowSubCasteDropdown(false);
-          }}
+          onPress={() => closeOtherDropdowns("")}
         >
-          {/* HEADER */}
           <View style={styles.header}>
             <Text style={styles.title}>Personal & Religious Details</Text>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.container}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* HEIGHT */}
-            <Text style={styles.label}>Height</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 5ft 6in"
-              value={profile.height}
-              placeholderTextColor="#777"
-              onChangeText={(t) => setProfile({ ...profile, height: t })}
-            />
+          <ScrollView contentContainerStyle={styles.container}>
+            
+            {renderDropdown(
+              "Height",
+              "height",
+              heightOptions,
+              showHeightDropdown,
+              setShowHeightDropdown,
+              "Select Height"
+            )}
 
-            {/* PHYSICAL STATUS */}
-            <Text style={styles.label}>Your physical status</Text>
-            <View style={styles.dropdownContainer}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.dropdownHeader}
-                onPress={() => {
-                  closeOtherDropdowns("physical");
-                  setShowPhysicalStatusDropdown(!showPhysicalStatusDropdown);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.dropdownHeaderText,
-                    !profile.physicalStatus && styles.placeholderText,
-                  ]}
-                >
-                  {profile.physicalStatus || "Select"}
-                </Text>
-                <Icon
-                  name={
-                    showPhysicalStatusDropdown ? "chevron-up" : "chevron-down"
-                  }
-                  size={20}
-                  color="#555"
-                />
-              </TouchableOpacity>
+            {renderDropdown(
+              "Your physical status",
+              "physicalStatus",
+              physicalStatusOptions,
+              showPhysicalStatusDropdown,
+              setShowPhysicalStatusDropdown
+            )}
 
-              {showPhysicalStatusDropdown && (
-                <View style={styles.dropdownList}>
-                  {physicalStatusOptions.map((item, index) => {
-                    const isSelected = profile.physicalStatus === item;
-                    return (
-                      <TouchableOpacity
-                        key={item}
-                        activeOpacity={0.85}
-                        style={[
-                          styles.dropdownItem,
-                          isSelected && styles.dropdownItemSelected,
-                          index === physicalStatusOptions.length - 1 &&
-                            styles.lastDropdownItem,
-                        ]}
-                        onPress={() => handleSelectPhysicalStatus(item)}
-                      >
-                        <Text
-                          style={[
-                            styles.dropdownItemText,
-                            isSelected && styles.dropdownItemTextSelected,
-                          ]}
-                        >
-                          {item}
-                        </Text>
+            {renderDropdown(
+              "Your marital status",
+              "maritalStatus",
+              maritalStatusOptions,
+              showMaritalStatusDropdown,
+              setShowMaritalStatusDropdown
+            )}
 
-                        {isSelected && (
-                          <Icon name="checkmark" size={18} color="#d4af37" />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-
-            {/* MARITAL STATUS */}
-            <Text style={styles.label}>Your marital status</Text>
-            <View style={styles.dropdownContainer}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.dropdownHeader}
-                onPress={() => {
-                  closeOtherDropdowns("marital");
-                  setShowMaritalStatusDropdown(!showMaritalStatusDropdown);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.dropdownHeaderText,
-                    !profile.maritalStatus && styles.placeholderText,
-                  ]}
-                >
-                  {profile.maritalStatus || "Select"}
-                </Text>
-                <Icon
-                  name={
-                    showMaritalStatusDropdown ? "chevron-up" : "chevron-down"
-                  }
-                  size={20}
-                  color="#555"
-                />
-              </TouchableOpacity>
-
-              {showMaritalStatusDropdown && (
-                <View style={styles.dropdownList}>
-                  {maritalStatusOptions.map((item, index) => {
-                    const isSelected = profile.maritalStatus === item;
-                    return (
-                      <TouchableOpacity
-                        key={item}
-                        activeOpacity={0.85}
-                        style={[
-                          styles.dropdownItem,
-                          isSelected && styles.dropdownItemSelected,
-                          index === maritalStatusOptions.length - 1 &&
-                            styles.lastDropdownItem,
-                        ]}
-                        onPress={() => handleSelectMaritalStatus(item)}
-                      >
-                        <Text
-                          style={[
-                            styles.dropdownItemText,
-                            isSelected && styles.dropdownItemTextSelected,
-                          ]}
-                        >
-                          {item}
-                        </Text>
-
-                        {isSelected && (
-                          <Icon name="checkmark" size={18} color="#d4af37" />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-
-            {/* CASTE */}
             <Text style={styles.label}>Cast</Text>
             <TextInput
               style={[styles.input, styles.disabledInput]}
               value={profile.caste || "Dhakad"}
               editable={false}
-              placeholderTextColor="#777"
             />
 
-            {/* SUB CASTE */}
-            <Text style={styles.label}>Sub Cast</Text>
-            <View style={styles.dropdownContainer}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.dropdownHeader}
-                onPress={() => {
-                  closeOtherDropdowns("subCaste");
-                  setShowSubCasteDropdown(!showSubCasteDropdown);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.dropdownHeaderText,
-                    !profile.subCaste && styles.placeholderText,
-                  ]}
-                >
-                  {profile.subCaste || "Select Sub Caste"}
-                </Text>
-                <Icon
-                  name={showSubCasteDropdown ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#555"
-                />
-              </TouchableOpacity>
+            {renderDropdown(
+              "Sub Cast",
+              "subCaste",
+              subCasteOptions,
+              showSubCasteDropdown,
+              setShowSubCasteDropdown,
+              "Select Sub Caste"
+            )}
 
-              {showSubCasteDropdown && (
-                <View style={styles.dropdownList}>
-                  {subCasteOptions.map((item, index) => {
-                    const isSelected = profile.subCaste === item;
-                    return (
-                      <TouchableOpacity
-                        key={item}
-                        activeOpacity={0.85}
-                        style={[
-                          styles.dropdownItem,
-                          isSelected && styles.dropdownItemSelected,
-                          index === subCasteOptions.length - 1 &&
-                            styles.lastDropdownItem,
-                        ]}
-                        onPress={() => handleSelectSubCaste(item)}
-                      >
-                        <Text
-                          style={[
-                            styles.dropdownItemText,
-                            isSelected && styles.dropdownItemTextSelected,
-                          ]}
-                        >
-                          {item}
-                        </Text>
-
-                        {isSelected && (
-                          <Icon name="checkmark" size={18} color="#d4af37" />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-
-            {/* GOTRA */}
             <Text style={styles.label}>Gotra</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter Your Gotra"
               value={profile.gotra}
-              placeholderTextColor="#777"
-              onChangeText={(t) => setProfile({ ...profile, gotra: t })}
+              onChangeText={(t) =>
+                setProfile({ ...profile, gotra: t })
+              }
             />
 
-            <View style={{ height: 110 }} />
+            <View style={{ height: 100 }} />
           </ScrollView>
         </TouchableOpacity>
       </KeyboardAvoidingView>

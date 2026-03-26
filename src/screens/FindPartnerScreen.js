@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useRef } from "react";
 import {
     View,
     ScrollView,
@@ -29,6 +30,7 @@ export default function FindPartnerScreen({ navigation }) {
         search: "",
     });
 
+    const [search, setSearch] = React.useState("");
 
     const [filterOptions, setFilterOptions] = useState({
         religions: [],
@@ -37,6 +39,9 @@ export default function FindPartnerScreen({ navigation }) {
         professions: [],
     });
 
+
+    const cleanArray = (arr) =>
+        [...new Set(arr.map(i => i.trim()))].slice(0, 300);
 
     const fetchFilterOptions = async () => {
         try {
@@ -48,10 +53,10 @@ export default function FindPartnerScreen({ navigation }) {
 
             if (res.data?.success) {
                 setFilterOptions({
-                    religions: res.data.filters.religions || [],
-                    locations: res.data.filters.locations || [],
-                    educations: res.data.filters.education || [],
-                    professions: res.data.filters.occupations || [],
+                    religions: cleanArray(res.data.filters.religions || []),
+                    locations: cleanArray(res.data.filters.locations || []),
+                    educations: cleanArray(res.data.filters.education || []),
+                    professions: cleanArray(res.data.filters.occupations || []),
                 });
             }
         } catch (err) {
@@ -65,8 +70,6 @@ export default function FindPartnerScreen({ navigation }) {
         fetchFilterOptions();
     }, []);
 
-
-
     const [profiles, setProfiles] = useState([]);
     const [page, setPage] = useState(1);
     const limit = 10;
@@ -74,7 +77,7 @@ export default function FindPartnerScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [sentRequests, setSentRequests] = useState([]);
     const [showFilter, setShowFilter] = useState(false);
-
+    const searchTimeout = useRef(null);
     /* 🔹 AGE MAP */
     const ageRangeToQuery = (ageRange) => {
         const map = {
@@ -89,8 +92,14 @@ export default function FindPartnerScreen({ navigation }) {
     };
 
     /* 🔹 FETCH PROFILES */
+    let cancelToken;
     const fetchProfiles = async () => {
         try {
+            if (cancelToken) {
+                cancelToken.cancel("New request triggered");
+            }
+
+            cancelToken = axios.CancelToken.source();
             setLoading(true);
             const token = await AsyncStorage.getItem("token");
             const user = await AsyncStorage.getItem("user");
@@ -118,12 +127,17 @@ export default function FindPartnerScreen({ navigation }) {
             const res = await axios.get(
                 `${API_URL}/profile/profiles?${params.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` },
+                cancelToken: cancelToken.token,
             }
             );
 
             console.log("FIND PARTNER RESPONSE 👉", res.data);
 
-            setProfiles(res.data?.profiles || []);
+            if (page === 1) {
+                setProfiles(res.data?.profiles || []);
+            } else {
+                setProfiles(prev => [...prev, ...(res.data?.profiles || [])]);
+            }
             setTotalPages(Math.ceil((res.data?.total || 0) / limit));
         } catch (err) {
             console.log("FIND PARTNER ERROR 👉", err?.response?.data || err.message);
@@ -136,25 +150,24 @@ export default function FindPartnerScreen({ navigation }) {
         fetchProfiles();
     }, [filters, page]);
 
-    /* 🔹 SEND INTEREST */
-    const handleSendInterest = async (receiverId) => {
-        try {
-            const token = await AsyncStorage.getItem("token");
-            if (!token) return alert("Please login first");
+    useEffect(() => {
+        setPage(1);
+    }, [filters]);
 
-            const res = await axios.post(
-                `${API_URL}/interest/request/send`,
-                { receiverId },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
 
-            if (res.data.success) {
-                setSentRequests((prev) => [...prev, receiverId]);
-            }
-        } catch (err) {
-            alert(err?.response?.data?.message || "Error sending interest");
-        }
-    };
+
+
+
+    const SkeletonCard = () => (
+        <View style={ui.card}>
+            <View style={{ height: 420, backgroundColor: "#eee" }} />
+            <View style={{ padding: 12 }}>
+                <View style={{ height: 15, backgroundColor: "#ddd", marginBottom: 8, borderRadius: 4 }} />
+                <View style={{ height: 12, backgroundColor: "#eee", marginBottom: 6, borderRadius: 4 }} />
+                <View style={{ height: 12, backgroundColor: "#eee", width: "60%", borderRadius: 4 }} />
+            </View>
+        </View>
+    );
 
     /* 🔹 PROFILE CARD */
     const renderItem = ({ item }) => {
@@ -285,11 +298,23 @@ export default function FindPartnerScreen({ navigation }) {
             <View style={styles.topBar}>
                 <TextInput
                     placeholder="Search Here...."
-                     placeholderTextColor="black"
+                    placeholderTextColor="black"
                     value={filters.search}
-                    onChangeText={(text) =>
-                        setFilters((prev) => ({ ...prev, search: text }))
-                    }
+                    onChangeText={(text) => {
+                        if (searchTimeout.current) {
+                            clearTimeout(searchTimeout.current);
+                        }
+
+                        searchTimeout.current = setTimeout(() => {
+                            setPage(1); // reset page
+                            setProfiles([]); // clear old data
+
+                            setFilters((prev) => ({
+                                ...prev,
+                                search: text,
+                            }));
+                        }, 500); // 🔥 debounce 500ms
+                    }}
                     style={styles.searchInput}
                 />
 
@@ -301,14 +326,31 @@ export default function FindPartnerScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            {loading ? (
-                <ActivityIndicator style={{ marginTop: 30 }} size="large" />
+            {loading && page === 1 ? (
+                <FlatList
+                    data={[1, 2, 3, 4]}
+                    renderItem={() => <SkeletonCard />}
+                />
             ) : (
                 <FlatList
                     data={listData}
-                    keyExtractor={(item) => item._id}
+                    keyExtractor={(item, index) => item._id || index.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={{ paddingBottom: 80 }}
+
+                    onEndReached={() => {
+                        if (page < totalPages && !loading) {
+                            setPage(prev => prev + 1);
+                        }
+                    }}
+                    onEndReachedThreshold={0.5}
+
+                    ListFooterComponent={
+                        loading && page > 1 ? (
+                            <ActivityIndicator style={{ margin: 10 }} />
+                        ) : null
+                    }
+
                     ListEmptyComponent={
                         <Text style={{ textAlign: "center", marginTop: 40 }}>
                             No profiles found
@@ -344,6 +386,8 @@ export default function FindPartnerScreen({ navigation }) {
                 filters={filters}
                 setFilters={setFilters}
                 filterOptions={filterOptions}
+                setPage={setPage}            // ✅ ADD
+                setProfiles={setProfiles}    // ✅ ADD
                 onClose={() => setShowFilter(false)}
             />
 
@@ -355,7 +399,7 @@ export default function FindPartnerScreen({ navigation }) {
 
 /* ================= FILTER SHEET ================= */
 
-const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) => {
+const FilterSheet = ({ visible, filters, setFilters, filterOptions, setPage, setProfiles, onClose }) => {
     if (!visible) return null;
 
     return (
@@ -365,7 +409,7 @@ const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) =
                 <Text style={fs.title}>Filters</Text>
 
                 {/* BODY */}
-                <ScrollView
+                <View
                     style={fs.body}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
@@ -376,37 +420,38 @@ const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) =
                         label="Age"
                         value={filters.age}
                         options={["18-25", "26-30", "31-35", "36-40", "41-50", "50+"]}
-                        onSelect={(v) => setFilters({ ...filters, age: v })}
+                        onSelect={(v) => setFilters((prev) => ({ ...prev, age: v }))}
                     />
 
                     <SelectField
                         label="Religion"
                         value={filters.religion}
                         options={filterOptions.religions}
-                        onSelect={(v) => setFilters({ ...filters, religion: v })}
+                        onSelect={(v) => setFilters((prev) => ({ ...prev, religion: v }))}
                     />
 
                     <SelectField
                         label="Location"
                         value={filters.location}
                         options={filterOptions.locations}
-                        onSelect={(v) => setFilters({ ...filters, location: v })}
+
+                        onSelect={(v) => setFilters((prev) => ({ ...prev, location: v }))}
                     />
 
                     <SelectField
                         label="Education"
                         value={filters.education}
                         options={filterOptions.educations}
-                        onSelect={(v) => setFilters({ ...filters, education: v })}
+                        onSelect={(v) => setFilters((prev) => ({ ...prev, education: v }))}
                     />
 
                     <SelectField
                         label="Profession"
                         value={filters.profession}
                         options={filterOptions.professions}
-                        onSelect={(v) => setFilters({ ...filters, profession: v })}
+                        onSelect={(v) => setFilters((prev) => ({ ...prev, profession: v }))}
                     />
-                </ScrollView>
+                </View>
 
                 {/* FOOTER */}
                 <View style={fs.footer}>
@@ -424,7 +469,11 @@ const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) =
                         <Text style={fs.clear}>Clear</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={fs.applyBtn} onPress={onClose}>
+                    <TouchableOpacity style={fs.applyBtn} onPress={() => {
+                        setPage(1);
+                        setProfiles([]);
+                        onClose(); // ✅ bas close karo
+                    }}>
                         <Text style={fs.applyText}>Apply</Text>
                     </TouchableOpacity>
                 </View>
@@ -436,6 +485,14 @@ const FilterSheet = ({ visible, filters, setFilters, filterOptions, onClose }) =
 
 const SelectField = ({ label, value, options, onSelect }) => {
     const [open, setOpen] = React.useState(false);
+
+    const [search, setSearch] = React.useState(""); // ✅ पहले define
+
+    const filteredOptions = React.useMemo(() => {
+        return options.filter(item =>
+            (item || "").toLowerCase().includes(search.toLowerCase())
+        );
+    }, [search, options]);
 
     return (
         <View style={{ marginBottom: 14 }}>
@@ -451,22 +508,46 @@ const SelectField = ({ label, value, options, onSelect }) => {
                 <Text style={fs.arrow}>▼</Text>
             </TouchableOpacity>
 
+
             {open && (
                 <View style={fs.dropdown}>
-                    <ScrollView nestedScrollEnabled>
-                        {options.map((item) => (
+
+                    {/* 🔍 SEARCH BOX */}
+                    <TextInput
+                        placeholder="Search..."
+                        value={search}
+                        onChangeText={setSearch}
+                        style={{
+                            borderBottomWidth: 1,
+                            borderColor: "#ddd",
+                            padding: 8
+                        }}
+                    />
+
+                    {/* ⚡ FAST LIST */}
+
+                    <FlatList
+                        data={filteredOptions}
+                        keyExtractor={(item, index) => item + index}
+                        initialNumToRender={15}
+                        maxToRenderPerBatch={15}
+                        windowSize={7}
+                        removeClippedSubviews={true}
+                        keyboardShouldPersistTaps="handled"
+                        nestedScrollEnabled
+                        renderItem={({ item }) => (
                             <TouchableOpacity
-                                key={item}
                                 style={fs.option}
                                 onPress={() => {
                                     onSelect(item);
                                     setOpen(false);
+                                    setSearch(""); // ✅ reset search
                                 }}
                             >
                                 <Text>{item}</Text>
                             </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+                        )}
+                    />
                 </View>
             )}
         </View>
@@ -489,7 +570,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#f1f1f1",
         borderRadius: 10,
         paddingHorizontal: 12,
-        
+
     },
 
     filterBtn: {
@@ -758,14 +839,14 @@ const ui = StyleSheet.create({
 
     /* OVERLAY */
     overlay: {
-    position: "absolute",
-  bottom: 56,
-  bottom: -4,   
-    left: 0,
-    right: 0,
-    padding: 14,
-    backgroundColor: "rgba(0,0,0,0.45)",
-},
+        position: "absolute",
+        bottom: 56,
+        bottom: -4,
+        left: 0,
+        right: 0,
+        padding: 14,
+        backgroundColor: "rgba(0,0,0,0.45)",
+    },
 
 
     name: {
@@ -1029,7 +1110,7 @@ const fs = StyleSheet.create({
         borderColor: "#ddd",
         borderRadius: 10,
         marginTop: 6,
-        maxHeight: 180,
+        maxHeight: 250,
         backgroundColor: "#fff",
     },
 
