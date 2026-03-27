@@ -55,6 +55,7 @@ export default function Step3Religion({ profile, setProfile }) {
   const [showPhysicalStatusDropdown, setShowPhysicalStatusDropdown] = useState(false);
   const [showMaritalStatusDropdown, setShowMaritalStatusDropdown] = useState(false);
   const [showSubCasteDropdown, setShowSubCasteDropdown] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
   /* ---------------- DEFAULT VALUES ---------------- */
   useEffect(() => {
@@ -118,7 +119,11 @@ export default function Step3Religion({ profile, setProfile }) {
 
         {show && (
           <View style={styles.dropdownList}>
-            <ScrollView style={{ maxHeight: 200 }}>
+            <ScrollView
+              style={{ maxHeight: 200 }}
+              nestedScrollEnabled={true}   // 👈 ADD
+              showsVerticalScrollIndicator={true}
+            >
               {options.map((item) => {
                 const isSelected = profile[keyName] === item.value;
 
@@ -170,8 +175,12 @@ export default function Step3Religion({ profile, setProfile }) {
             <Text style={styles.title}>Personal & Religious Details</Text>
           </View>
 
-          <ScrollView contentContainerStyle={styles.container}>
-            
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}   // 👈 ADD THIS
+          >
+
             {renderDropdown(
               "Height",
               "height",
@@ -282,7 +291,9 @@ const styles = StyleSheet.create({
 
   dropdownContainer: {
     marginBottom: 2,
-    zIndex: 99,
+    marginBottom: 12,
+    zIndex: 1000,
+    position: "relative",
   },
 
   dropdownHeader: {
@@ -311,13 +322,13 @@ const styles = StyleSheet.create({
   },
 
   dropdownList: {
-    marginTop: 8,
+    marginTop: 6,
+    maxHeight: 200,
     borderWidth: 1,
     borderColor: "#e1e1e1",
     borderRadius: 12,
     backgroundColor: "#fff",
-    overflow: "hidden",
-    elevation: 4,
+    elevation: 5,
   },
 
   dropdownItem: {

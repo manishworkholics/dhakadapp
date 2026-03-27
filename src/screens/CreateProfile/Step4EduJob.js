@@ -124,7 +124,11 @@ export default function Step4EduJob({ profile, setProfile }) {
 
         {show && (
           <View style={styles.dropdownList}>
-            <ScrollView style={{ maxHeight: 250 }}>
+           <ScrollView
+  style={{ maxHeight: 250 }}
+  nestedScrollEnabled={true}
+  showsVerticalScrollIndicator={true}
+>
               {options.map((item) => {
                 const isSelected = profile[keyName] === item.value;
 
@@ -175,7 +179,11 @@ export default function Step4EduJob({ profile, setProfile }) {
             </Text>
           </View>
 
-          <ScrollView contentContainerStyle={styles.container}>
+         <ScrollView
+  contentContainerStyle={styles.container}
+  keyboardShouldPersistTaps="handled"
+  nestedScrollEnabled={true}
+>
 
             {renderDropdown(
               "Education",
@@ -254,7 +262,7 @@ const styles = StyleSheet.create({
   },
 
   dropdownWrapper: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
 
   label: {
@@ -265,7 +273,7 @@ const styles = StyleSheet.create({
   },
 
   dropdownContainer: {
-    zIndex: 99,
+    zIndex: 1,
   },
 
   dropdownHeader: {
@@ -293,15 +301,15 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
 
-  dropdownList: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-    borderRadius: 14,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-    elevation: 4,
-  },
+ dropdownList: {
+  marginTop: 6,
+  maxHeight: 250,
+  borderWidth: 1,
+  borderColor: "#e1e1e1",
+  borderRadius: 14,
+  backgroundColor: "#fff",
+  elevation: 5,
+},
 
   dropdownItem: {
     paddingVertical: 14,
