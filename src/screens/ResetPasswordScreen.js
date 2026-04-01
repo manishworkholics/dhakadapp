@@ -10,6 +10,7 @@ import {
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AppModal from "../components/AppModal";
+import Ionicons from "react-native-vector-icons/Ionicons"; // 👈 add this
 
 const RESET_API = "http://143.110.244.163:5000/api/auth/reset-password";
 
@@ -19,18 +20,23 @@ export default function ResetPasswordScreen({ navigation, route }) {
   const [email, setEmail] = useState(routeEmail || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // 👇 NEW STATES
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState("success");
+
   const showModal = (msg, type = "success") => {
     setModalMessage(msg);
     setModalType(type);
     setModalVisible(true);
   };
 
-  // ✅ web jaisa: AsyncStorage se email load
   useEffect(() => {
     const init = async () => {
       const storedEmail = await AsyncStorage.getItem("resetEmail");
@@ -56,7 +62,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
     try {
       setLoading(true);
 
-      // ✅ EXACT web payload
       const res = await axios.post(RESET_API, {
         email,
         newPassword: password,
@@ -69,7 +74,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
 
       showModal("Password Updated!", "success");
 
-      // ✅ web jaisa cleanup
       await AsyncStorage.multiRemove(["resetEmail", "debugOtp"]);
 
       setTimeout(() => {
@@ -87,21 +91,51 @@ export default function ResetPasswordScreen({ navigation, route }) {
       <View style={styles.card}>
         <Text style={styles.title}>Create New Password</Text>
 
-        <TextInput
-          placeholder="Enter New Password"
-          secureTextEntry
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-        />
+        {/* 🔐 PASSWORD FIELD */}
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Enter New Password"
+            secureTextEntry={!showPassword}
+            style={styles.input}
+            value={password}
+            placeholderTextColor="#8a8a8a"
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeIcon}
+          >
+            <Ionicons
+              name={showPassword ? "eye" : "eye-off"}
+              size={20}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
 
-        <TextInput
-          placeholder="Confirm New Password"
-          secureTextEntry
-          style={styles.input}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
+        {/* 🔐 CONFIRM PASSWORD FIELD */}
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Confirm New Password"
+            secureTextEntry={!showConfirmPassword}
+            style={styles.input}
+            value={confirmPassword}
+            placeholderTextColor="#8a8a8a"
+            onChangeText={setConfirmPassword}
+          />
+          <TouchableOpacity
+            onPress={() =>
+              setShowConfirmPassword(!showConfirmPassword)
+            }
+            style={styles.eyeIcon}
+          >
+            <Ionicons
+              name={showConfirmPassword ? "eye" : "eye-off"}
+              size={20}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.btn} onPress={onSave} disabled={loading}>
           {loading ? (
@@ -176,4 +210,14 @@ const styles = StyleSheet.create({
   btnText: { color: "#fff", fontWeight: "900" },
   link: { textAlign: "center", color: "#6B7280", fontWeight: "700" },
   linkBold: { color: "#D4AF37", fontWeight: "900" },
+
+  inputWrapper: {
+  position: "relative",
+  justifyContent: "center",
+},
+
+eyeIcon: {
+  position: "absolute",
+  right: 12,
+},
 });
