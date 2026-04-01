@@ -213,7 +213,7 @@ export default function HomeScreen() {
             <View style={styles.topRow}>
               <View>
                 <Text style={styles.profileName}>{profile?.name}</Text>
-                <Text style={styles.profileId}>DH{profile?._id?.slice(0, 5)}</Text>
+                <Text style={styles.profileId}>DH{profile?.oldVirtualId?.slice(0, 5) || profile?._id?.slice(0, 5)}</Text>
 
                 <View style={styles.freeBadge}>
                   <Text style={styles.freeText}>
@@ -236,46 +236,6 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* 🔴 COMPLETE PROFILE */}
-          {/* <View style={styles.completeBox}>
-            <Text style={styles.completeTitle}>
-              {profile?.profileScore === 100
-                ? "Your Profile is Completed"
-                : "Complete Your Profile"}
-            </Text>
-
-            <View
-              style={[
-                styles.progressCircle,
-                {
-                  borderColor:
-                    profile?.profileScore === 100 ? "green" : "red",
-                },
-              ]}
-            >
-              <Text style={styles.progressText}>
-                {profile?.profileScore || 0}%
-              </Text>
-            </View>
-
-            <View style={styles.actionRow}>
-              {profile?.profileScore === 100 ? (
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => navigation.navigate("Profile")}
-                >
-                  <Text style={styles.actionText}>Update Profile</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => navigation.navigate("Profile")}
-                >
-                  <Text style={styles.actionText}>Complete Profile</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View> */}
 
 
           {/* ================= Premium Matches ================= */}
@@ -604,7 +564,7 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: "center",
     alignItems: "center",
-    
+
   },
 
   darkOverlay: {

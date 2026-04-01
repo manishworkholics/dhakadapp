@@ -201,14 +201,14 @@ export default function FindPartnerScreen({ navigation }) {
 
 
                 {/* JUST JOINED */}
-                <View style={ui.joinedBadge}>
+                {/* <View style={ui.joinedBadge}>
                     <Text style={ui.joinedText}>JUST JOINED</Text>
-                </View>
+                </View> */}
 
                 {/* IMAGE COUNT (optional) */}
-                <View style={ui.imageCount}>
+                {/* <View style={ui.imageCount}>
                     <Text style={ui.imageCountText}>📷 1</Text>
-                </View>
+                </View> */}
 
                 {/* BOTTOM OVERLAY */}
                 <View style={ui.overlay}>
@@ -299,21 +299,23 @@ export default function FindPartnerScreen({ navigation }) {
                 <TextInput
                     placeholder="Search Here...."
                     placeholderTextColor="black"
-                    value={filters.search}
+                    value={search}
                     onChangeText={(text) => {
+                        setSearch(text); // ✅ instant update (smooth typing)
+
                         if (searchTimeout.current) {
                             clearTimeout(searchTimeout.current);
                         }
 
                         searchTimeout.current = setTimeout(() => {
-                            setPage(1); // reset page
-                            setProfiles([]); // clear old data
+                            setPage(1);
+                            setProfiles([]);
 
                             setFilters((prev) => ({
                                 ...prev,
                                 search: text,
                             }));
-                        }, 500); // 🔥 debounce 500ms
+                        }, 500);
                     }}
                     style={styles.searchInput}
                 />

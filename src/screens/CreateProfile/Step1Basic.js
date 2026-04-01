@@ -84,7 +84,15 @@ export default function Step1Basic({ profile, setProfile }) {
               <TextInput
                 style={[styles.input, { flex: 1, marginBottom: 0 }]}
                 placeholder="YYYY-MM-DD"
-                value={profile.dob}
+                value={
+                  profile.dob
+                    ? new Date(profile.dob).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                    : ""
+                }
                 editable={false}
                 pointerEvents="none"
               />

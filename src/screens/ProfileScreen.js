@@ -234,7 +234,8 @@ export default function ProfileScreen({ navigation }) {
           </Text>
 
           <Text style={styles.profileId}>
-            Profile ID: DH{profile?._id?.slice(0, 5)}
+
+            Profile ID: DH{profile?.oldVirtualId?.slice(0, 5) || profile?._id?.slice(0, 5)}
           </Text>
 
           <TouchableOpacity

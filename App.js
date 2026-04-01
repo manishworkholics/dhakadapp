@@ -1,3 +1,7 @@
+import React, { useEffect, useState } from "react";
+import { Alert, Linking } from "react-native";
+import VersionCheck from "react-native-version-check";
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -5,7 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DrawerProvider } from './src/context/DrawerContext';
 import { ProfileProvider } from './src/context/ProfileContext';
 
-import { useEffect, useState } from 'react';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { socket } from './src/socket';
 
@@ -46,6 +50,61 @@ import ContactUsScreen from './src/screens/ContactUsScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+
+  // const checkUpdate = async () => {
+  //   try {
+  //     const latestVersion = await VersionCheck.getLatestVersion();
+  //     const currentVersion = VersionCheck.getCurrentVersion();
+
+  //     if (latestVersion !== currentVersion) {
+  //       Alert.alert(
+  //         "Update Available 🚀",
+  //         "New version available, please update your app",
+  //         [
+  //           {
+  //             text: "Update",
+  //             onPress: () => {
+  //               Linking.openURL(
+  //               "https://play.google.com/store/apps/details?id=com.dhakadmatrimony"
+  //               );
+  //             },
+  //           },
+  //         ]
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.log("Update check error:", error);
+  //   }
+  // };
+
+  const checkUpdate = async () => {
+    try {
+      const res = await VersionCheck?.needUpdate();
+
+      if (res?.isNeeded) {
+        Alert.alert(
+          "Update Available 🚀",
+          "New version available, please update your app",
+          [
+            {
+              text: "Update",
+              onPress: () => {
+                Linking.openURL(res.storeUrl); // ✅ auto correct URL
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.log("Update check error:", error);
+    }
+  };
+
+  useEffect(() => {
+    checkUpdate();
+  }, []);
+
+
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {

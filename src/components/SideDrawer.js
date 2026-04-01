@@ -136,7 +136,7 @@ export default function SideDrawer({ navigation }) {
 
                   <View style={styles.useridbox}>
                     <Text style={styles.userid}>
-                      DH{profile?._id?.slice(0, 5) || "XXXXX"}
+                      DH{profile?.oldVirtualId?.slice(0, 5) || profile?._id?.slice(0, 5)}
                     </Text>
 
                     <TouchableOpacity
@@ -240,25 +240,25 @@ export default function SideDrawer({ navigation }) {
               <Divider />
               <DrawerItem icon="logo-buffer" title="Blog" onPress={() => go("Blog")} />
               <Divider />
-<DrawerItem
-  icon="document-text-outline"
-  title="Terms & Conditions"
-  onPress={() => go("TermsAndCondition")}
-/>
-<Divider />
-<DrawerItem
-  icon="information-circle-outline"
-  title="About Us"
-  onPress={() => go("AboutUs")}
-/>
-<Divider />
-<DrawerItem
-  icon="call-outline"
-  title="Contact Us"
-  onPress={() => go("ContactUs")}
-/>
-<Divider />
-              
+              <DrawerItem
+                icon="document-text-outline"
+                title="Terms & Conditions"
+                onPress={() => go("TermsAndCondition")}
+              />
+              <Divider />
+              <DrawerItem
+                icon="information-circle-outline"
+                title="About Us"
+                onPress={() => go("AboutUs")}
+              />
+              <Divider />
+              <DrawerItem
+                icon="call-outline"
+                title="Contact Us"
+                onPress={() => go("ContactUs")}
+              />
+              <Divider />
+
 
               <TouchableOpacity style={styles.logout} onPress={handleLogout}>
                 <Icon name="log-out-outline" size={18} color="red" />

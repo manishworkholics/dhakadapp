@@ -187,7 +187,7 @@ export default function Step4EduJob({ profile, setProfile }) {
 
             {renderDropdown(
               "Education",
-              "educationDetails",
+              "education",
               educationOptions,
               showEducation,
               setShowEducation,
