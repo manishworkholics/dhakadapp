@@ -46,6 +46,7 @@ import BlogDetailsScreen from './src/screens/BlogDetailsScreen';
 import TermsAndConditionScreen from './src/screens/TermsAndConditionScreen';
 import AboutUsScreen from './src/screens/AboutUsScreen';
 import ContactUsScreen from './src/screens/ContactUsScreen';
+import GalleryScreen from './src/screens/GalleryScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -178,6 +179,7 @@ export default function App() {
             <Stack.Screen name="TermsAndCondition" component={TermsAndConditionScreen} />
             <Stack.Screen name="AboutUs" component={AboutUsScreen} />
             <Stack.Screen name="ContactUs" component={ContactUsScreen} />
+            <Stack.Screen name="Gallery" component={GalleryScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </ProfileProvider>

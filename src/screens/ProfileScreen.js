@@ -1,3 +1,6 @@
+import { Dimensions } from 'react-native';
+const { width } = Dimensions.get('window');
+const ITEM_SIZE = (width - 60) / 3;
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -234,8 +237,8 @@ export default function ProfileScreen({ navigation }) {
           </Text>
 
           <Text style={styles.profileId}>
-
-            Profile ID: DH{profile?.oldVirtualId?.slice(0, 5) || profile?._id?.slice(0, 5)}
+            Profile ID: DH
+            {profile?.oldVirtualId?.slice(0, 5) || profile?._id?.slice(0, 5)}
           </Text>
 
           <TouchableOpacity
@@ -249,7 +252,9 @@ export default function ProfileScreen({ navigation }) {
             }
           >
             <Text style={styles.editText}>
-              {profile.profileScore < 100 ? 'Complete Profile' : 'Edit Profile '}
+              {profile.profileScore < 100
+                ? 'Complete Profile'
+                : 'Edit Profile '}
             </Text>
           </TouchableOpacity>
         </View>
@@ -261,15 +266,31 @@ export default function ProfileScreen({ navigation }) {
               profile.photos.map((img, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => setPreviewImage(img)}
-                  style={{ position: 'relative' }}
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    console.log('CLICK IMAGE'); // debug
+                    setPreviewImage(img);
+                  }}
+                  style={{
+                    width: ITEM_SIZE,
+                    height: ITEM_SIZE,
+                    marginBottom: 10,
+                  }}
                 >
-                  <Image source={{ uri: img }} style={styles.galleryImg} />
+                  <Image
+                    source={{ uri: img }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 10,
+                    }}
+                  />
 
-                  {/* delete button */}
+                  {/* DELETE BUTTON */}
                   <TouchableOpacity
                     style={styles.deleteBtn}
-                    onPress={() => {
+                    onPress={e => {
+                      e.stopPropagation(); // 🔥 VERY IMPORTANT
                       setDeleteIndex(index);
                       setShowDeleteModal(true);
                     }}
@@ -369,6 +390,7 @@ export default function ProfileScreen({ navigation }) {
       {previewImage && (
         <TouchableOpacity
           style={styles.previewContainer}
+          activeOpacity={1}
           onPress={() => setPreviewImage(null)}
         >
           <Image source={{ uri: previewImage }} style={styles.previewImage} />
@@ -459,22 +481,6 @@ const styles = StyleSheet.create({
   value: { fontWeight: '600' },
 
   galleryRow: { flexDirection: 'row', flexWrap: 'wrap' },
-  galleryImg: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  addPhoto: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 
   navCard: {
     flexDirection: 'row',
@@ -519,18 +525,18 @@ const styles = StyleSheet.create({
   galleryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between', // 🔥 spacing fix
   },
 
   galleryImg: {
-    width: 100,
-    height: 100,
+    width: '100%',
+    height: '100%',
     borderRadius: 10,
   },
 
   addPhoto: {
-    width: 100,
-    height: 100,
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#ddd',

@@ -154,24 +154,16 @@ export default function BlogDetailsScreen({ route }) {
               style={styles.coverImage}
             />
 
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>Blog</Text>
-            </View>
+      
           </View>
 
           <View style={styles.contentCard}>
             <View style={styles.metaTopRow}>
               <View style={styles.metaItem}>
-                <Text style={styles.metaText}>
-                  {formatDate(blogData?.publishedAt || blogData?.createdAt)}
-                </Text>
+               
               </View>
 
-              <View style={styles.metaItem}>
-                <Text style={styles.metaText}>
-                  {blogData?.author || 'Admin'}
-                </Text>
-              </View>
+           
             </View>
 
             <Text style={styles.title}>{blogData?.title}</Text>

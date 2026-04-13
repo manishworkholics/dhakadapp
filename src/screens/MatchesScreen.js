@@ -377,9 +377,9 @@ export default function MatchesScreen() {
   );
 }
 
-const HEADER_HEIGHT = 80;
-const FOOTER_HEIGHT = 65;
-const CARD_MARGIN = 50;
+const HEADER_HEIGHT = 85;
+const FOOTER_HEIGHT = 70;
+const CARD_MARGIN = 55;
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({

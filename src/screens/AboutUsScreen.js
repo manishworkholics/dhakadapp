@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,64 +20,60 @@ const TEAM_CARD_WIDTH = Math.min(width * 0.72, 240);
 
 export default function AboutUsScreen() {
   const navigation = useNavigation();
+
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
-  const teamMembers = useMemo(
-    () => [
-      {
-        id: 1,
-        name: 'Rahul',
-        role: 'Marketing Manager',
-        image: require('../assets/images/team1.jpg'),
-      },
-      {
-        id: 2,
-        name: 'Rohit',
-        role: 'HR Manager',
-        image: require('../assets/images/team2.jpg'),
-      },
-      {
-        id: 3,
-        name: 'Shubham',
-        role: 'Marketing Manager',
-        image: require('../assets/images/team1.jpg'),
-      },
-      {
-        id: 4,
-        name: 'Karan',
-        role: 'Marketing Manager',
-        image: require('../assets/images/team2.jpg'),
-      },
-    ],
-    [],
-  );
+  // ✅ TEAM STATE
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loadingTeam, setLoadingTeam] = useState(true);
 
+  // ✅ API CALL
+  useEffect(() => {
+    fetchTeam();
+  }, []);
+
+  const fetchTeam = async () => {
+    try {
+      const res = await fetch('http://143.110.244.163:5000/api/team');
+      const json = await res.json();
+
+      if (json.success) {
+        const sorted = json.members.sort((a, b) => a.order - b.order);
+        setTeamMembers(sorted);
+      }
+    } catch (e) {
+      console.log('API ERROR:', e);
+    } finally {
+      setLoadingTeam(false);
+    }
+  };
+
+  // ✅ FAQ SAME
   const faqData = useMemo(
     () => [
       {
         question: 'Who can register?',
         answer:
-          'Any adult individual from the Dhakad community, or families looking for a suitable life partner for their loved ones, can register on Dhakad Matrimony.',
+          'Any adult individual from the Dhakad community can register.',
       },
       {
         question: 'Is it safe and secure?',
         answer:
-          'Yes, our platform focuses on profile authenticity, privacy, and secure user experience. We aim to provide a trusted and respectful matchmaking environment.',
+          'Yes, our platform focuses on privacy and authenticity.',
       },
       {
         question: 'How is it different?',
         answer:
-          'Dhakad Matrimony is specially focused on the Dhakad community, combining cultural values, genuine profiles, and modern technology for meaningful matches.',
+          'Focused on Dhakad community with genuine profiles.',
       },
       {
         question: 'Is registration free?',
-        answer:
-          'Yes, registration can be free depending on the services offered. Additional premium features can be introduced as per app requirements.',
+        answer: 'Yes, basic registration is free.',
       },
       {
         question: 'How can I find matches?',
         answer:
-          'After registration, you can browse profiles, apply filters, and connect with suitable matches based on preferences, compatibility, and family values.',
+          'Browse profiles and connect based on preferences.',
       },
     ],
     [],
@@ -102,11 +98,10 @@ export default function AboutUsScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#F3EEF7" />
 
       <View style={styles.container}>
-        {/* Header */}
+        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            activeOpacity={0.8}
             style={styles.backBtn}
           >
             <Icon name="arrow-back" size={24} color="#1E1E1E" />
@@ -117,90 +112,60 @@ export default function AboutUsScreen() {
           <View style={styles.rightSpace} />
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
-        >
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
-            {/* Top Banner */}
+            {/* TOP BANNER */}
             <View style={styles.topBanner}>
-              <Text style={styles.topBannerText}>Lakhs of Happy Marriages</Text>
+              <Text style={styles.topBannerText}>
+                Lakhs of Happy Marriages
+              </Text>
             </View>
 
-            {/* Image Area */}
+            {/* IMAGE SECTION */}
             <View style={styles.imageSection}>
               <View style={styles.circleWrap}>
                 <Image
                   source={require('../assets/images/couple 1.png')}
                   style={[styles.circleImage, styles.leftCircle]}
-                  resizeMode="cover"
                 />
-
                 <Image
                   source={require('../assets/images/about1.png')}
                   style={[styles.circleImage, styles.rightCircle]}
-                  resizeMode="cover"
                 />
               </View>
             </View>
 
-            {/* Content */}
+            {/* TEXT */}
             <View style={styles.textSection}>
               <Text style={styles.welcomeText}>Welcome To</Text>
               <Text style={styles.brandText}>Dhakad Matrimony</Text>
 
               <Text style={styles.description}>
                 A trusted platform dedicated to bringing together individuals
-                and families from the Dhakad community. Our mission is to help
-                you find a life partner who shares your values, traditions, and
-                vision for the future.
+                and families from the Dhakad community.
               </Text>
 
               <Text style={styles.description}>
-                We understand that marriage is not just a bond between two
-                individuals, but a union of families. That’s why Dhakad
-                Matrimony focuses on authenticity, compatibility, and cultural
-                harmony.
-              </Text>
-
-              <Text style={styles.description}>
-                Our platform offers a safe, reliable, and easy-to-use
-                experience, ensuring genuine profiles and meaningful
-                connections. With deep respect for Dhakad traditions and modern
-                lifestyle needs, we aim to bridge the gap between tradition and
-                technology.
-              </Text>
-
-              <Text style={styles.description}>
-                Whether you are looking for a partner for yourself or for a
-                loved one, Dhakad Matrimony is committed to making your journey
-                simple, respectful, and successful.
+                We understand that marriage is a union of families.
               </Text>
 
               <View style={styles.infoCard}>
                 <Text style={styles.infoTitle}>Our Mission</Text>
                 <Text style={styles.infoText}>
-                  Our mission is to provide a safe, reliable, and
-                  community-focused matrimony platform for the Dhakad community.
-                  We are committed to helping individuals and families find
-                  suitable life partners through genuine profiles, transparent
-                  processes, and respectful matchmaking.
+                  Provide safe and reliable matrimony platform.
                 </Text>
               </View>
 
               <View style={styles.infoCard}>
                 <Text style={styles.infoTitle}>Our Vision</Text>
                 <Text style={styles.infoText}>
-                  Our vision is to become the most trusted and respected
-                  matrimony platform for the Dhakad community by preserving
-                  cultural values while embracing modern technology for genuine
-                  and successful matches.
+                  Become most trusted matrimony platform.
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Meet Our Team */}
+          {/* 🔥 TEAM SECTION */}
           <View style={styles.sectionContainer}>
             {renderSectionTitle('Meet', 'Our Team')}
 
@@ -209,20 +174,31 @@ export default function AboutUsScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.teamScrollContent}
             >
-              {teamMembers.map(member => (
-                <View key={member.id} style={styles.teamCard}>
-                  <Image
-                    source={member.image}
-                    style={styles.teamImage}
-                    resizeMode="cover"
-                  />
+              {loadingTeam ? (
+                <Text style={{ marginLeft: 10 }}>Loading...</Text>
+              ) : (
+                teamMembers.map(member => (
+                  <View key={member._id} style={styles.teamCard}>
+                    <Image
+                      source={{
+                        uri:
+                          member.photo ||
+                          'https://via.placeholder.com/300',
+                      }}
+                      style={styles.teamImage}
+                    />
 
-                  <View style={styles.teamInfoCard}>
-                    <Text style={styles.teamName}>{member.name}</Text>
-                    <Text style={styles.teamRole}>{member.role}</Text>
+                    <View style={styles.teamInfoCard}>
+                      <Text style={styles.teamName}>
+                        {member.name}
+                      </Text>
+                      <Text style={styles.teamRole}>
+                        {member.post}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              ))}
+                ))
+              )}
             </ScrollView>
           </View>
 
@@ -237,23 +213,27 @@ export default function AboutUsScreen() {
                 return (
                   <View key={index} style={styles.faqItem}>
                     <TouchableOpacity
-                      activeOpacity={0.8}
                       style={styles.faqHeader}
                       onPress={() => toggleFaq(index)}
                     >
-                      <Text style={styles.faqQuestion}>{item.question}</Text>
+                      <Text style={styles.faqQuestion}>
+                        {item.question}
+                      </Text>
                       <Icon
                         name={
-                          isOpen ? 'chevron-up-outline' : 'chevron-down-outline'
+                          isOpen
+                            ? 'chevron-up-outline'
+                            : 'chevron-down-outline'
                         }
                         size={22}
-                        color="#2C2C2C"
                       />
                     </TouchableOpacity>
 
                     {isOpen && (
                       <View style={styles.faqBody}>
-                        <Text style={styles.faqAnswer}>{item.answer}</Text>
+                        <Text style={styles.faqAnswer}>
+                          {item.answer}
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -272,16 +252,8 @@ export default function AboutUsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F3EEF7',
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: '#F3EEF7',
-    marginBottom:30
-  },
+  safeArea: { flex: 1, backgroundColor: '#F3EEF7' },
+  container: { flex: 1, marginBottom: 30 },
 
   header: {
     height: 58,
@@ -289,35 +261,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    backgroundColor: '#F3EEF7',
   },
 
   backBtn: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E1E1E',
-  },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
+  rightSpace: { width: 34 },
 
-  rightSpace: {
-    width: 34,
-  },
-
-  content: {
-    paddingBottom: 24,
-  },
-
-  card: {
-    backgroundColor: '#F8F6F3',
-    overflow: 'hidden',
-  },
+  card: { backgroundColor: '#F8F6F3' },
 
   topBanner: {
     height: 60,
@@ -326,26 +282,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  topBannerText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  imageSection: {
-    backgroundColor: '#F8F6F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 30,
-    paddingBottom: 30,
-  },
+  topBannerText: { color: '#fff', fontWeight: '700' },
+
+  imageSection: { alignItems: 'center', padding: 30 },
 
   circleWrap: {
     width: width,
     height: CIRCLE_SIZE + 30,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
   },
 
   circleImage: {
@@ -355,105 +300,47 @@ const styles = StyleSheet.create({
     borderWidth: 6,
     borderColor: '#9B2C2C',
     position: 'absolute',
-    backgroundColor: '#ddd',
   },
 
-  leftCircle: {
-    left: width * 0.12,
-    zIndex: 1,
-  },
+  leftCircle: { left: width * 0.12 },
+  rightCircle: { right: width * 0.12 },
 
-  rightCircle: {
-    right: width * 0.12,
-    zIndex: 2,
-  },
+  textSection: { padding: 16 },
 
-  textSection: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
+  welcomeText: { fontSize: 25, fontWeight: '800' },
+  brandText: { fontSize: 24, color: '#D4AF37' },
 
-  welcomeText: {
-    fontSize: 25,
-    fontWeight: '800',
-    color: '#1B2A3A',
-    marginBottom: 2,
-    marginTop: -10,
-  },
-
-  brandText: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#D4AF37',
-    marginBottom: 12,
-  },
-
-  description: {
-    fontSize: 15,
-    color: '#111827',
-    lineHeight: 28,
-    marginBottom: 10,
-  },
+  description: { fontSize: 15, marginBottom: 10, lineHeight: 24 },
 
   infoCard: {
     marginTop: 10,
-    backgroundColor: '#FFF',
-    borderRadius: 14,
+    backgroundColor: '#fff',
     padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E8DFC9',
   },
 
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#6D2606',
-    marginBottom: 6,
-  },
+  infoTitle: { fontWeight: '700', color: '#6D2606' },
+  infoText: { color: '#444' },
 
-  infoText: {
-    fontSize: 14,
-    color: '#444',
-    lineHeight: 22,
-  },
+  sectionContainer: { paddingHorizontal: 16, marginTop: 24 },
 
-  sectionContainer: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-  },
+  sectionTitleWrap: { alignItems: 'center', marginBottom: 18 },
 
-  sectionTitleWrap: {
-    alignItems: 'center',
-    marginBottom: 18,
-  },
+  sectionTitle: { fontSize: 26, fontWeight: '800' },
 
-  sectionTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-
-  sectionTitleBlack: {
-    color: '#16202A',
-  },
-
-  sectionTitleGold: {
-    color: '#D4AF37',
-  },
+  sectionTitleBlack: { color: '#16202A' },
+  sectionTitleGold: { color: '#D4AF37' },
 
   titleUnderline: {
-    marginTop: 6,
     width: 120,
     height: 3,
-    borderRadius: 4,
     backgroundColor: '#D4AF37',
+    marginTop: 6,
   },
 
-  teamScrollContent: {
-    paddingLeft: 2,
-    paddingRight: 10,
-    paddingBottom: 6,
-  },
+  teamScrollContent: { paddingRight: 10 },
 
   teamCard: {
     width: TEAM_CARD_WIDTH,
@@ -465,16 +352,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 210,
     borderRadius: 18,
-    backgroundColor: '#D9D9D9',
   },
 
   teamInfoCard: {
     width: '86%',
-    backgroundColor: '#FFFFFF',
-    marginTop: -26,
+    backgroundColor: '#fff',
+    marginTop: -26, // 🔥 overlap effect
     borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    padding: 10,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -483,61 +368,28 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  teamName: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#E53935',
-    marginBottom: 4,
-  },
+  teamName: { fontWeight: '800', color: '#E53935' },
+  teamRole: { color: '#374151' },
 
-  teamRole: {
-    fontSize: 13,
-    color: '#374151',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-
-  faqContainer: {
-    marginTop: 4,
-  },
+  faqContainer: {},
 
   faqItem: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
+    marginBottom: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#D9DEE5',
-    borderRadius: 14,
-    marginBottom: 12,
-    overflow: 'hidden',
   },
 
   faqHeader: {
-    minHeight: 58,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    padding: 16,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
   },
 
-  faqQuestion: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1F2937',
-    fontWeight: '600',
-    paddingRight: 12,
-  },
+  faqQuestion: { fontWeight: '600' },
 
-  faqBody: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#EEF1F4',
-  },
+  faqBody: { padding: 16 },
 
-  faqAnswer: {
-    fontSize: 14,
-    color: '#4B5563',
-    lineHeight: 22,
-    marginTop: 12,
-  },
+  faqAnswer: { color: '#4B5563' },
 });

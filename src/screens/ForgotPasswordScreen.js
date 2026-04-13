@@ -66,7 +66,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Reset Your Password </Text>
+        <Text style={styles.title}>Reset Your Password</Text>
 
         <Text style={styles.label}>Enter Registered Email</Text>
 

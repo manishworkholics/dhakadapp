@@ -15,6 +15,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
+import Entypo from "react-native-vector-icons/Entypo";
 import Clipboard from "@react-native-clipboard/clipboard";
 import axios from "axios";
 import { CommonActions } from "@react-navigation/native";
@@ -215,8 +216,8 @@ export default function SideDrawer({ navigation }) {
               />
               <Divider />
               <DrawerItem
-                icon="filter-outline"
-                title="Contact Filters"
+                icon="people-sharp"
+                title="FindPartner"
                 onPress={() => go("FindPartner")}
               />
               <Divider />
@@ -259,9 +260,15 @@ export default function SideDrawer({ navigation }) {
               />
               <Divider />
 
+              <DrawerItem
+                icon="images-sharp"
+                title="Gallery"
+                onPress={() => go("Gallery")}
+              />
+
 
               <TouchableOpacity style={styles.logout} onPress={handleLogout}>
-                <Icon name="log-out-outline" size={18} color="red" />
+                <Entypo name="log-out" size={17} color="red" />
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </ScrollView>

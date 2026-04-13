@@ -138,8 +138,6 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.screen}>
-  
-
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -302,7 +300,12 @@ export default function RegisterScreen() {
 
               <Text style={styles.termsText}>
                 I agree to the{' '}
-                <Text style={styles.termsLink}>Terms & Conditions</Text>
+                <Text
+                  style={styles.termsLink}
+                  onPress={() => navigation.navigate('TermsAndCondition')}
+                >
+                  Terms & Conditions
+                </Text>
               </Text>
             </View>
             <TouchableOpacity
@@ -352,7 +355,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingBottom: 28,
-    marginTop: 125,
+    marginTop: 90,
   },
 
   card: {
