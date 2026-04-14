@@ -324,6 +324,9 @@ export default function ProfileScreen({ navigation }) {
           <InfoRow label="Marital Status" value={profile.maritalStatus} />
           <InfoRow label="Physical Status" value={profile.physicalStatus} />
           <InfoRow label="Height" value={profile.height} />
+          <InfoRow label="Birth Place" value={profile.birthPlace} />
+          <InfoRow label="Birth Time" value={profile.birthTime} />
+          <InfoRow label="Skin Tone" value={profile.skinTone} />
         </Section>
 
         {/* 🔹 RELIGION */}

@@ -61,6 +61,11 @@ export default function CreateProfileScreen({ navigation, route }) {
     subCaste: existingProfile?.subCaste || "",
     gotra: existingProfile?.gotra || "",
 
+    // New fields
+    birthPlace: existingProfile?.birthPlace || "",
+    birthTime: existingProfile?.birthTime || "",
+    skinTone: existingProfile?.skinTone || "",
+
     education: existingProfile?.educationDetails || "",
     employmentType: existingProfile?.employmentType || "",
     occupation: existingProfile?.occupation || "",
@@ -132,6 +137,11 @@ export default function CreateProfileScreen({ navigation, route }) {
         caste: profileData.caste,
         subCaste: profileData.subCaste,
         gotra: profileData.gotra,
+
+        // New fields
+        birthPlace: profileData.birthPlace,
+        birthTime: profileData.birthTime,
+        skinTone: profileData.skinTone,
 
         educationDetails: profileData.education,
         employmentType: profileData.employmentType,

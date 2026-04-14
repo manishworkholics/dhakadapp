@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Alert, Linking } from "react-native";
-import VersionCheck from "react-native-version-check";
+import React, { useEffect, useState } from 'react';
+import { Alert, Linking } from 'react-native';
+import VersionCheck from 'react-native-version-check';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,10 +9,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DrawerProvider } from './src/context/DrawerContext';
 import { ProfileProvider } from './src/context/ProfileContext';
 
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { socket } from './src/socket';
-
 
 /* 🔹 SCREENS */
 import SplashScreen from './src/screens/SplashScreen';
@@ -46,65 +44,37 @@ import BlogDetailsScreen from './src/screens/BlogDetailsScreen';
 import TermsAndConditionScreen from './src/screens/TermsAndConditionScreen';
 import AboutUsScreen from './src/screens/AboutUsScreen';
 import ContactUsScreen from './src/screens/ContactUsScreen';
-import GalleryScreen from './src/screens/GalleryScreen'
-
+import GalleryScreen from './src/screens/GalleryScreen';
+import AddSuccessStoryScreen from './src/screens/AddSuccessStoryScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-
-  // const checkUpdate = async () => {
-  //   try {
-  //     const latestVersion = await VersionCheck.getLatestVersion();
-  //     const currentVersion = VersionCheck.getCurrentVersion();
-
-  //     if (latestVersion !== currentVersion) {
-  //       Alert.alert(
-  //         "Update Available 🚀",
-  //         "New version available, please update your app",
-  //         [
-  //           {
-  //             text: "Update",
-  //             onPress: () => {
-  //               Linking.openURL(
-  //               "https://play.google.com/store/apps/details?id=com.dhakadmatrimony"
-  //               );
-  //             },
-  //           },
-  //         ]
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.log("Update check error:", error);
-  //   }
-  // };
-
   const checkUpdate = async () => {
     try {
       const res = await VersionCheck?.needUpdate();
 
       if (res?.isNeeded) {
         Alert.alert(
-          "Update Available 🚀",
-          "New version available, please update your app",
+          'Update Available 🚀',
+          'New version available, please update your app',
           [
             {
-              text: "Update",
+              text: 'Update',
               onPress: () => {
                 Linking.openURL(res.storeUrl); // ✅ auto correct URL
               },
             },
-          ]
+          ],
         );
       }
     } catch (error) {
-      console.log("Update check error:", error);
+      console.log('Update check error:', error);
     }
   };
 
   useEffect(() => {
     checkUpdate();
   }, []);
-
 
   const [userId, setUserId] = useState(null);
 
@@ -159,11 +129,11 @@ export default function App() {
               component={ProfileDetailScreen}
             />
             <Stack.Screen
-              name="PartnerPreference"
+              name="PartnerPreference "
               component={PartnerPreferenceScreen}
             />
             <Stack.Screen
-              name="CreateProfile"
+              name="CreateProfile "
               component={CreateProfileScreen}
             />
             <Stack.Screen name="FindPartner" component={FindPartnerScreen} />
@@ -176,10 +146,17 @@ export default function App() {
             <Stack.Screen name="RateReview" component={RateReviewScreen} />
             <Stack.Screen name="Blog" component={BlogScreen} />
             <Stack.Screen name="BlogDetails" component={BlogDetailsScreen} />
-            <Stack.Screen name="TermsAndCondition" component={TermsAndConditionScreen} />
+            <Stack.Screen
+              name="TermsAndCondition"
+              component={TermsAndConditionScreen}
+            />
             <Stack.Screen name="AboutUs" component={AboutUsScreen} />
             <Stack.Screen name="ContactUs" component={ContactUsScreen} />
             <Stack.Screen name="Gallery" component={GalleryScreen} />
+            <Stack.Screen
+              name="AddSuccessStory"
+              component={AddSuccessStoryScreen}
+            />
           </Stack.Navigator>
         </NavigationContainer>
       </ProfileProvider>

@@ -383,7 +383,11 @@ export default function ProfileDetailScreen({ route, navigation }) {
             </View>
           </View>
 
+
           <InfoRow label="Birth Date" value={new Date(profile.dob).toDateString()} />
+          <InfoRow label="Birth Place" value={profile.birthPlace || "-"} />
+          <InfoRow label="Birth Time" value={profile.birthTime || "-"} />
+          <InfoRow label="Skin Tone" value={profile.skinTone || "-"} />
           <InfoRow label="Mother Tongue" value={profile.motherTongue || "N/A"} />
           <InfoRow label="Location" value={profile.location || "N/A"} />
           <InfoRow label="Physical Status" value={profile.physicalStatus || "N/A"} />

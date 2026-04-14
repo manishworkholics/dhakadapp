@@ -587,12 +587,7 @@ const styles = StyleSheet.create({
     width: "90%",
     height: "85%",
   },
-  successStoryImg: {
-    width: "100%",
-    height: 240,
-    resizeMode: "contain",
-    backgroundColor: "#f5f5f5",
-  },
+  
 
 
   newMatchWrapper: {
@@ -915,8 +910,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 19,
     paddingVertical: 20,
     paddingLeft: 10,
-    paddingBottom: 26,   // ⭐ KEY FIX
-    elevation: 1,
+    paddingBottom: 26,
+       // ⭐ KEY FIX
+    
   },
 
 
@@ -928,15 +924,19 @@ const styles = StyleSheet.create({
     marginRight: 14,
     marginBottom: 10,     // ⭐ prevents touching
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#E6E6E6",
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    height: 370,
   },
 
   successStoryImg: {
     width: "100%",
     height: 240,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    resizeMode: "cover",
+    marginTop: -10,
+    
   },
 
   successStoryContent: {

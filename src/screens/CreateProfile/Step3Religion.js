@@ -45,9 +45,11 @@ const physicalStatusOptions = [
 // Marital Status (match web exactly)
 const maritalStatusOptions = [
   { label: "Never Married", value: "Never married" },
+  { label: "Married", value: "Married" },
   { label: "Previously Married (Divorced)", value: "Divorced" },
   { label: "Previously Married (Widowed)", value: "Widower" },
   { label: "Legally Separated / Awaiting Divorce", value: "Awaiting divorce" },
+  
 ];
 
 export default function Step3Religion({ profile, setProfile }) {
@@ -231,6 +233,71 @@ export default function Step3Religion({ profile, setProfile }) {
                 setProfile({ ...profile, gotra: t })
               }
             />
+
+            {/* New Profile Fields */}
+            <Text style={styles.label}>Birth Place</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Birth Place"
+              value={profile.birthPlace}
+              onChangeText={(t) => setProfile({ ...profile, birthPlace: t })}
+            />
+
+            <Text style={styles.label}>Birth Time</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Birth Time"
+              value={profile.birthTime}
+              onChangeText={(t) => setProfile({ ...profile, birthTime: t })}
+            />
+
+            <Text style={styles.label}>Skin Tone</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  closeOtherDropdowns('skinTone');
+                  setActiveDropdown(activeDropdown === 'skinTone' ? null : 'skinTone');
+                }}
+              >
+                <Text style={styles.dropdownHeaderText}>
+                  {profile.skinTone ? profile.skinTone : '-'}
+                </Text>
+                <Icon name={activeDropdown === 'skinTone' ? 'chevron-up' : 'chevron-down'} size={20} />
+              </TouchableOpacity>
+              {activeDropdown === 'skinTone' && (
+                <View style={styles.dropdownList}>
+                  <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled={true} showsVerticalScrollIndicator={true}>
+                    {['Fair', 'Wheatish', 'Medium', 'Dark', 'Very Dark'].map((tone) => (
+                      <TouchableOpacity
+                        key={tone}
+                        style={[
+                          styles.dropdownItem,
+                          profile.skinTone === tone && styles.dropdownItemSelected,
+                        ]}
+                        onPress={() => {
+                          setProfile({ ...profile, skinTone: tone });
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            profile.skinTone === tone && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {tone}
+                        </Text>
+                        {profile.skinTone === tone && (
+                          <Icon name="checkmark" size={18} color="#d4af37" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+            {/* End New Profile Fields */}
 
             <View style={{ height: 100 }} />
           </ScrollView>
