@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 22,
     paddingTop: 10,
-    paddingBottom: 140,
+    paddingBottom: 202,
   },
 
   label: { fontWeight: "700", marginBottom: 6, color: "#111" },
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  backActionText: { color: "#ff4e50", fontWeight: "800" },
+  backActionText: { color: "#ff4e50", fontWeight: "800" }, 
 
   submitBtn: {
     flex: 1.3,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom: 65
+    marginBottom: 100
   },
 
   submitText: { color: "#fff", fontSize: 15, fontWeight: "800" },

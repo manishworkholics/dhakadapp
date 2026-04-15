@@ -476,12 +476,12 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 15,
     borderBottomWidth: 0.5,
-    borderColor: '#eee',
+    borderColor: '#DCDCDC',
   },
-  label: { color: '#666' },
-  value: { fontWeight: '600' },
+  label: { color: '#2F4F4F' },
+  value: { fontWeight: '700' },
 
   galleryRow: { flexDirection: 'row', flexWrap: 'wrap' },
 

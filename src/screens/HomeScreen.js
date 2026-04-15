@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
     marginBottom: 10,     // ⭐ prevents touching
     overflow: "hidden",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#E6E6E6",
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,

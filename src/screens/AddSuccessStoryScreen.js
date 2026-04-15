@@ -388,7 +388,7 @@ export default function AddSuccessStoryScreen({ navigation }) {
               ) : (
                 <>
                   <Icon name="camera" size={26} color="#d4af37" />
-                  <Text style={styles.imageText}>Add Photo</Text>
+                  <Text style={styles.imageText}>Upload Photo</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -397,6 +397,7 @@ export default function AddSuccessStoryScreen({ navigation }) {
               style={styles.input}
               placeholder="Story Title"
               value={title}
+              placeholderTextColor={'black'}
               onChangeText={setTitle}
             />
 
@@ -404,6 +405,7 @@ export default function AddSuccessStoryScreen({ navigation }) {
               style={styles.input}
               placeholder="Your Name"
               value={name}
+              placeholderTextColor={'black'}
               onChangeText={setName}
             />
 
@@ -411,6 +413,7 @@ export default function AddSuccessStoryScreen({ navigation }) {
               style={styles.input}
               placeholder="Partner Name"
               value={partnerName}
+              placeholderTextColor={'black'}
               onChangeText={setPartnerName}
             />
 
@@ -418,6 +421,7 @@ export default function AddSuccessStoryScreen({ navigation }) {
               style={[styles.input, { height: 110 }]}
               placeholder="Your Story"
               value={story}
+              placeholderTextColor={'black'}
               onChangeText={setStory}
               multiline
             />
@@ -509,8 +513,9 @@ const styles = StyleSheet.create({
   },
 
   imageText: {
-    marginTop: 6,
+    marginTop: 8,
     color: "#d4af37",
+    fontWeight: "600",
   },
 
   input: {
@@ -520,6 +525,9 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
     backgroundColor: "#fafafa",
+    color:"#2F4F4F",
+    fontSize:15,
+    fontWeight:"400"
   },
 
   button: {

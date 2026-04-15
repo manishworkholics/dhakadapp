@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingBottom: 28,
-    marginTop: 90,
+    marginTop: 60,
   },
 
   card: {

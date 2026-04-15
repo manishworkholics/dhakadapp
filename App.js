@@ -133,7 +133,7 @@ export default function App() {
               component={PartnerPreferenceScreen}
             />
             <Stack.Screen
-              name="CreateProfile "
+              name="CreateProfile"
               component={CreateProfileScreen}
             />
             <Stack.Screen name="FindPartner" component={FindPartnerScreen} />

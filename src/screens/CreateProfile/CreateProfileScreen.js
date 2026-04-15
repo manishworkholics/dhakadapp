@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: "space-between",
     alignItems: "center",
+    
   },
   backBtn: {
     backgroundColor: "#f0f0f0",
@@ -268,6 +269,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#e9e9e9",
     flexDirection: "row",
     gap: 12,
+    marginBottom:15
   },
 
   backAction: {
