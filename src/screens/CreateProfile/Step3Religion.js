@@ -499,75 +499,7 @@ export default function Step3Religion({ profile, setProfile }) {
 
 
 
-            <Text style={styles.label}>Rashi / Nakshatra</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Rashi / Nakshatra"
-              value={profile.rashiNakshatra}
-              onChangeText={(t) =>
-                setProfile({ ...profile, rashiNakshatra: t })
-              }
-            />
 
-
-
-            <Text style={styles.label}>Mangalik</Text>
-            <View style={styles.dropdownContainer}>
-              <TouchableOpacity
-                style={styles.dropdownHeader}
-                onPress={() => {
-                  closeOtherDropdowns("mangalik");
-                  setActiveDropdown(
-                    activeDropdown === "mangalik" ? null : "mangalik"
-                  );
-                }}
-              >
-                <Text style={styles.dropdownHeaderText}>
-                  {profile.mangalik ? profile.mangalik : "Select"}
-                </Text>
-                <Icon
-                  name={activeDropdown === "mangalik" ? "chevron-up" : "chevron-down"}
-                  size={20}
-                />
-              </TouchableOpacity>
-
-              {activeDropdown === "mangalik" && (
-                <View style={styles.dropdownList}>
-                  <ScrollView nestedScrollEnabled>
-                    {["Yes", "No"].map((item) => {
-                      const isSelected = profile.mangalik === item;
-
-                      return (
-                        <TouchableOpacity
-                          key={item}
-                          style={[
-                            styles.dropdownItem,
-                            isSelected && styles.dropdownItemSelected,
-                          ]}
-                          onPress={() => {
-                            setProfile({ ...profile, mangalik: item });
-                            setActiveDropdown(null);
-                          }}
-                        >
-                          <Text
-                            style={[
-                              styles.dropdownItemText,
-                              isSelected && styles.dropdownItemTextSelected,
-                            ]}
-                          >
-                            {item}
-                          </Text>
-
-                          {isSelected && (
-                            <Icon name="checkmark" size={18} color="#d4af37" />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-              )}
-            </View>
 // 🔥 NEW FIELDS END
 
             <View style={{ height: 100 }} />
