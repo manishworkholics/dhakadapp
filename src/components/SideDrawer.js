@@ -178,14 +178,13 @@ export default function SideDrawer({ navigation }) {
                     : 'Complete Your Profile'}
                 </Text>
 
-                <View
-                  style={[
-                    styles.progressCircle,
-                    {
-                      borderColor: isProfileComplete ? 'green' : 'red',
-                    },
-                  ]}
-                >
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      { width: `${profileScore}%` },
+                    ]}
+                  />
                   <Text style={styles.progressText}>{profileScore}%</Text>
                 </View>
 
@@ -430,14 +429,15 @@ const styles = StyleSheet.create({
   },
 
   progressCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 250,
+    height: 44,
+    borderRadius: 20,
     borderWidth: 6,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 14,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF8DC',
+
   },
 
   progressText: {
@@ -502,4 +502,30 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 15,
   },
+
+  progressBarContainer: {
+  width: "100%",
+  height: 28,
+  backgroundColor: "#F3E9D2", // light gold bg
+  borderRadius: 20,
+  overflow: "hidden",
+  justifyContent: "center",
+  marginVertical: 14,
+},
+
+progressFill: {
+  height: "100%",
+  backgroundColor: "#DAA520", // gold fill
+  borderRadius: 20,
+  position: "absolute",
+  left: 0,
+  top: 0,
+},
+
+progressText: {
+  textAlign: "center",
+  fontWeight: "800",
+  color: "white",
+  fontSize: 14,
+},
 });

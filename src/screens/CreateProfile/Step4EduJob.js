@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
+import { TextInput } from "react-native";
 
 /* ---------------- OPTIONS (MATCH WEB EXACTLY) ---------------- */
 
@@ -71,20 +72,35 @@ const annualIncomeOptions = [
 ];
 
 export default function Step4EduJob({ profile, setProfile }) {
+
+  
   const [showEducation, setShowEducation] = useState(false);
   const [showEmployment, setShowEmployment] = useState(false);
   const [showOccupation, setShowOccupation] = useState(false);
   const [showIncome, setShowIncome] = useState(false);
+ 
 
   /* ---------------- COMMON FUNCTIONS ---------------- */
 
-  const handleSelect = (key, item, setDropdown) => {
-    setProfile((prev) => ({
-      ...prev,
-      [key]: item.value,
-    }));
-    setDropdown(false);
-  };
+ const handleSelect = (key, item, setDropdown) => {
+  setProfile((prev) => {
+    let updated = { ...prev, [key]: item.value };
+
+    if (key === "education" && item.value !== "others") {
+      updated.otherEducation = "";
+    }
+    if (key === "employmentType" && item.value !== "others") {
+      updated.otherEmployment = "";
+    }
+    if (key === "occupation" && item.value !== "others") {
+      updated.otherOccupation = "";
+    }
+
+    return updated;
+  });
+
+  setDropdown(false);
+};
 
   const getLabel = (options, value, placeholder) => {
     return options.find((i) => i.value === value)?.label || placeholder;
@@ -124,11 +140,11 @@ export default function Step4EduJob({ profile, setProfile }) {
 
         {show && (
           <View style={styles.dropdownList}>
-           <ScrollView
-  style={{ maxHeight: 250 }}
-  nestedScrollEnabled={true}
-  showsVerticalScrollIndicator={true}
->
+            <ScrollView
+              style={{ maxHeight: 250 }}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+            >
               {options.map((item) => {
                 const isSelected = profile[keyName] === item.value;
 
@@ -179,11 +195,11 @@ export default function Step4EduJob({ profile, setProfile }) {
             </Text>
           </View>
 
-         <ScrollView
-  contentContainerStyle={styles.container}
-  keyboardShouldPersistTaps="handled"
-  nestedScrollEnabled={true}
->
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}
+          >
 
             {renderDropdown(
               "Education",
@@ -193,7 +209,23 @@ export default function Step4EduJob({ profile, setProfile }) {
               setShowEducation,
               "Select education"
             )}
-
+         {profile.education === "others" && (
+  <>
+    <Text style={styles.label}>Other Education</Text>
+    <TextInput
+      style={styles.input}
+      placeholder="Enter your education"
+      placeholderTextColor={"#A9A9A9"}
+      value={profile.otherEducation || ""}
+      onChangeText={(text) =>
+        setProfile((prev) => ({
+          ...prev,
+          otherEducation: text,
+        }))
+      }
+    />
+  </>
+)}
             {renderDropdown(
               "Employment Type",
               "employmentType",
@@ -202,7 +234,22 @@ export default function Step4EduJob({ profile, setProfile }) {
               setShowEmployment,
               "Select employment type"
             )}
-
+        {profile.employmentType === "others" && (
+  <>
+    <Text style={styles.label}>Other Employment</Text>
+    <TextInput
+      style={styles.input}
+      placeholder="Enter employment details"
+      value={profile.otherEmployment || ""}
+      onChangeText={(text) =>
+        setProfile((prev) => ({
+          ...prev,
+          otherEmployment: text,
+        }))
+      }
+    />
+  </>
+)}
             {renderDropdown(
               "Occupation",
               "occupation",
@@ -211,7 +258,25 @@ export default function Step4EduJob({ profile, setProfile }) {
               setShowOccupation,
               "Select occupation"
             )}
+           {profile.occupation === "others" && (
+  <>
+    <Text style={styles.label}>Other Occupation</Text>
+    <TextInput
+      style={styles.input}
+      placeholder="Enter occupation details"
+      placeholderTextColor="#8a8a8a"
+      value={profile.otherOccupation || ""}
+      
 
+      onChangeText={(text) =>
+        setProfile((prev) => ({
+          ...prev,
+          otherOccupation: text,
+        }))
+      }
+    />
+  </>
+)}
             {renderDropdown(
               "Annual Income",
               "annualIncome",
@@ -301,15 +366,15 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
 
- dropdownList: {
-  marginTop: 6,
-  maxHeight: 250,
-  borderWidth: 1,
-  borderColor: "#e1e1e1",
-  borderRadius: 14,
-  backgroundColor: "#fff",
-  elevation: 5,
-},
+  dropdownList: {
+    marginTop: 6,
+    maxHeight: 250,
+    borderWidth: 1,
+    borderColor: "#e1e1e1",
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    elevation: 5,
+  },
 
   dropdownItem: {
     paddingVertical: 14,
@@ -342,4 +407,17 @@ const styles = StyleSheet.create({
     color: "#b8860b",
     fontWeight: "700",
   },
+
+  input: {
+  borderWidth: 1,
+  borderColor: "#ddd",
+  borderRadius: 10,
+  paddingHorizontal: 14,
+  paddingVertical: 12,
+  backgroundColor: "#fff",
+  color: "#111",
+  fontSize: 15,
+  marginTop: 6,
+  
+}
 });

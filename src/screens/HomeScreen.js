@@ -396,10 +396,10 @@ export default function HomeScreen() {
 
               {/* ORANGE CURVED HEADER */}
               <View style={styles.successHeader}>
-                <Text style={styles.successHeaderTitle}>Success Story</Text>
-                <Text style={styles.successHeaderSub}>
+                <Text style={styles.successHeaderTitle}>Together Forever Stories</Text>
+                {/* <Text style={styles.successHeaderSub}>
                   Check it out our success stories who found their life partner here.
-                </Text>
+                </Text> */}
               </View>
 
               {/* WHITE CARD BACKGROUND */}

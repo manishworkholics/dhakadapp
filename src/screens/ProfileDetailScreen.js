@@ -285,7 +285,7 @@ export default function ProfileDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView edges={["left", "right", "bottom", "top"]} style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* <Header title={profile.name} onMenuPress={() => navigation.goBack()} /> */}
-            <View style={styles.topBar}>
+      <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
@@ -385,9 +385,16 @@ export default function ProfileDetailScreen({ route, navigation }) {
 
 
           <InfoRow label="Birth Date" value={new Date(profile.dob).toDateString()} />
-          <InfoRow label="Birth Place" value={profile.birthPlace || "-"} />
-          <InfoRow label="Birth Time" value={profile.birthTime || "-"} />
-          <InfoRow label="Skin Tone" value={profile.skinTone || "-"} />
+          <InfoRow label="Birth Place" value={profile.birthPlace || "N/A"} />
+          <InfoRow label="Birth Time" value={profile.birthTime || "N/A"} />
+          <InfoRow label="Skin Tone" value={profile.skinTone || "N/A"} />
+          <InfoRow label="Body Type" value={profile.bodyType || "N/A"} />
+          <InfoRow label="Smoke" value={profile.smoke || "N/A"} />
+          <InfoRow label="Drink" value={profile.drink || "N/A"} />
+          <InfoRow
+            label="Physical Challenge"
+            value={profile.physicalChallengeDescription || "N/A"}
+          />
           <InfoRow label="Mother Tongue" value={profile.motherTongue || "N/A"} />
           <InfoRow label="Location" value={profile.location || "N/A"} />
           <InfoRow label="Physical Status" value={profile.physicalStatus || "N/A"} />
@@ -396,8 +403,26 @@ export default function ProfileDetailScreen({ route, navigation }) {
           <InfoRow label="Caste" value={profile.caste || "N/A"} />
           <InfoRow label="Sub Caste" value={profile.subCaste || "N/A"} />
           <InfoRow label="Gotra" value={profile.gotra || "N/A"} />
+          <InfoRow label="Rashi / Nakshatra" value={profile.rashiNakshatra  || "N/A"} />
+          <InfoRow label="Mangalik" value={profile.mangalik  || "N/A"}  />
           <InfoRow label="Diet" value={profile.diet || "N/A"} />
           <InfoRow label="Family Status" value={profile.familyStatus || "N/A"} />
+          <InfoRow label="Mama Gotra" value={profile.mamaGotra || "N/A"} />
+
+  <InfoRow label="Father Name" value={profile.fatherName || "N/A"} />
+  <InfoRow label="Mother Name" value={profile.motherName || "N/A"} />
+
+  <InfoRow label="Father Contact" value={profile.fatherContactNo || "N/A"} />
+
+  <InfoRow label="Father Status" value={profile.fatherStatus || "N/A"} />
+  <InfoRow label="Father Occupation" value={profile.fatherOccupation || "N/A"} />
+
+  <InfoRow label="Mother Status" value={profile.motherStatus || "N/A"} />
+  <InfoRow label="Mother Occupation" value={profile.motherOccupation || "N/A"} />
+
+  <InfoRow label="No. of Brothers" value={profile.noOfBrothers || "0"} />
+  <InfoRow label="No. of Sisters" value={profile.noOfSisters || "0"} />
+
 
 
           {!hasActivePlan ? <PremiumBtn onPress={() => navigation.navigate("Premium")} /> : null}
@@ -559,9 +584,16 @@ const Card = ({ title, children }) => (
 );
 
 const InfoRow = ({ label, value }) => (
-  <View style={styles.infoRow}>
-    <Text style={styles.infoLabel}>{label}</Text>
-    <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
+  <View>
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+
+    {/* 🔥 Divider */}
+    <View style={styles.dividerLine} />
   </View>
 );
 
@@ -652,8 +684,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderRadius: 20,
     padding: 1,
-    marginRight:15,
-    marginTop:5
+    marginRight: 15,
+    marginTop: 5
   },
   cardTitle: { fontWeight: "700", marginBottom: 8 },
   text: { color: "#555", lineHeight: 22 },
@@ -679,7 +711,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  infoRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 6 },
+  infoRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 10 },
   infoLabel: { color: "#777" },
   infoValue: { fontWeight: "600", maxWidth: "60%", textAlign: "right" },
 
@@ -823,7 +855,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-    topBar: {
+  topBar: {
     height: 58,
     backgroundColor: "#fff",
     flexDirection: "row",
@@ -848,4 +880,10 @@ const styles = StyleSheet.create({
     color: "#111",
     marginLeft: 8,
   },
+
+  dividerLine: {
+  height: 1,
+  backgroundColor: "#eee",
+  marginVertical: 8,
+},
 });

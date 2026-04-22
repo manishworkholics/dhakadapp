@@ -1,4 +1,309 @@
-// src/screens/CreateProfile/CreateProfileScreen.js
+
+// import React, { useState, useEffect } from "react";
+// import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import axios from "axios";
+
+// import Step1Basic from "./Step1Basic";
+// import Step2Location from "./Step2Location";
+// import Step3Religion from "./Step3Religion";
+// import Step4EduJob from "./Step4EduJob";
+// import Step5AboutPhotos from "./Step5AboutPhotos";
+// import { useProfile } from "../../context/ProfileContext";
+// import AppModal from "../../components/AppModal";
+
+// const API_URL = "http://143.110.244.163:5000/api";
+
+// export default function CreateProfileScreen({ navigation, route }) {
+//   const initialStep = route?.params?.initialStep || 1;
+//   const [authUser, setAuthUser] = useState(null);
+
+//   const { fetchProfile } = useProfile();
+//   const [modalVisible, setModalVisible] = useState(false);
+//   const [modalMessage, setModalMessage] = useState("");
+//   const [modalType, setModalType] = useState("success");
+
+//   const showModal = (msg, type = "success") => {
+//     setModalMessage(msg);
+//     setModalType(type);
+//     setModalVisible(true);
+//   };
+
+//   useEffect(() => {
+//     const loadUser = async () => {
+//       const storedUser = await AsyncStorage.getItem("user");
+//       if (storedUser) {
+//         setAuthUser(JSON.parse(storedUser));
+//       }
+//     };
+//     loadUser();
+//   }, []);
+
+//   const existingProfile = route?.params?.profile || null;
+//   const [step, setStep] = useState(initialStep);
+
+//   const [profileData, setProfileData] = useState({
+//     name: existingProfile?.name || authUser?.name || "",
+//     email: existingProfile?.email || authUser?.email || "",
+//     phone: existingProfile?.phone || authUser?.phone || "",
+
+//     dob: existingProfile?.dob || "",
+//     gender: existingProfile?.gender || "",
+//     motherTongue: existingProfile?.motherTongue || "",
+//     location: existingProfile?.location || "",
+
+//     height: existingProfile?.height || "",
+//     physicalStatus: existingProfile?.physicalStatus || "Normal",
+//     maritalStatus: existingProfile?.maritalStatus || "Never married",
+
+//     religion: existingProfile?.religion || "Hinduism",
+//     caste: existingProfile?.caste || "Dhakad",
+//     subCaste: existingProfile?.subCaste || "",
+//     gotra: existingProfile?.gotra || "",
+
+//     // New fields
+//     birthPlace: existingProfile?.birthPlace || "",
+//     birthTime: existingProfile?.birthTime || "",
+//     skinTone: existingProfile?.skinTone || "",
+
+//     education: existingProfile?.educationDetails || "",
+//     employmentType: existingProfile?.employmentType || "",
+//     occupation: existingProfile?.occupation || "",
+//     annualIncome: existingProfile?.annualIncome || "",
+
+//     familyStatus: existingProfile?.familyStatus || "Middle class",
+//     diet: existingProfile?.diet || "Veg",
+//     aboutYourself: existingProfile?.aboutYourself || "",
+//     hobbies: existingProfile?.hobbies || "",
+
+//     photos: existingProfile?.photos || [],
+//   });
+
+//   useEffect(() => {
+//     if (!existingProfile && authUser?.name) {
+//       setProfileData((prev) => ({
+//         ...prev,
+//         name: authUser.name,
+//       }));
+//     }
+//   }, [authUser, existingProfile]);
+
+//   // ✅ initialStep ko route params ke through update karne ke liye
+//   useEffect(() => {
+//     if (route?.params?.initialStep) {
+//       setStep(route.params.initialStep);
+//     }
+//   }, [route?.params?.initialStep]);
+
+//   const next = () => setStep((s) => Math.min(5, s + 1));
+//   const prev = () => setStep((s) => Math.max(1, s - 1));
+
+//   /* 🔹 AUTO JUMP TO INCOMPLETE STEP (EDIT MODE) */
+//   useEffect(() => {
+//     // agar explicit initialStep aaya hai to usko priority do
+//     if (route?.params?.initialStep) return;
+
+//     if (!existingProfile) return;
+
+//     if (!profileData.name || !profileData.gender || !profileData.dob) {
+//       setStep(1);
+//     } else if (!profileData.location) {
+//       setStep(2);
+//     } else if (!profileData.religion || !profileData.caste) {
+//       setStep(3);
+//     } else if (!profileData.occupation || !profileData.annualIncome) {
+//       setStep(4);
+//     } else {
+//       setStep(5);
+//     }
+//   }, []);
+
+//   /* 🔹 FINAL SUBMIT */
+//   const submitForm = async () => {
+//     try {
+//       const token = await AsyncStorage.getItem("token");
+
+//       const payload = {
+//         name: profileData.name,
+//         dob: profileData.dob,
+//         motherTongue: profileData.motherTongue,
+//         gender: profileData.gender,
+//         location: profileData.location,
+
+//         height: profileData.height,
+//         physicalStatus: profileData.physicalStatus,
+//         maritalStatus: profileData.maritalStatus,
+//         religion: profileData.religion,
+//         caste: profileData.caste,
+//         subCaste: profileData.subCaste,
+//         gotra: profileData.gotra,
+
+//         // New fields
+//         birthPlace: profileData.birthPlace,
+//         birthTime: profileData.birthTime,
+//         skinTone: profileData.skinTone,
+
+//         educationDetails: profileData.education,
+//         employmentType: profileData.employmentType,
+//         occupation: profileData.occupation,
+//         annualIncome: profileData.annualIncome,
+
+//         familyStatus: profileData.familyStatus,
+//         diet: profileData.diet,
+//         aboutYourself: profileData.aboutYourself,
+//         hobbies: profileData.hobbies,
+
+//         photos: profileData.photos,
+//       };
+
+//       await axios.post(`${API_URL}/profile/create`, payload, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       await AsyncStorage.removeItem("ownProfile");
+
+//       showModal("Profile Updated Successfully! ✅ ❤️", "success");
+
+//       fetchProfile();
+//     } catch (err) {
+//       console.log(err.response?.data || err.message);
+//       showModal("Failed to update profile", "error");
+//     }
+//   };
+
+//   return (
+//     <View style={{ flex: 1 }}>
+//       {step === 1 && (
+//         <Step1Basic profile={profileData} setProfile={setProfileData} />
+//       )}
+//       {step === 2 && (
+//         <Step2Location profile={profileData} setProfile={setProfileData} />
+//       )}
+//       {step === 3 && (
+//         <Step3Religion profile={profileData} setProfile={setProfileData} />
+//       )}
+//       {step === 4 && (
+//         <Step4EduJob profile={profileData} setProfile={setProfileData} />
+//       )}
+//       {step === 5 && (
+//         <Step5AboutPhotos
+//           profile={profileData}
+//           setProfile={setProfileData}
+//           submit={submitForm}
+//         />
+//       )}
+
+//       <View style={styles.bottomBar}>
+//         {step > 1 ? (
+//           <TouchableOpacity onPress={prev} style={styles.backAction}>
+//             <Text style={styles.backActionText}>← Back</Text>
+//           </TouchableOpacity>
+//         ) : (
+//           <View style={{ flex: 1 }} />
+//         )}
+
+//         {step < 5 ? (
+//           <TouchableOpacity style={styles.continueBtn} onPress={next}>
+//             <Text style={styles.continueText}>Continue →</Text>
+//           </TouchableOpacity>
+//         ) : (
+//           <View style={{ flex: 1.3 }} />
+//         )}
+//       </View>
+
+//       <AppModal
+//         visible={modalVisible}
+//         message={modalMessage}
+//         type={modalType}
+//         onClose={() => {
+//           setModalVisible(false);
+
+//           if (modalType === "success") {
+//             navigation.reset({
+//               index: 0,
+//               routes: [{ name: "Home" }],
+//             });
+//           }
+//         }}
+//       />
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   bottomContainer: {
+//     flexDirection: "row",
+//     position: "absolute",
+//     bottom: 25,
+//     left: 0,
+//     right: 0,
+//     paddingHorizontal: 20,
+//     justifyContent: "space-between",
+//     alignItems: "center",
+
+//   },
+//   backBtn: {
+//     backgroundColor: "#f0f0f0",
+//     paddingVertical: 12,
+//     paddingHorizontal: 18,
+//     borderRadius: 30,
+//   },
+//   continueBtn: {
+//     backgroundColor: "#FF4D4D",
+//     paddingVertical: 8,
+//     paddingHorizontal: 8,
+//     borderRadius: 40,
+//     elevation: 4,
+//   },
+//   btnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
+//   bottomBar: {
+//     position: "absolute",
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
+//     paddingHorizontal: 16,
+//     paddingTop: 12,
+//     paddingBottom: 20,
+//     backgroundColor: "#f5f5f5",
+//     borderTopWidth: 1,
+//     borderTopColor: "#e9e9e9",
+//     flexDirection: "row",
+//     gap: 12,
+//     marginBottom:15
+//   },
+
+//   backAction: {
+//     flex: 1,
+//     backgroundColor: "#fff",
+//     borderWidth: 1,
+//     borderColor: "#FF4D4D",
+//     paddingVertical: 12,
+//     borderRadius: 26,
+//     alignItems: "center",
+//   },
+//   backActionText: {
+//     color: "#FF4D4D",
+//     fontWeight: "800",
+//   },
+
+//   continueBtn: {
+//     flex: 1.3,
+//     backgroundColor: "#FF4D4D",
+//     paddingVertical: 12,
+//     borderRadius: 26,
+//     alignItems: "center",
+//     elevation: 3,
+//   },
+//   continueText: {
+//     color: "#fff",
+//     fontWeight: "800",
+//     fontSize: 14,
+//   },
+// });
+
+
+
+
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -49,7 +354,7 @@ export default function CreateProfileScreen({ navigation, route }) {
 
     dob: existingProfile?.dob || "",
     gender: existingProfile?.gender || "",
-    motherTongue: existingProfile?.motherTongue || "",
+    // motherTongue: existingProfile?.motherTongue || "",
     location: existingProfile?.location || "",
 
     height: existingProfile?.height || "",
@@ -61,7 +366,7 @@ export default function CreateProfileScreen({ navigation, route }) {
     subCaste: existingProfile?.subCaste || "",
     gotra: existingProfile?.gotra || "",
 
-    // New fields
+    // OLD NEW FIELDS
     birthPlace: existingProfile?.birthPlace || "",
     birthTime: existingProfile?.birthTime || "",
     skinTone: existingProfile?.skinTone || "",
@@ -77,6 +382,33 @@ export default function CreateProfileScreen({ navigation, route }) {
     hobbies: existingProfile?.hobbies || "",
 
     photos: existingProfile?.photos || [],
+
+    // 🔥 NEW API FIELDS ADDED
+    bodyType: existingProfile?.bodyType || "",
+    smoke: existingProfile?.smoke || "",
+    drink: existingProfile?.drink || "",
+    physicalChallengeDescription:
+      existingProfile?.physicalChallengeDescription || "",
+
+    mamaGotra: existingProfile?.mamaGotra || "",
+    fatherName: existingProfile?.fatherName || "",
+    motherName: existingProfile?.motherName || "",
+
+    fatherContactNo: existingProfile?.fatherContactNo || "",
+
+    fatherStatus: existingProfile?.fatherStatus || "",
+    fatherOccupation: existingProfile?.fatherOccupation || "",
+
+    motherStatus: existingProfile?.motherStatus || "",
+    motherOccupation: existingProfile?.motherOccupation || "",
+
+    noOfBrothers: existingProfile?.noOfBrothers || "",
+    noOfSisters: existingProfile?.noOfSisters || "",
+
+    rashiNakshatra: existingProfile?.rashiNakshatra || "",
+    mangalik: existingProfile?.mangalik || "",
+
+
   });
 
   useEffect(() => {
@@ -88,7 +420,6 @@ export default function CreateProfileScreen({ navigation, route }) {
     }
   }, [authUser, existingProfile]);
 
-  // ✅ initialStep ko route params ke through update karne ke liye
   useEffect(() => {
     if (route?.params?.initialStep) {
       setStep(route.params.initialStep);
@@ -98,11 +429,8 @@ export default function CreateProfileScreen({ navigation, route }) {
   const next = () => setStep((s) => Math.min(5, s + 1));
   const prev = () => setStep((s) => Math.max(1, s - 1));
 
-  /* 🔹 AUTO JUMP TO INCOMPLETE STEP (EDIT MODE) */
   useEffect(() => {
-    // agar explicit initialStep aaya hai to usko priority do
     if (route?.params?.initialStep) return;
-
     if (!existingProfile) return;
 
     if (!profileData.name || !profileData.gender || !profileData.dob) {
@@ -118,7 +446,6 @@ export default function CreateProfileScreen({ navigation, route }) {
     }
   }, []);
 
-  /* 🔹 FINAL SUBMIT */
   const submitForm = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -126,7 +453,7 @@ export default function CreateProfileScreen({ navigation, route }) {
       const payload = {
         name: profileData.name,
         dob: profileData.dob,
-        motherTongue: profileData.motherTongue,
+        // motherTongue: profileData.motherTongue,
         gender: profileData.gender,
         location: profileData.location,
 
@@ -138,7 +465,6 @@ export default function CreateProfileScreen({ navigation, route }) {
         subCaste: profileData.subCaste,
         gotra: profileData.gotra,
 
-        // New fields
         birthPlace: profileData.birthPlace,
         birthTime: profileData.birthTime,
         skinTone: profileData.skinTone,
@@ -154,6 +480,45 @@ export default function CreateProfileScreen({ navigation, route }) {
         hobbies: profileData.hobbies,
 
         photos: profileData.photos,
+
+        // 🔥 NEW API PAYLOAD
+        bodyType: profileData.bodyType,
+        smoke: profileData.smoke,
+        drink: profileData.drink,
+        physicalChallengeDescription:
+          profileData.physicalChallengeDescription,
+
+        mamaGotra: profileData.mamaGotra,
+        fatherName: profileData.fatherName,
+        motherName: profileData.motherName,
+
+        fatherContactNo: profileData.fatherContactNo,
+
+        fatherStatus: profileData.fatherStatus,
+        fatherOccupation: profileData.fatherOccupation,
+
+        motherStatus: profileData.motherStatus,
+        motherOccupation: profileData.motherOccupation,
+
+        noOfBrothers: profileData.noOfBrothers,
+        noOfSisters: profileData.noOfSisters,
+
+        rashiNakshatra: profileData.rashiNakshatra,
+        mangalik: profileData.mangalik,
+educationDetails:
+  profileData.education === "others"
+    ? profileData.otherEducation
+    : profileData.education,
+
+employmentType:
+  profileData.employmentType === "others"
+    ? profileData.otherEmployment
+    : profileData.employmentType,
+
+occupation:
+  profileData.occupation === "others"
+    ? profileData.otherOccupation
+    : profileData.occupation,
       };
 
       await axios.post(`${API_URL}/profile/create`, payload, {
@@ -163,7 +528,6 @@ export default function CreateProfileScreen({ navigation, route }) {
       await AsyncStorage.removeItem("ownProfile");
 
       showModal("Profile Updated Successfully! ✅ ❤️", "success");
-
       fetchProfile();
     } catch (err) {
       console.log(err.response?.data || err.message);
@@ -183,7 +547,22 @@ export default function CreateProfileScreen({ navigation, route }) {
         <Step3Religion profile={profileData} setProfile={setProfileData} />
       )}
       {step === 4 && (
-        <Step4EduJob profile={profileData} setProfile={setProfileData} />
+        <Step4EduJob
+          profile={profileData}
+          setProfile={setProfileData}
+          otherEducation={profileData.otherEducation}
+          setOtherEducation={(val) =>
+            setProfileData((prev) => ({ ...prev, otherEducation: val }))
+          }
+          otherEmployment={profileData.otherEmployment}
+          setOtherEmployment={(val) =>
+            setProfileData((prev) => ({ ...prev, otherEmployment: val }))
+          }
+          otherOccupation={profileData.otherOccupation}
+          setOtherOccupation={(val) =>
+            setProfileData((prev) => ({ ...prev, otherOccupation: val }))
+          }
+        />
       )}
       {step === 5 && (
         <Step5AboutPhotos
@@ -217,7 +596,6 @@ export default function CreateProfileScreen({ navigation, route }) {
         type={modalType}
         onClose={() => {
           setModalVisible(false);
-
           if (modalType === "success") {
             navigation.reset({
               index: 0,
@@ -230,6 +608,10 @@ export default function CreateProfileScreen({ navigation, route }) {
   );
 }
 
+
+
+
+
 const styles = StyleSheet.create({
   bottomContainer: {
     flexDirection: "row",
@@ -240,7 +622,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: "space-between",
     alignItems: "center",
-    
+
   },
   backBtn: {
     backgroundColor: "#f0f0f0",
@@ -269,7 +651,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#e9e9e9",
     flexDirection: "row",
     gap: 12,
-    marginBottom:15
+    marginBottom: 15
   },
 
   backAction: {
@@ -300,3 +682,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+

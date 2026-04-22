@@ -178,6 +178,100 @@ export default function Step5AboutPhotos({ profile, setProfile, submit, onBack }
               )}
             </View>
 
+
+// 🔥 FAMILY DETAILS START
+
+            <Text style={[styles.label, { marginTop: 18 }]}>Family Details</Text>
+
+            <Text style={styles.label}>Mama Gotra</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Mama Gotra"
+              value={profile.mamaGotra}
+              onChangeText={(t) => setProfile({ ...profile, mamaGotra: t })}
+            />
+
+            <Text style={styles.label}>Father Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Father Name"
+              value={profile.fatherName}
+              onChangeText={(t) => setProfile({ ...profile, fatherName: t })}
+            />
+
+            <Text style={styles.label}>Mother Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Mother Name"
+              value={profile.motherName}
+              onChangeText={(t) => setProfile({ ...profile, motherName: t })}
+            />
+
+            <Text style={styles.label}>Father Contact No</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Father Contact Number"
+              keyboardType="phone-pad"
+              value={profile.fatherContactNo}
+              onChangeText={(t) => setProfile({ ...profile, fatherContactNo: t })}
+            />
+
+            <Text style={styles.label}>Father Status</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Father Status"
+              value={profile.fatherStatus}
+              onChangeText={(t) => setProfile({ ...profile, fatherStatus: t })}
+            />
+
+            <Text style={styles.label}>Father Occupation</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Father Occupation"
+              value={profile.fatherOccupation}
+              onChangeText={(t) => setProfile({ ...profile, fatherOccupation: t })}
+            />
+
+            <Text style={styles.label}>Mother Status</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Mother Status"
+              value={profile.motherStatus}
+              onChangeText={(t) => setProfile({ ...profile, motherStatus: t })}
+            />
+
+            <Text style={styles.label}>Mother Occupation</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Mother Occupation"
+              value={profile.motherOccupation}
+              onChangeText={(t) => setProfile({ ...profile, motherOccupation: t })}
+            />
+
+            <Text style={styles.label}>No of Brothers</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Number of Brothers"
+              keyboardType="numeric"
+              value={profile.noOfBrothers?.toString()}
+              onChangeText={(t) =>
+                setProfile({ ...profile, noOfBrothers: t })
+              }
+            />
+
+            <Text style={styles.label}>No of Sisters</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Number of Sisters"
+              keyboardType="numeric"
+              value={profile.noOfSisters?.toString()}
+              onChangeText={(t) =>
+                setProfile({ ...profile, noOfSisters: t })
+              }
+            />
+
+// 🔥 FAMILY DETAILS END
+
             {/* DIET */}
             <Text style={styles.label}>Diet</Text>
             <View style={styles.dropdownContainer}>
@@ -497,7 +591,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  backActionText: { color: "#ff4e50", fontWeight: "800" }, 
+  backActionText: { color: "#ff4e50", fontWeight: "800" },
 
   submitBtn: {
     flex: 1.3,

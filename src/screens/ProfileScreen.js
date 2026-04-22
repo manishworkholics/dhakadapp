@@ -327,6 +327,13 @@ export default function ProfileScreen({ navigation }) {
           <InfoRow label="Birth Place" value={profile.birthPlace} />
           <InfoRow label="Birth Time" value={profile.birthTime} />
           <InfoRow label="Skin Tone" value={profile.skinTone} />
+          <InfoRow label="Body Type" value={profile.bodyType} />
+          <InfoRow label="Smoke" value={profile.smoke} />
+          <InfoRow label="Drink" value={profile.drink} />
+          <InfoRow
+            label="Physical Challenge"
+            value={profile.physicalChallengeDescription}
+          />
         </Section>
 
         {/* 🔹 RELIGION */}
@@ -335,7 +342,10 @@ export default function ProfileScreen({ navigation }) {
           <InfoRow label="Caste" value={profile.caste} />
           <InfoRow label="Sub Caste" value={profile.subCaste} />
           <InfoRow label="Gotra" value={profile.gotra} />
-          <InfoRow label="Mother Tongue" value={profile.motherTongue} />
+           {/* 🔥 NEW ADD */}
+          <InfoRow label="Rashi / Nakshatra" value={profile.rashiNakshatra} />
+          <InfoRow label="Mangalik" value={profile.mangalik} />
+          {/* <InfoRow label="Mother Tongue" value={profile.motherTongue} /> */}
         </Section>
 
         {/* 🔹 PROFESSIONAL */}
@@ -356,6 +366,20 @@ export default function ProfileScreen({ navigation }) {
           <InfoRow label="Diet" value={profile.diet} />
           <InfoRow label="Hobbies" value={profile.hobbies} />
           <InfoBlock label="About Me" value={profile.aboutYourself} />
+          <InfoRow label="Mama Gotra" value={profile.mamaGotra} />
+          <InfoRow label="Father Name" value={profile.fatherName} />
+          <InfoRow label="Mother Name" value={profile.motherName} />
+
+          <InfoRow label="Father Contact" value={profile.fatherContactNo} />
+
+          <InfoRow label="Father Status" value={profile.fatherStatus} />
+          <InfoRow label="Father Occupation" value={profile.fatherOccupation} />
+
+          <InfoRow label="Mother Status" value={profile.motherStatus} />
+          <InfoRow label="Mother Occupation" value={profile.motherOccupation} />
+
+          <InfoRow label="No. of Brothers" value={profile.noOfBrothers} />
+          <InfoRow label="No. of Sisters" value={profile.noOfSisters} />
         </Section>
 
         {/* 🔹 PROFILE OPTIONS */}

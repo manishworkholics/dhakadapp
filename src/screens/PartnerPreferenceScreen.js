@@ -75,14 +75,14 @@ export default function PartnerPreferenceScreen({ navigation }) {
   }
 
   const occupationOptions = [
-    'Software Engineer','Manager','Doctor','Teacher','Business Owner',
-    'Government Officer','Farmer','Student','Not Working','Others'
+    'Software Engineer', 'Manager', 'Doctor', 'Teacher', 'Business Owner',
+    'Government Officer', 'Farmer', 'Student', 'Not Working', 'Others'
   ];
 
   const annualIncomeOptions = [
-    'Below ₹1 Lakh','₹1 – 3 Lakh','₹3 – 5 Lakh','₹5 – 8 Lakh',
-    '₹8 – 12 Lakh','₹12 – 20 Lakh','₹20 – 35 Lakh',
-    '₹35 – 50 Lakh','₹50 Lakh – 1 Crore','Above ₹1 Crore'
+    'Below ₹1 Lakh', '₹1 – 3 Lakh', '₹3 – 5 Lakh', '₹5 – 8 Lakh',
+    '₹8 – 12 Lakh', '₹12 – 20 Lakh', '₹20 – 35 Lakh',
+    '₹35 – 50 Lakh', '₹50 Lakh – 1 Crore', 'Above ₹1 Crore'
   ];
 
   const fetchStates = async () => {
@@ -221,8 +221,28 @@ export default function PartnerPreferenceScreen({ navigation }) {
         )}
 
         {/* TEXT */}
-        <Label text="Caste" />
-        <TextInput style={styles.inputFull} value={form.caste} onChangeText={v => setForm({ ...form, caste: v })} />
+        {/* <Label text="Caste" />
+        <TextInput style={styles.inputFull} value={form.caste} onChangeText={v => setForm({ ...form, caste: v })} /> */}
+        {/* Select Preferences - Only Dhakar, Only Malav, Only Nagar, Only Kirar, No Boundation
+*/}
+
+        <Label text="Select Preferences" />
+        <View style={styles.wrap}>
+          {[
+            'Dhakar',
+            'Malav',
+            'Nagar',
+            'Kirar',
+            // 'No Boundation',
+          ].map(c => (
+            <Chip
+              key={c}
+              label={c}
+              selected={form.caste === c}
+              onPress={() => setForm({ ...form, caste: c })}
+            />
+          ))}
+        </View>
 
         <Label text="Mother Tongue" />
         <TextInput style={styles.inputFull} value={form.motherTongue} onChangeText={v => setForm({ ...form, motherTongue: v })} />
@@ -230,7 +250,7 @@ export default function PartnerPreferenceScreen({ navigation }) {
         {/* MARITAL */}
         <Label text="Marital Status" />
         <View style={styles.wrap}>
-          {['Never married','Widower','Divorced'].map(m => (
+          {['Never married', 'Widower', 'Divorced'].map(m => (
             <Chip key={m} label={m}
               selected={form.maritalStatus.includes(m)}
               onPress={() => toggleMulti('maritalStatus', m)}
@@ -241,25 +261,25 @@ export default function PartnerPreferenceScreen({ navigation }) {
         {/* EDUCATION */}
         <Label text="Education" />
         <View style={styles.wrap}>
-          {['10th','12th','Diploma',"Bachelor's Degree","Master's Degree",
-          'PhD','CA','CS','MBBS','LLB','Others'].map(e => (
-            <Chip key={e} label={e}
-              selected={form.educationDetails.includes(e)}
-              onPress={() => toggleMulti('educationDetails', e)}
-            />
-          ))}
+          {['10th', '12th', 'Diploma', "Bachelor's Degree", "Master's Degree",
+            'PhD', 'CA', 'CS', 'MBBS', 'LLB', 'Others'].map(e => (
+              <Chip key={e} label={e}
+                selected={form.educationDetails.includes(e)}
+                onPress={() => toggleMulti('educationDetails', e)}
+              />
+            ))}
         </View>
 
         {/* EMPLOYMENT */}
         <Label text="Employment Type" />
         <View style={styles.wrap}>
-          {['Government Job','Private Job','Business','Self Employed','Freelancer',
-          'Defence','PSU','Startup','NGO','Student','Not Working','Homemaker','Retired'].map(e => (
-            <Chip key={e} label={e}
-              selected={form.employmentType.includes(e)}
-              onPress={() => toggleMulti('employmentType', e)}
-            />
-          ))}
+          {['Government Job', 'Private Job', 'Business', 'Self Employed', 'Freelancer',
+            'Defence', 'PSU', 'Startup', 'NGO', 'Student', 'Not Working', 'Homemaker', 'Retired'].map(e => (
+              <Chip key={e} label={e}
+                selected={form.employmentType.includes(e)}
+                onPress={() => toggleMulti('employmentType', e)}
+              />
+            ))}
         </View>
 
         {/* OCCUPATION */}
@@ -296,7 +316,7 @@ export default function PartnerPreferenceScreen({ navigation }) {
             {states.map(s => (
               <TouchableOpacity key={s.state} style={styles.dropdownItem}
                 onPress={() => {
-                  setForm({ ...form, preferredState:[s.state], preferredCity:[] });
+                  setForm({ ...form, preferredState: [s.state], preferredCity: [] });
                   fetchCities(s.state);
                   setShowState(false);
                 }}>
@@ -318,7 +338,7 @@ export default function PartnerPreferenceScreen({ navigation }) {
             {cities.map(c => (
               <TouchableOpacity key={c} style={styles.dropdownItem}
                 onPress={() => {
-                  setForm({ ...form, preferredCity:[c] });
+                  setForm({ ...form, preferredCity: [c] });
                   setShowCity(false);
                 }}>
                 <Text>{c}</Text>

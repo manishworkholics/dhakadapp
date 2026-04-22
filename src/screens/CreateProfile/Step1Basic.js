@@ -400,7 +400,7 @@ export default function Step1Basic({ profile, setProfile }) {
           />
 
           {/* MOTHER TONGUE */}
-          <Text style={styles.label}>Mother Tongue</Text>
+          {/* <Text style={styles.label}>Mother Tongue</Text>
           <View style={styles.chipWrap}>
             {["Hindi", "English", "Gujarati"].map((lang) => (
               <TouchableOpacity
@@ -425,7 +425,7 @@ export default function Step1Basic({ profile, setProfile }) {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </View> */}
 
           <View style={{ height: 120 }} />
         </ScrollView>

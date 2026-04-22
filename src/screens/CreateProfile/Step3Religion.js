@@ -49,7 +49,7 @@ const maritalStatusOptions = [
   { label: "Previously Married (Divorced)", value: "Divorced" },
   { label: "Previously Married (Widowed)", value: "Widower" },
   { label: "Legally Separated / Awaiting Divorce", value: "Awaiting divorce" },
-  
+
 ];
 
 export default function Step3Religion({ profile, setProfile }) {
@@ -251,6 +251,75 @@ export default function Step3Religion({ profile, setProfile }) {
               onChangeText={(t) => setProfile({ ...profile, birthTime: t })}
             />
 
+            <Text style={styles.label}>Rashi / Nakshatra</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Rashi / Nakshatra"
+              value={profile.rashiNakshatra}
+              onChangeText={(t) =>
+                setProfile({ ...profile, rashiNakshatra: t })
+              }
+            />
+
+            <Text style={styles.label}>Mangalik</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  closeOtherDropdowns("mangalik");
+                  setActiveDropdown(
+                    activeDropdown === "mangalik" ? null : "mangalik"
+                  );
+                }}
+              >
+                <Text style={styles.dropdownHeaderText}>
+                  {profile.mangalik || "Select"}
+                </Text>
+                <Icon
+                  name={
+                    activeDropdown === "mangalik"
+                      ? "chevron-up"
+                      : "chevron-down"
+                  }
+                  size={20}
+                />
+              </TouchableOpacity>
+
+              {activeDropdown === "mangalik" && (
+                <View style={styles.dropdownList}>
+                  <ScrollView nestedScrollEnabled>
+                    {["Yes", "No"].map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={[
+                          styles.dropdownItem,
+                          profile.mangalik === item &&
+                          styles.dropdownItemSelected,
+                        ]}
+                        onPress={() => {
+                          setProfile({ ...profile, mangalik: item });
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            profile.mangalik === item &&
+                            styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {item}
+                        </Text>
+                        {profile.mangalik === item && (
+                          <Icon name="checkmark" size={18} color="#d4af37" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+
             <Text style={styles.label}>Skin Tone</Text>
             <View style={styles.dropdownContainer}>
               <TouchableOpacity
@@ -297,7 +366,209 @@ export default function Step3Religion({ profile, setProfile }) {
                 </View>
               )}
             </View>
-            {/* End New Profile Fields */}
+         // 🔥 NEW FIELDS START
+
+            {/* Body Type */}
+            <Text style={styles.label}>Body Type</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  closeOtherDropdowns('bodyType');
+                  setActiveDropdown(activeDropdown === 'bodyType' ? null : 'bodyType');
+                }}
+              >
+                <Text style={styles.dropdownHeaderText}>
+                  {profile.bodyType || 'Select Body Type'}
+                </Text>
+                <Icon name={activeDropdown === 'bodyType' ? 'chevron-up' : 'chevron-down'} size={20} />
+              </TouchableOpacity>
+
+              {activeDropdown === 'bodyType' && (
+                <View style={styles.dropdownList}>
+                  <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+                    {["Slim", "Athletic", "Average", "Heavy"].map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={[
+                          styles.dropdownItem,
+                          profile.bodyType === item && styles.dropdownItemSelected,
+                        ]}
+                        onPress={() => {
+                          setProfile({ ...profile, bodyType: item });
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            profile.bodyType === item && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+
+            {/* Smoke */}
+            <Text style={styles.label}>Do you Smoke?</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  closeOtherDropdowns('smoke');
+                  setActiveDropdown(activeDropdown === 'smoke' ? null : 'smoke');
+                }}
+              >
+                <Text style={styles.dropdownHeaderText}>
+                  {profile.smoke || 'Select'}
+                </Text>
+                <Icon name={activeDropdown === 'smoke' ? 'chevron-up' : 'chevron-down'} size={20} />
+              </TouchableOpacity>
+
+              {activeDropdown === 'smoke' && (
+                <View style={styles.dropdownList}>
+                  <ScrollView nestedScrollEnabled>
+                    {["Yes", "No"].map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setProfile({ ...profile, smoke: item });
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>{item}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+
+            {/* Drink */}
+            <Text style={styles.label}>Do you Drink?</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  closeOtherDropdowns('drink');
+                  setActiveDropdown(activeDropdown === 'drink' ? null : 'drink');
+                }}
+              >
+                <Text style={styles.dropdownHeaderText}>
+                  {profile.drink || 'Select'}
+                </Text>
+                <Icon name={activeDropdown === 'drink' ? 'chevron-up' : 'chevron-down'} size={20} />
+              </TouchableOpacity>
+
+              {activeDropdown === 'drink' && (
+                <View style={styles.dropdownList}>
+                  <ScrollView nestedScrollEnabled>
+                    {["Yes", "No"].map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setProfile({ ...profile, drink: item });
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>{item}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+
+            {/* Physical Challenge Description */}
+            <Text style={styles.label}>Physical Challenge Description</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter description (if any)"
+              value={profile.physicalChallengeDescription}
+              onChangeText={(t) =>
+                setProfile({ ...profile, physicalChallengeDescription: t })
+              }
+            />
+
+
+
+            <Text style={styles.label}>Rashi / Nakshatra</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Rashi / Nakshatra"
+              value={profile.rashiNakshatra}
+              onChangeText={(t) =>
+                setProfile({ ...profile, rashiNakshatra: t })
+              }
+            />
+
+
+
+            <Text style={styles.label}>Mangalik</Text>
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={styles.dropdownHeader}
+                onPress={() => {
+                  closeOtherDropdowns("mangalik");
+                  setActiveDropdown(
+                    activeDropdown === "mangalik" ? null : "mangalik"
+                  );
+                }}
+              >
+                <Text style={styles.dropdownHeaderText}>
+                  {profile.mangalik ? profile.mangalik : "Select"}
+                </Text>
+                <Icon
+                  name={activeDropdown === "mangalik" ? "chevron-up" : "chevron-down"}
+                  size={20}
+                />
+              </TouchableOpacity>
+
+              {activeDropdown === "mangalik" && (
+                <View style={styles.dropdownList}>
+                  <ScrollView nestedScrollEnabled>
+                    {["Yes", "No"].map((item) => {
+                      const isSelected = profile.mangalik === item;
+
+                      return (
+                        <TouchableOpacity
+                          key={item}
+                          style={[
+                            styles.dropdownItem,
+                            isSelected && styles.dropdownItemSelected,
+                          ]}
+                          onPress={() => {
+                            setProfile({ ...profile, mangalik: item });
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              isSelected && styles.dropdownItemTextSelected,
+                            ]}
+                          >
+                            {item}
+                          </Text>
+
+                          {isSelected && (
+                            <Icon name="checkmark" size={18} color="#d4af37" />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+// 🔥 NEW FIELDS END
 
             <View style={{ height: 100 }} />
           </ScrollView>
