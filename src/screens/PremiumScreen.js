@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import RazorpayCheckout from "react-native-razorpay";
 import {
   View,
@@ -9,36 +9,45 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useFocusEffect } from "@react-navigation/native";
-const stripHtml = (html) => {
+
+const API_URL = "http://143.110.244.163:5000/api";
+
+const stripHtml = (html = "") => {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ");
 };
 
-const API_URL = "http://143.110.244.163:5000/api";
+const formatPrice = (value) => `Rs ${Number(value || 0).toFixed(2)}`;
 
 export default function PlanScreen() {
   const [myPlan, setMyPlan] = useState(null);
   const [plans, setPlans] = useState([]);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false);
+  const [payingPlanId, setPayingPlanId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-
-  /* ================= API CALLS ================= */
+  const [couponInputs, setCouponInputs] = useState({});
+  const [couponLoading, setCouponLoading] = useState({});
+  const [couponResults, setCouponResults] = useState({});
 
   const fetchMyPlan = async (token) => {
     try {
       const res = await axios.get(`${API_URL}/plan/my-plan`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data.success) setMyPlan(res.data.userPlan);
-      else setMyPlan(null);
+
+      if (res.data.success) {
+        setMyPlan(res.data.userPlan);
+      } else {
+        setMyPlan(null);
+      }
     } catch {
       setMyPlan(null);
     }
@@ -47,7 +56,9 @@ export default function PlanScreen() {
   const fetchAllPlans = async () => {
     try {
       const res = await axios.get(`${API_URL}/plan`);
-      if (res.data.success) setPlans(res.data.plans);
+      if (res.data.success) {
+        setPlans(res.data.plans || []);
+      }
     } catch (e) {
       console.log("PLAN FETCH ERROR", e.message);
     }
@@ -58,26 +69,29 @@ export default function PlanScreen() {
       const res = await axios.get(`${API_URL}/plan/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data.success) setPaymentHistory(res.data.history);
+
+      if (res.data.success) {
+        setPaymentHistory(res.data.history || []);
+      }
     } catch (e) {
       console.log("HISTORY ERROR", e.message);
     }
   };
 
-  /* ================= LOAD ALL ================= */
-
   const loadAll = async () => {
-    const token = await AsyncStorage.getItem("token");
-    await Promise.all([
-      fetchMyPlan(token),
-      fetchAllPlans(),
-      fetchPaymentHistory(token),
-    ]);
-    setLoading(false);
-    setRefreshing(false);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      await Promise.all([
+        fetchMyPlan(token),
+        fetchAllPlans(),
+        fetchPaymentHistory(token),
+      ]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  /* 🔁 SCREEN FOCUS REFRESH */
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -85,22 +99,91 @@ export default function PlanScreen() {
     }, [])
   );
 
-  /* 🔁 PULL TO REFRESH */
   const onRefresh = () => {
     setRefreshing(true);
     loadAll();
   };
 
-  /* ================= PAYMENT ================= */
+  const clearCouponForPlan = (planId) => {
+    setCouponResults((prev) => {
+      const next = { ...prev };
+      delete next[planId];
+      return next;
+    });
+  };
+
+  const handleCouponInput = (planId, text) => {
+    setCouponInputs((prev) => ({
+      ...prev,
+      [planId]: text.toUpperCase(),
+    }));
+
+    const appliedCoupon = couponResults[planId]?.couponCode;
+    if (appliedCoupon && appliedCoupon !== text.trim().toUpperCase()) {
+      clearCouponForPlan(planId);
+    }
+  };
+
+  const handleApplyCoupon = async (planId) => {
+    const couponCode = couponInputs[planId]?.trim().toUpperCase();
+
+    if (!couponCode) {
+      alert("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      setCouponLoading((prev) => ({ ...prev, [planId]: true }));
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.post(
+        `${API_URL}/plan/apply-coupon`,
+        {
+          planId,
+          couponCode,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.data.success) {
+        setCouponResults((prev) => ({
+          ...prev,
+          [planId]: {
+            couponCode,
+            originalPrice: res.data.originalPrice,
+            discount: res.data.discount,
+            finalPrice: res.data.finalPrice,
+          },
+        }));
+        alert("Coupon applied successfully");
+      } else {
+        clearCouponForPlan(planId);
+        alert(res.data.message || "Unable to apply coupon");
+      }
+    } catch (err) {
+      clearCouponForPlan(planId);
+      alert(err?.response?.data?.message || "Failed to apply coupon");
+    } finally {
+      setCouponLoading((prev) => ({ ...prev, [planId]: false }));
+    }
+  };
 
   const handleBuy = async (plan) => {
     try {
-      setPaying(true);
+      setPayingPlanId(plan._id);
       const token = await AsyncStorage.getItem("token");
+      const appliedCoupon = couponResults[plan._id];
+      const payload = { planId: plan._id };
+
+      if (appliedCoupon?.couponCode) {
+        payload.couponCode = appliedCoupon.couponCode;
+      }
 
       const orderRes = await axios.post(
         `${API_URL}/plan/create-order`,
-        { planId: plan._id },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -129,18 +212,23 @@ export default function PlanScreen() {
           );
 
           if (verifyRes.data.success) {
-            alert("🎉 Payment Successful & Plan Activated!");
+            alert("Payment successful and plan activated!");
+            clearCouponForPlan(plan._id);
+            setCouponInputs((prev) => ({
+              ...prev,
+              [plan._id]: "",
+            }));
             loadAll();
           } else {
-            alert("❌ Payment verification failed");
+            alert("Payment verification failed");
           }
         })
         .catch(() => alert("Payment cancelled"))
-        .finally(() => setPaying(false));
+        .finally(() => setPayingPlanId(null));
     } catch (err) {
       console.log("PAYMENT ERROR", err?.response?.data || err.message);
-      alert("Payment failed");
-      setPaying(false);
+      alert(err?.response?.data?.message || "Payment failed");
+      setPayingPlanId(null);
     }
   };
 
@@ -151,6 +239,9 @@ export default function PlanScreen() {
       </View>
     );
   }
+
+  const activePlan = myPlan && myPlan.plan ? myPlan.plan : null;
+  const currentPrice = activePlan?.offerPrice || activePlan?.price || 0;
 
   return (
     <View style={styles.container}>
@@ -167,7 +258,6 @@ export default function PlanScreen() {
           />
         }
       >
-        {/* ===== Banner ===== */}
         <View style={styles.banner}>
           <Icon name="diamond" size={45} color="#fff" />
           <Text style={styles.bannerTitle}>Upgrade to Premium</Text>
@@ -176,80 +266,126 @@ export default function PlanScreen() {
           </Text>
         </View>
 
-        {/* ===== Current Plan ===== */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Current Plan</Text>
 
-          {myPlan ? (
+          {activePlan ? (
             <View style={styles.currentPlan}>
-              <Text style={styles.planName}>{myPlan.plan.name}</Text>
+              <Text style={styles.planName}>{activePlan.name}</Text>
               <Text style={styles.planMeta}>
                 Valid till: {new Date(myPlan.endDate).toDateString()}
               </Text>
-              <Text style={styles.planPrice}>₹{myPlan.plan.price}</Text>
+              <Text style={styles.planPrice}>{formatPrice(currentPrice)}</Text>
             </View>
           ) : (
             <Text style={styles.noPlan}>No active plan</Text>
           )}
         </View>
 
-        {/* ===== All Plans ===== */}
         <Text style={styles.sectionTitle1}>Choose Your Plan</Text>
 
         {plans.map((plan) => {
-          const gst = Math.round((plan.price * plan.gstPercent) / 100);
-          const total = plan.price + gst;
+          const basePrice = plan.offerPrice || plan.price;
+          const appliedCoupon = couponResults[plan._id];
+          const discountedPrice = appliedCoupon?.finalPrice ?? basePrice;
+          const gstPercent = Number(plan.gstPercent || 0);
+          const gst = Math.round((discountedPrice * gstPercent) / 100);
+          const total = discountedPrice + gst;
+          const isPaying = payingPlanId === plan._id;
 
           return (
-            <View key={plan._id} style={[
-              styles.planCard,
-              plan.name.toLowerCase().includes("gold") && styles.goldCard,
-              plan.name.toLowerCase().includes("silver") && styles.silverCard,
-            ]}>
-
-              {/* 🔥 BADGE */}
-              {plan.name.toLowerCase().includes("gold") && (
+            <View
+              key={plan._id}
+              style={[
+                styles.planCard,
+                plan.name?.toLowerCase().includes("gold") && styles.goldCard,
+                plan.name?.toLowerCase().includes("silver") && styles.silverCard,
+              ]}
+            >
+              {plan.name?.toLowerCase().includes("gold") && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>MOST POPULAR</Text>
                 </View>
               )}
 
-              {/* 🔥 HEADER */}
               <Text style={styles.planName}>{plan.name}</Text>
               <Text style={styles.duration}>{plan.durationMonths} Months</Text>
 
-              {/* 🔥 PRICE */}
               <View style={styles.priceBox}>
-                <Text style={styles.actualPrice}>₹{plan.actualPrice}</Text>
-                <Text style={styles.planPrice}>₹{plan.price}</Text>
-                <Text style={styles.gstText}>+ GST</Text>
+                {plan.actualPrice && plan.actualPrice > basePrice ? (
+                  <Text style={styles.actualPrice}>
+                    {formatPrice(plan.actualPrice)}
+                  </Text>
+                ) : null}
+
+                <Text style={styles.planPrice}>{formatPrice(discountedPrice)}</Text>
+                <Text style={styles.gstText}>
+                  GST: {formatPrice(gst)} | Total: {formatPrice(total)}
+                </Text>
               </View>
 
-              {/* 🔥 FEATURES */}
-              <View style={{ marginTop: 10 }}>
-                {plan.features?.slice(0, 5).map((f, i) => (
-                  <View key={i} style={styles.featureRow}>
+              <View style={styles.couponRow}>
+                <TextInput
+                  style={styles.couponInput}
+                  value={couponInputs[plan._id] || ""}
+                  onChangeText={(text) => handleCouponInput(plan._id, text)}
+                  placeholder="Enter coupon code"
+                  placeholderTextColor="#999"
+                  autoCapitalize="characters"
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.couponBtn,
+                    couponLoading[plan._id] && styles.disabledBtn,
+                  ]}
+                  onPress={() => handleApplyCoupon(plan._id)}
+                  disabled={couponLoading[plan._id]}
+                >
+                  <Text style={styles.couponBtnText}>
+                    {couponLoading[plan._id] ? "Applying..." : "Apply"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {appliedCoupon ? (
+                <View style={styles.couponSummary}>
+                  <Text style={styles.couponCodeText}>
+                    Coupon: {appliedCoupon.couponCode}
+                  </Text>
+                  <Text style={styles.couponSummaryText}>
+                    Original: {formatPrice(appliedCoupon.originalPrice)}
+                  </Text>
+                  <Text style={styles.couponSummaryText}>
+                    Discount: {formatPrice(appliedCoupon.discount)}
+                  </Text>
+                  <Text style={styles.couponFinalText}>
+                    Final: {formatPrice(appliedCoupon.finalPrice)}
+                  </Text>
+                </View>
+              ) : null}
+
+              <View style={styles.featureList}>
+                {plan.features?.slice(0, 5).map((feature, index) => (
+                  <View key={index} style={styles.featureRow}>
                     <Icon name="checkmark-circle" size={18} color="#4CAF50" />
-                    <Text style={styles.featureText}>
-                      {stripHtml(f)}
-                    </Text>
+                    <Text style={styles.featureText}>{stripHtml(feature)}</Text>
                   </View>
                 ))}
               </View>
 
-              {/* 🔥 BUTTON */}
               <TouchableOpacity
-                style={styles.buyBtn}
+                style={[styles.buyBtn, isPaying && styles.disabledBtn]}
                 onPress={() => handleBuy(plan)}
+                disabled={isPaying}
               >
-                <Text style={styles.buyText}>Upgrade Now 🚀</Text>
+                <Text style={styles.buyText}>
+                  {isPaying ? "Processing..." : `Upgrade Now - ${formatPrice(total)}`}
+                </Text>
               </TouchableOpacity>
-
             </View>
           );
         })}
 
-        {/* ===== Payment History ===== */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment History</Text>
 
@@ -263,12 +399,10 @@ export default function PlanScreen() {
               renderItem={({ item, index }) => (
                 <View style={styles.historyRow}>
                   <Text style={styles.historyIndex}>{index + 1}.</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.historyPlan}>
-                      {item.plan?.name || "-"}
-                    </Text>
+                  <View style={styles.historyContent}>
+                    <Text style={styles.historyPlan}>{item.plan?.name || "-"}</Text>
                     <Text style={styles.historyMeta}>
-                      ₹{item.amount} | {item.status.toUpperCase()}
+                      {formatPrice(item.amount)} | {item.status?.toUpperCase()}
                     </Text>
                     <Text style={styles.historyDate}>
                       {new Date(item.createdAt).toLocaleString()}
@@ -288,12 +422,17 @@ export default function PlanScreen() {
   );
 }
 
-/* ================= STYLES ================= */
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
 
-  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
   banner: {
     backgroundColor: "#ff4e50",
@@ -308,7 +447,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  bannerSub: { fontSize: 14, color: "#ffe3e3", marginTop: 6 },
+  bannerSub: {
+    fontSize: 14,
+    color: "#ffe3e3",
+    marginTop: 6,
+  },
 
   section: {
     backgroundColor: "#fff",
@@ -325,92 +468,35 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
-  currentPlan: { alignItems: "center" },
-
-  noPlan: { textAlign: "center", color: "#888", marginTop: 10 },
-
-  planName: { fontSize: 18, fontWeight: "700", color: "#333" },
-
-  planMeta: { color: "#777", marginTop: 4 },
-
-  planPrice: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#ff4e50",
-    marginTop: 8,
-  },
-
-  planCard: {
-    backgroundColor: "#fff",
-    marginHorizontal: 14,
-    marginTop: 12,
-    padding: 18,
-    borderRadius: 14,
-    elevation: 3,
-    alignItems: "center",
-  },
-
-  featureText: { fontSize: 12, color: "#555", marginTop: 4 },
-
-  buyBtn: {
-    backgroundColor: "#ff4e50",
-    marginTop: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-
-  buyText: { color: "#fff", fontWeight: "600" },
-
-  historyRow: {
-    flexDirection: "row",
-    paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderColor: "#ddd",
-  },
-
-  historyIndex: { width: 22, fontWeight: "700" },
-
-  historyPlan: { fontWeight: "600" },
-
-  historyMeta: { color: "#555", fontSize: 12 },
-
-  historyDate: { color: "#999", fontSize: 11 },
-
   sectionTitle1: {
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 10,
     color: "#333",
-    marginLeft: 18
-
-
-  },
-  actualPrice: {
-    textDecorationLine: "line-through",
-    color: "#999",
-    fontSize: 14,
+    marginLeft: 18,
   },
 
-  duration: {
-    backgroundColor: "#ffe5e5",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    fontSize: 12,
-    color: "#ff4e50",
+  currentPlan: {
+    alignItems: "center",
   },
 
-  gstText: {
-    fontSize: 12,
+  noPlan: {
+    textAlign: "center",
+    color: "#888",
+    marginTop: 10,
+  },
+
+  planName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+  },
+
+  planMeta: {
     color: "#777",
+    marginTop: 4,
   },
 
-  desc: {
-    fontSize: 13,
-    color: "#444",
-    marginBottom: 8,
-  },
   planCard: {
     backgroundColor: "#fff",
     marginHorizontal: 14,
@@ -450,20 +536,104 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
+  duration: {
+    alignSelf: "flex-start",
+    backgroundColor: "#ffe5e5",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    fontSize: 12,
+    color: "#ff4e50",
+    marginTop: 6,
+  },
+
   priceBox: {
-    alignItems: "center",
+    alignItems: "flex-start",
     marginVertical: 10,
+  },
+
+  actualPrice: {
+    textDecorationLine: "line-through",
+    color: "#999",
+    fontSize: 14,
   },
 
   planPrice: {
     fontSize: 26,
     fontWeight: "bold",
     color: "#ff4e50",
+    marginTop: 6,
   },
 
-  actualPrice: {
-    textDecorationLine: "line-through",
-    color: "#aaa",
+  gstText: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 4,
+  },
+
+  couponRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+
+  couponInput: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    color: "#222",
+  },
+
+  couponBtn: {
+    marginLeft: 8,
+    backgroundColor: "#222",
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  couponBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+
+  couponSummary: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#fff4f4",
+    borderWidth: 1,
+    borderColor: "#ffd1d1",
+  },
+
+  couponCodeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 6,
+  },
+
+  couponSummaryText: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 3,
+  },
+
+  couponFinalText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#ff4e50",
+  },
+
+  featureList: {
+    marginTop: 12,
   },
 
   featureRow: {
@@ -476,6 +646,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 13,
     color: "#444",
+    flex: 1,
   },
 
   buyBtn: {
@@ -491,5 +662,39 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 14,
+  },
+
+  disabledBtn: {
+    opacity: 0.7,
+  },
+
+  historyRow: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    borderBottomWidth: 0.5,
+    borderColor: "#ddd",
+  },
+
+  historyIndex: {
+    width: 22,
+    fontWeight: "700",
+  },
+
+  historyContent: {
+    flex: 1,
+  },
+
+  historyPlan: {
+    fontWeight: "600",
+  },
+
+  historyMeta: {
+    color: "#555",
+    fontSize: 12,
+  },
+
+  historyDate: {
+    color: "#999",
+    fontSize: 11,
   },
 });

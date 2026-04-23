@@ -316,10 +316,12 @@ import Step4EduJob from "./Step4EduJob";
 import Step5AboutPhotos from "./Step5AboutPhotos";
 import { useProfile } from "../../context/ProfileContext";
 import AppModal from "../../components/AppModal";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const API_URL = "http://143.110.244.163:5000/api";
 
 export default function CreateProfileScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const initialStep = route?.params?.initialStep || 1;
   const [authUser, setAuthUser] = useState(null);
 
@@ -572,7 +574,7 @@ occupation:
         />
       )}
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         {step > 1 ? (
           <TouchableOpacity onPress={prev} style={styles.backAction}>
             <Text style={styles.backActionText}>← Back</Text>

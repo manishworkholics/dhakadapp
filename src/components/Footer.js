@@ -7,16 +7,18 @@ import Icon from "react-native-vector-icons/Feather";
 import Entypo from "react-native-vector-icons/Entypo";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import AntDesign from "react-native-vector-icons/AntDesign";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Footer() {
   const navigation = useNavigation();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const currentRoute = route.name;
 
   const isActive = (screen) => currentRoute === screen;
 
   return (
-    <View style={styles.footer}>
+    <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {/* HOME */}
       <TouchableOpacity
         style={styles.item}
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 70,
+    minHeight: 70,
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
@@ -138,8 +140,10 @@ const styles = StyleSheet.create({
   },
 
   item: {
+    minHeight: 44,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom:11
+    paddingHorizontal: 4,
   },
 
   text: {

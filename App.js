@@ -1,18 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Linking } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, AppState, Linking } from 'react-native';
 import VersionCheck from 'react-native-version-check';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-/* 🔹 CONTEXT */
 import { DrawerProvider } from './src/context/DrawerContext';
 import { ProfileProvider } from './src/context/ProfileContext';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { socket } from './src/socket';
 
-/* 🔹 SCREENS */
 import SplashScreen from './src/screens/SplashScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -46,28 +44,52 @@ import AboutUsScreen from './src/screens/AboutUsScreen';
 import ContactUsScreen from './src/screens/ContactUsScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
 import AddSuccessStoryScreen from './src/screens/AddSuccessStoryScreen';
+import AccountDeactivationScreen from './src/screens/AccountDeactivationScreen';
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [userId, setUserId] = useState(null);
+  const appState = useRef(AppState.currentState);
+  const isUpdateAlertVisible = useRef(false);
+
   const checkUpdate = async () => {
     try {
-      const res = await VersionCheck?.needUpdate();
+      const currentVersion = VersionCheck.getCurrentVersion();
+      const res = await VersionCheck.needUpdate();
 
-      if (res?.isNeeded) {
+      if (res?.isNeeded && !isUpdateAlertVisible.current) {
+        isUpdateAlertVisible.current = true;
+
         Alert.alert(
-          'Update Available 🚀',
-          'New version available, please update your app',
+          'Update Available',
+          `Please update the app. A new version is available.\nCurrent version: ${currentVersion}\nLatest version: ${res.latestVersion}`,
           [
             {
-              text: 'Update',
+              text: 'Later',
+              style: 'cancel',
               onPress: () => {
-                Linking.openURL(res.storeUrl); // ✅ auto correct URL
+                isUpdateAlertVisible.current = false;
+              },
+            },
+            {
+              text: 'Update',
+              onPress: async () => {
+                try {
+                  if (res.storeUrl) {
+                    await Linking.openURL(res.storeUrl);
+                  }
+                } finally {
+                  isUpdateAlertVisible.current = false;
+                }
               },
             },
           ],
+          { cancelable: false },
         );
       }
     } catch (error) {
+      isUpdateAlertVisible.current = false;
       console.log('Update check error:', error);
     }
   };
@@ -76,7 +98,22 @@ export default function App() {
     checkUpdate();
   }, []);
 
-  const [userId, setUserId] = useState(null);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      const wasInBackground =
+        appState.current === 'background' || appState.current === 'inactive';
+
+      if (wasInBackground && nextAppState === 'active') {
+        checkUpdate();
+      }
+
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -156,6 +193,10 @@ export default function App() {
             <Stack.Screen
               name="AddSuccessStory"
               component={AddSuccessStoryScreen}
+            />
+            <Stack.Screen
+              name="AccountDeactivation"
+              component={AccountDeactivationScreen}
             />
           </Stack.Navigator>
         </NavigationContainer>

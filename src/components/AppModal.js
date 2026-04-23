@@ -166,6 +166,7 @@ const styles = StyleSheet.create({
 
   container: {
     width: "100%",
+    maxWidth: 420,
     backgroundColor: "#fff",
     borderRadius: 24,
     padding: 24,
@@ -202,6 +203,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
     fontWeight: "500",
     lineHeight: 20,
+    flexShrink: 1,
   },
 
   button: {

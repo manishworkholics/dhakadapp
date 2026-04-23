@@ -212,7 +212,9 @@ export default function HomeScreen() {
           <View style={styles.topCard}>
             <View style={styles.topRow}>
               <View>
-                <Text style={styles.profileName}>{profile?.name}</Text>
+                <Text style={styles.profileName} numberOfLines={1}>
+                  {profile?.name}
+                </Text>
                 <Text style={styles.profileId}>DH{profile?.oldVirtualId?.slice(0, 5) || profile?._id?.slice(0, 5)}</Text>
 
                 <View style={styles.freeBadge}>
@@ -264,16 +266,16 @@ export default function HomeScreen() {
                     </ImageBackground>
 
                     <View style={styles.premiumOverlay}>
-                      <Text style={styles.premiumName}>
+                      <Text style={styles.premiumName} numberOfLines={1}>
                         {item.name}{" "}
                         <Text style={styles.premiumAge}>
                           {calculateAge(item.dob)} yrs
                         </Text>
                       </Text>
-                      <Text style={styles.premiumInfo}>
+                      <Text style={styles.premiumInfo} numberOfLines={1}>
                         {item.height}, {item.caste}
                       </Text>
-                      <Text style={styles.premiumInfo}>
+                      <Text style={styles.premiumInfo} numberOfLines={1}>
                         {item.city}, {item.state}
                       </Text>
                     </View>
@@ -355,7 +357,7 @@ export default function HomeScreen() {
 
                     {/* Overlay Content */}
                     <View style={styles.newMatchOverlay}>
-                      <Text style={styles.newMatchName}>
+                      <Text style={styles.newMatchName} numberOfLines={1}>
                         {item.name}
                         <Text style={styles.newMatchAge}>
                           {"  "}
@@ -363,11 +365,11 @@ export default function HomeScreen() {
                         </Text>
                       </Text>
 
-                      <Text style={styles.newMatchInfo}>
+                      <Text style={styles.newMatchInfo} numberOfLines={1}>
                         {item.height || "5'6\""}, {item.caste || ""}
                       </Text>
 
-                      <Text style={styles.newMatchInfo}>
+                      <Text style={styles.newMatchInfo} numberOfLines={1}>
                         {item.city}, {item.state}
                       </Text>
                     </View>
@@ -414,7 +416,7 @@ export default function HomeScreen() {
                       />
 
                       <View style={styles.successStoryContent}>
-                        <Text style={styles.successStoryName}>
+                        <Text style={styles.successStoryName} numberOfLines={1}>
                           {story.name} & {story.partnerName}
                         </Text>
 
@@ -477,16 +479,16 @@ export default function HomeScreen() {
                       </Text>
 
                       {/* Comment */}
-                      <Text style={styles.testimonialComment}>
+                      <Text style={styles.testimonialComment} numberOfLines={4}>
                         "{item.comment}"
                       </Text>
 
 
                       <View>
-                        <Text style={styles.testimonialName}>
+                        <Text style={styles.testimonialName} numberOfLines={1}>
                           {item.user?.name}
                         </Text>
-                        <Text style={styles.testimonialCity}>
+                        <Text style={styles.testimonialCity} numberOfLines={1}>
                           {item.user?.city}
                         </Text>
                       </View>
@@ -779,7 +781,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  profileName: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  profileName: { color: "#fff", fontSize: 16, fontWeight: "700", flexShrink: 1, maxWidth: "90%" },
   profileId: { color: "#aaa", marginTop: 4 },
   freeBadge: {
     backgroundColor: "#333",
@@ -825,7 +827,7 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   progressText: { fontSize: 22, fontWeight: "800" },
-  actionRow: { flexDirection: "row", gap: 12 },
+  actionRow: { flexDirection: "row", gap: 12, flexWrap: "wrap", justifyContent: "center" },
   actionBtn: {
     borderWidth: 1,
     borderColor: "#696969",
@@ -949,6 +951,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FF6F00",
     textAlign: "center",
+    flexShrink: 1,
   },
 
   successStoryDesc: {
@@ -956,6 +959,7 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     marginVertical: 6,
+    flexShrink: 1,
   },
 
   /* Read More button – EXACT */
@@ -1023,6 +1027,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     marginBottom: 18,
     lineHeight: 20,
+    flexShrink: 1,
   },
 
   testimonialUser: {
@@ -1040,11 +1045,13 @@ const styles = StyleSheet.create({
   testimonialName: {
     fontWeight: "700",
     fontSize: 14,
+    flexShrink: 1,
   },
 
   testimonialCity: {
     fontSize: 12,
     color: "#888",
+    flexShrink: 1,
   },
 
   pagination: {
@@ -1085,7 +1092,7 @@ const UpgradeModal = ({ visible, onClose, onUpgrade, imageUri }) => {
           }}
           style={modalStyles.avatar}
         />
-        {/* बाकी same */}
+       
 
 
         <Text style={modalStyles.title}>

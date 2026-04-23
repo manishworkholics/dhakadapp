@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -42,6 +42,7 @@ const employmentTypeOptions = [
   { label: "Not Working", value: "not_working" },
   { label: "Homemaker", value: "homemaker" },
   { label: "Retired", value: "retired" },
+  { label: "Others", value: "others" },
 ];
 
 const occupationOptions = [
@@ -79,6 +80,49 @@ export default function Step4EduJob({ profile, setProfile }) {
   const [showOccupation, setShowOccupation] = useState(false);
   const [showIncome, setShowIncome] = useState(false);
  
+  useEffect(() => {
+    const normalizeOtherSelection = (fieldKey, otherKey, options) => {
+      const selectedValue = profile?.[fieldKey];
+      const customOther = profile?.[otherKey];
+
+      if (!selectedValue || selectedValue === "others") return null;
+
+      const isKnownOption = options.some((item) => item.value === selectedValue);
+      if (isKnownOption) return null;
+
+      return {
+        [fieldKey]: "others",
+        [otherKey]: customOther || selectedValue,
+      };
+    };
+
+    const normalizedEducation = normalizeOtherSelection(
+      "education",
+      "otherEducation",
+      educationOptions
+    );
+    const normalizedEmployment = normalizeOtherSelection(
+      "employmentType",
+      "otherEmployment",
+      employmentTypeOptions
+    );
+    const normalizedOccupation = normalizeOtherSelection(
+      "occupation",
+      "otherOccupation",
+      occupationOptions
+    );
+
+    const updates = {
+      ...(normalizedEducation || {}),
+      ...(normalizedEmployment || {}),
+      ...(normalizedOccupation || {}),
+    };
+
+    if (Object.keys(updates).length > 0) {
+      setProfile((prev) => ({ ...prev, ...updates }));
+    }
+  }, [profile, setProfile]);
+
 
   /* ---------------- COMMON FUNCTIONS ---------------- */
 

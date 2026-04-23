@@ -262,6 +262,12 @@ export default function SideDrawer({ navigation }) {
               />
               <Divider />
               <DrawerItem
+                icon="pause-circle-outline"
+                title="Account Deactivation"
+                onPress={() => go('AccountDeactivation')}
+              />
+              <Divider />
+              <DrawerItem
                 icon="star-outline"
                 title="RateReview"
                 onPress={() => go('RateReview')}

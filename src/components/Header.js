@@ -100,8 +100,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   container: {
-    height: 50,
-    paddingHorizontal: 19,
+    minHeight: 50,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -110,15 +111,15 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    marginHorizontal: 19,
+    marginHorizontal: 12,
+    minWidth: 0,
   },
   title: {
     fontSize: 19,
     fontWeight: "800",
     color: "#000000",
-    alignItems: "flex-start",
-    marginLeft: 15
-
+    marginLeft: 8,
+    flexShrink: 1,
   },
   searchInput: {
     height: 40,
