@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 16, 
+    paddingBottom: 100,
   },
 
   hero: {
